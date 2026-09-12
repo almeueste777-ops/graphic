@@ -762,13 +762,13 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
               </div>
             </div>
 
-            {/* ================= LAYOUT 0: PANOURI MONAHALE & CASETE MARI (RECOMANDAT A4) ================= */}
+            {/* ================= LAYOUT 0: DREPTUNGHIURI MONAHALE (RECOMANDAT A4) ================= */}
             {layoutMode === 'modular' && (
               <div className="mt-2.5 space-y-2.5">
-                {/* ROW 1: CELE 4 CASETE MARI DE BAZĂ (SFÂNTUL ALTAR, STRANĂ & AJUTOR, PARACLISERIE, ȘOFERIE) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-2.5">
+                {/* 4 DREPTUNGHIURI PRINCIPALE LÂNGĂ LALTĂ (ALTAR & PARACLISERIE, PREDICA, STAT ÎN BISERICĂ, ȘOFERIE) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-2.5">
                   
-                  {/* CASETA 1: SFÂNTUL ALTAR */}
+                  {/* DREPTUNGHIUL 1: ALTARUL & PARACLISERIA (cu STRANA) */}
                   <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
                     <div>
                       <div 
@@ -777,306 +777,122 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                       >
                         <div className="flex items-center space-x-1.5">
                           <Church className="w-3.5 h-3.5 text-amber-200" />
-                          <span className={fontThemeClasses[fontTheme].header}>SFÂNTUL ALTAR</span>
+                          <span className={fontThemeClasses[fontTheme].header}>ALTARUL & PARACLISERIA</span>
                         </div>
                         <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
                       </div>
 
                       <div className="p-2 space-y-1.5">
-                        {/* Preot de rând */}
-                        <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
-                              Preot Slujitor de Rând:
-                            </span>
-                            <span className="text-[9px] text-stone-500 font-sans">Toată Săptămâna</span>
+                        {/* Secțiunea SFÂNTUL ALTAR */}
+                        <div className="border-b border-stone-200 pb-1.5 space-y-1">
+                          <div className="text-[10px] font-black uppercase tracking-wider text-[#78141c] flex items-center space-x-1">
+                            <span>❖</span>
+                            <span>SFÂNTUL ALTAR:</span>
                           </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {getPersonName(altarPreotAssignment?.personId, true)}
-                          </div>
-                          {altarPreotAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{altarPreotAssignment.notes}</div>
-                          )}
-                        </div>
 
-                        {/* Diacon slujitor */}
-                        <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
-                              Diacon Slujitor:
-                            </span>
-                            <span className="text-[9px] text-stone-500 font-sans">Sf. Liturghie</span>
-                          </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {getPersonName(altarDiaconAssignment?.personId, true)}
-                          </div>
-                          {altarDiaconAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{altarDiaconAssignment.notes}</div>
-                          )}
-                        </div>
-
-                        {/* Sâmbătă Protos */}
-                        <div className="bg-amber-50/40 border border-amber-300/80 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-amber-950 tracking-wider">
-                              Sâmbătă Protos & Proscomidie:
-                            </span>
-                            <span className="text-[9px] text-amber-900 font-sans font-semibold">Weekend</span>
-                          </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {altarProtosAssignment?.personId 
-                              ? getPersonName(altarProtosAssignment.personId, true) 
-                              : getPersonName(persons.find(p => p.id === 'p_iliescu')?.id, true)}
-                          </div>
-                          {altarProtosAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{altarProtosAssignment.notes}</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Sfânta Liturghie, Vecernia, Utrenia & Tainele Bisericii
-                    </div>
-                  </div>
-
-                  {/* CASETA 2: CÂNTARE LA STRANĂ & AJUTOR */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
-                    <div>
-                      <div 
-                        className="text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
-                        style={{ backgroundColor: '#8c6b12' }}
-                      >
-                        <div className="flex items-center space-x-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-amber-200" />
-                          <span className={fontThemeClasses[fontTheme].header}>CÂNTARE LA STRANĂ</span>
-                        </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
-                      </div>
-
-                      <div className="p-2 space-y-1.5">
-                        {/* (a) Protopsalt */}
-                        <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
-                              (a) Protopsalt (Strana 1):
-                            </span>
-                            <span className="text-[9px] text-stone-500 font-sans">Conducător</span>
-                          </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {getPersonName(stranaPsaltAssignment?.personId, true)}
-                          </div>
-                          {stranaPsaltAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{stranaPsaltAssignment.notes}</div>
-                          )}
-                        </div>
-
-                        {/* (b) Ajutor permanent / Cititor */}
-                        <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
-                              (b) Ajutor Permanent / Cititor:
-                            </span>
-                            <span className="text-[9px] text-stone-500 font-sans">Strana 2 & Ison</span>
-                          </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {getPersonName(stranaAjutorAssignment?.personId, true)}
-                          </div>
-                          {stranaAjutorAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{stranaAjutorAssignment.notes}</div>
-                          )}
-                        </div>
-
-                        {/* Rânduială Tipic */}
-                        <div className="bg-amber-50/30 border border-stone-200 p-1 rounded-xs text-[9px] text-stone-700">
-                          <span className="font-bold text-stone-900 block">Rânduială liturgică:</span>
-                          <span>Ceasurile, Catavasii, Apostolul și rânduiala glasurilor de rând.</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Slujbele celor 7 Laude bisericești și Liturghie
-                    </div>
-                  </div>
-
-                  {/* CASETA 3: PARACLISERIE */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
-                    <div>
-                      <div 
-                        className="text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
-                        style={{ backgroundColor: '#c2410c' }}
-                      >
-                        <div className="flex items-center space-x-1.5">
-                          <Bell className="w-3.5 h-3.5 text-amber-200" />
-                          <span className={fontThemeClasses[fontTheme].header}>PARACLISERIE</span>
-                        </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
-                      </div>
-
-                      <div className="p-2 space-y-1.5">
-                        {/* Paracliser de rând */}
-                        <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
-                              Paracliser de Rând:
-                            </span>
-                            <span className="text-[9px] text-stone-500 font-sans">Toată Săptămâna</span>
-                          </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {getPersonName(paracliserAssignment?.personId, true)}
-                          </div>
-                          {paracliserAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{paracliserAssignment.notes}</div>
-                          )}
-                        </div>
-
-                        {/* Îndatoriri principale */}
-                        <div className="space-y-1 pt-0.5 text-[9px]">
-                          <div className="flex items-center space-x-1 bg-stone-50 p-1 rounded border border-stone-200 text-stone-800">
-                            <span className="text-amber-700 font-bold">❖</span>
-                            <span>Toaca și clopotele la Ceasuri și slujbe</span>
-                          </div>
-                          <div className="flex items-center space-x-1 bg-stone-50 p-1 rounded border border-stone-200 text-stone-800">
-                            <span className="text-amber-700 font-bold">❖</span>
-                            <span>Pregătirea cădelniței, lumânărilor & cărbunilor</span>
-                          </div>
-                          <div className="flex items-center space-x-1 bg-stone-50 p-1 rounded border border-stone-200 text-stone-800">
-                            <span className="text-amber-700 font-bold">❖</span>
-                            <span>Curățenia și ordinea în Sfântul Altar</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Punctualitate deplină la chemarea la rugăciune
-                    </div>
-                  </div>
-
-                  {/* CASETA 4: ȘOFERIE & TRANSPORT */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
-                    <div>
-                      <div 
-                        className="text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
-                        style={{ backgroundColor: '#1d4ed8' }}
-                      >
-                        <div className="flex items-center space-x-1.5">
-                          <Car className="w-3.5 h-3.5 text-blue-200" />
-                          <span className={fontThemeClasses[fontTheme].header}>ȘOFERIE & TRANSPORT</span>
-                        </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
-                      </div>
-
-                      <div className="p-2 space-y-1.5">
-                        {/* Șofer de serviciu */}
-                        <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
-                              Șofer de Serviciu:
-                            </span>
-                            <span className="text-[9px] text-blue-700 font-semibold font-sans">Toată Săptămâna</span>
-                          </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
-                            {getPersonName(soferAssignment?.personId, true)}
-                          </div>
-                          {soferAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{soferAssignment.notes}</div>
-                          )}
-                        </div>
-
-                        {/* De gardă / Urgențe */}
-                        <div className="bg-blue-50/40 border border-blue-200 p-1 rounded-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9.5px] uppercase font-bold text-blue-950 tracking-wider">
-                              De Gardă & Urgențe:
-                            </span>
-                            <span className="text-[8.5px] text-blue-800 font-sans">24h / 7</span>
-                          </div>
-                          <div className="text-xs font-bold text-stone-900 mt-0.5">
-                            Pr. Modest / Pr. Petru
-                          </div>
-                          <div className="text-[8.5px] text-stone-600 italic">Disponibili pentru urgențe și drumuri lungi</div>
-                        </div>
-
-                        <div className="text-[9px] text-stone-700 bg-stone-50 p-1 rounded border border-stone-200">
-                          <span className="font-bold text-stone-900 block">Domenii de deplasare:</span>
-                          <span>Aprovizionare, aeroport, urgențe medicale & pelerinaje.</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Plecarea se face doar cu binecuvântarea Starețului
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* ROW 2: CELE 3 CASETE ZILNICE & LITURGICE (SĂRBĂTORI, CINE PREDICĂ, ÎN BISERICĂ / POMELNICE) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 print:grid-cols-12 gap-2.5">
-                  
-                  {/* CASETA 5: SĂRBĂTORI ÎN SĂPTĂMÂNA ACEASTA (col-span-4) */}
-                  <div className="col-span-12 lg:col-span-4 print:col-span-4 border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
-                    <div>
-                      <div className="bg-[#991b1b] text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900">
-                        <div className="flex items-center space-x-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-red-200" />
-                          <span className={fontThemeClasses[fontTheme].header}>SĂRBĂTORI ÎN SĂPTĂMÂNA ACEASTA</span>
-                        </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">calendar</span>
-                      </div>
-
-                      <div className="p-1.5 space-y-1">
-                        {weekLiturgicalDays.map(item => (
-                          <div 
-                            key={item.dateStr}
-                            className={`px-1.5 py-1 rounded-xs border text-xs flex items-start justify-between gap-1 ${
-                              item.litInfo.isRedCross
-                                ? 'bg-red-50/90 border-red-400 font-bold text-red-950'
-                                : item.isSunday
-                                ? 'bg-red-50/40 border-red-200 text-stone-950 font-semibold'
-                                : item.isSaturday
-                                ? 'bg-amber-50/40 border-amber-200 text-stone-900'
-                                : item.isFastDay
-                                ? 'bg-stone-50 border-stone-200 text-stone-800'
-                                : 'bg-white border-stone-200 text-stone-800'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-1 min-w-[70px]">
-                              <span className={`text-[10px] font-bold uppercase tracking-wider ${item.litInfo.isRedCross ? 'text-red-700 font-black' : 'text-stone-700'}`}>
-                                {item.dayShort} {format(item.day, 'd')}
+                          {/* Preot de rând */}
+                          <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9.5px] uppercase font-bold text-stone-700 tracking-wider">
+                                Preot Slujitor de Rând:
                               </span>
-                              {item.litInfo.isRedCross && <span className="text-red-600 font-black text-xs">✝</span>}
+                              <span className="text-[8.5px] text-stone-500 font-sans">Toată săpt.</span>
                             </div>
+                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              {getPersonName(altarPreotAssignment?.personId, true)}
+                            </div>
+                            {altarPreotAssignment?.notes && (
+                              <div className="text-[8.5px] text-stone-600 italic mt-0.5">{altarPreotAssignment.notes}</div>
+                            )}
+                          </div>
 
-                            <div className="flex-1 text-right">
-                              <div className="text-[10.5px] leading-tight font-medium">
-                                {item.litInfo.feastTitle || item.dayName}
-                              </div>
-                              {item.isFastDay && (
-                                <span className="text-[8.5px] text-stone-500 font-sans italic block">
-                                  (zi de post)
-                                </span>
-                              )}
+                          {/* Diacon slujitor */}
+                          <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9.5px] uppercase font-bold text-stone-700 tracking-wider">
+                                Diacon Slujitor:
+                              </span>
+                              <span className="text-[8.5px] text-stone-500 font-sans">Sf. Liturghie</span>
+                            </div>
+                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              {getPersonName(altarDiaconAssignment?.personId, true)}
                             </div>
                           </div>
-                        ))}
 
-                        <div className="bg-stone-100 p-1 rounded-xs border border-stone-300 text-[9px] text-stone-700">
-                          <span className="font-bold text-stone-900">Rânduiala postului: </span>
-                          <span>Miercuri și Vineri post. La praznice conform calendarului bisericesc.</span>
+                          {/* Sâmbătă Protos */}
+                          <div className="bg-amber-50/40 border border-amber-300/80 p-1.5 rounded-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9.5px] uppercase font-bold text-amber-950 tracking-wider">
+                                Sâmbătă Protos & Proscomidie:
+                              </span>
+                              <span className="text-[8.5px] text-amber-900 font-sans font-semibold">Weekend</span>
+                            </div>
+                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              {altarProtosAssignment?.personId 
+                                ? getPersonName(altarProtosAssignment.personId, true) 
+                                : getPersonName(persons.find(p => p.id === 'p_iliescu')?.id, true)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Secțiunea PARACLISERIE */}
+                        <div className="border-b border-stone-200 pb-1.5 space-y-1">
+                          <div className="text-[10px] font-black uppercase tracking-wider text-[#c2410c] flex items-center space-x-1">
+                            <Bell className="w-3 h-3 text-[#c2410c]" />
+                            <span>PARACLISERIE:</span>
+                          </div>
+
+                          <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9.5px] uppercase font-bold text-stone-700 tracking-wider">
+                                Paracliser de Rând:
+                              </span>
+                              <span className="text-[8.5px] text-stone-500 font-sans">Toată săpt.</span>
+                            </div>
+                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              {getPersonName(paracliserAssignment?.personId, true)}
+                            </div>
+                            <div className="text-[8.5px] text-stone-600 italic mt-0.5">
+                              Toaca, clopotele, cădelnița & ordinea în Altar
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Secțiunea CÂNTARE LA STRANĂ */}
+                        <div className="space-y-1 pt-0.5">
+                          <div className="text-[10px] font-black uppercase tracking-wider text-[#8c6b12] flex items-center space-x-1">
+                            <BookOpen className="w-3 h-3 text-[#8c6b12]" />
+                            <span>CÂNTARE LA STRANĂ:</span>
+                          </div>
+
+                          <div className="bg-stone-50 border border-stone-300 p-1 rounded-xs">
+                            <div className="flex items-center justify-between text-[9px] text-stone-600 font-bold uppercase">
+                              <span>Protopsalt (Strana 1):</span>
+                            </div>
+                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 leading-snug`}>
+                              {getPersonName(stranaPsaltAssignment?.personId, true)}
+                            </div>
+                          </div>
+
+                          <div className="bg-stone-50 border border-stone-300 p-1 rounded-xs">
+                            <div className="flex items-center justify-between text-[9px] text-stone-600 font-bold uppercase">
+                              <span>Ajutor Permanent / Cititor:</span>
+                            </div>
+                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 leading-snug`}>
+                              {getPersonName(stranaAjutorAssignment?.personId, true)}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Tipicul Ecleziastic al Bisericii Ortodoxe Române
+                      Slujbele celor 7 Laude bisericești și Sfânta Liturghie
                     </div>
                   </div>
 
-                  {/* CASETA 6: CINE PREDICĂ PE ZILE (col-span-4) */}
-                  <div className="col-span-12 lg:col-span-4 print:col-span-4 border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                  {/* DREPTUNGHIUL 2: DOAR ZILELE ÎN CARE SE PREDICĂ ȘI CINE O FACE */}
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
                     <div>
                       <div className="bg-[#b45309] text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900">
                         <div className="flex items-center space-x-1.5">
@@ -1086,93 +902,115 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                         <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">amvon</span>
                       </div>
 
-                      <div className="p-1.5 space-y-1.5">
-                        {/* Sunday Preacher */}
+                      <div className="p-2 space-y-2">
+                        <div className="text-[10px] font-bold text-amber-950 uppercase tracking-wider bg-amber-50 p-1 border border-amber-200 text-center rounded-xs">
+                          Doar zilele cu predică la Liturghie
+                        </div>
+
+                        {/* 1. DUMINICĂ */}
                         {weekLiturgicalDays.filter(d => d.isSunday).map(d => {
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
                           const name = getPersonName(assign?.personId, true);
                           const fallbackName = getPersonName(altarPreotAssignment?.personId, true);
                           return (
-                            <div key={d.dateStr} className="p-1.5 bg-red-50/70 border border-red-300 rounded-xs">
+                            <div key={d.dateStr} className="p-2 bg-red-50/70 border-2 border-red-300 rounded-xs space-y-0.5">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-red-900">
-                                  Duminică (Sf. Liturghie):
+                                <span className="text-[10.5px] font-black uppercase tracking-wider text-red-900 flex items-center space-x-1">
+                                  <span className="text-red-600 text-xs">✝</span>
+                                  <span>Duminică (Sf. Liturghie):</span>
                                 </span>
-                                <span className="text-[9px] font-bold text-red-700">{d.dateFormatted}</span>
+                                <span className="text-[9.5px] font-bold text-red-800 font-mono">{d.dateFormatted}</span>
                               </div>
-                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
                                 {name !== '—' ? name : `${fallbackName} (Preot de rând)`}
                               </div>
-                              <div className="text-[9px] text-stone-600 italic">Preotul de rând predică duminica conform rânduielii</div>
+                              <div className="text-[9px] text-stone-600 italic">
+                                Preotul de rând predică doar duminica la Sfânta Liturghie
+                              </div>
                             </div>
                           );
                         })}
 
-                        {/* Saturday Preacher */}
+                        {/* 2. SÂMBĂTĂ */}
                         {weekLiturgicalDays.filter(d => d.isSaturday).map(d => {
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
                           const name = getPersonName(assign?.personId, true);
                           const iliescu = persons.find(p => p.id === 'p_iliescu');
                           return (
-                            <div key={d.dateStr} className="p-1.5 bg-amber-50/60 border border-amber-300 rounded-xs">
+                            <div key={d.dateStr} className="p-2 bg-amber-50/60 border-2 border-amber-300 rounded-xs space-y-0.5">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-950">
+                                <span className="text-[10.5px] font-black uppercase tracking-wider text-amber-950">
                                   Sâmbătă:
                                 </span>
-                                <span className="text-[9px] font-bold text-amber-800">{d.dateFormatted}</span>
+                                <span className="text-[9.5px] font-bold text-amber-900 font-mono">{d.dateFormatted}</span>
                               </div>
-                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
                                 {name !== '—' ? name : iliescu ? getPersonName(iliescu.id, true) : 'Pr. Iliescu / Diacon de rând'}
                               </div>
-                              <div className="text-[9px] text-stone-600 italic">2 sâmbete Pr. Iliescu, 2 sâmbete diacon prin rotație</div>
+                              <div className="text-[9px] text-stone-600 italic">
+                                2 sâmbete Pr. Iliescu, 2 sâmbete diacon prin rotație
+                              </div>
                             </div>
                           );
                         })}
 
-                        {/* Praznice / Sărbători în timpul săptămânii */}
+                        {/* 3. PRAZNICE ÎMPĂRĂTEȘTI / SĂRBĂTORI CU CRUCE ROȘIE ÎN CURSUL SĂPTĂMÂNII */}
                         {weekLiturgicalDays.filter(d => !d.isSunday && !d.isSaturday && d.litInfo.isRedCross).map(d => {
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
                           const name = getPersonName(assign?.personId, true);
                           return (
-                            <div key={d.dateStr} className="p-1.5 bg-amber-50 border border-amber-300 rounded-xs">
+                            <div key={d.dateStr} className="p-2 bg-amber-50 border-2 border-amber-400 rounded-xs space-y-0.5">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-red-900">
-                                  ✝ Praznic ({d.dayShort} {format(d.day, 'd')}):
+                                <span className="text-[10.5px] font-black uppercase tracking-wider text-red-900 flex items-center space-x-1">
+                                  <span className="text-red-600 text-xs">✝</span>
+                                  <span>Praznic ({d.dayShort} {format(d.day, 'd')}):</span>
                                 </span>
-                                <span className="text-[9px] font-bold text-red-800">{d.litInfo.feastTitle}</span>
+                                <span className="text-[9.5px] font-bold text-red-800 font-mono">{d.litInfo.feastTitle}</span>
                               </div>
-                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
                                 {name !== '—' ? name : 'Pr. Mina / Pr. Sebastian / Preot de rând'}
+                              </div>
+                              <div className="text-[9px] text-stone-600 italic">
+                                Predică de praznic la amvon prin rotație
                               </div>
                             </div>
                           );
                         })}
 
-                        {/* Zile de rând */}
-                        <div className="bg-stone-50 border border-stone-200 p-1 rounded-xs text-[9px] text-stone-700">
-                          <span className="font-bold text-stone-900 block">Zilele de rând:</span>
-                          <span>Cuvânt duhovnicesc / cateheză la cerere sau citirea Cazaniei.</span>
+                        {/* Mențiune pentru celelalte zile din săptămână */}
+                        <div className="bg-stone-50 border border-stone-200 p-2 rounded-xs text-[9.5px] text-stone-700 space-y-0.5">
+                          <span className="font-bold text-stone-900 block uppercase tracking-wide">
+                            Zilele de rând (Luni – Vineri):
+                          </span>
+                          <p className="leading-tight text-stone-600">
+                            În zilele de rând fără sărbătoare mare <strong>nu se ține predică la amvon</strong>. Se citește Cazania sau se rostește cateheză la cererea credincioșilor.
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Predica se rostește după Sfânta Evanghelie sau la chinonic
+                      Cuvântul de învățătură se rostește după Sf. Evanghelie sau la chinonic
                     </div>
                   </div>
 
-                  {/* CASETA 7: ÎN BISERICĂ (PRIMIRE POMELNICE & PELERINI) (col-span-4) */}
-                  <div className="col-span-12 lg:col-span-4 print:col-span-4 border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                  {/* DREPTUNGHIUL 3: ZILELE DE STAT ÎN BISERICĂ ȘI CINE STĂ ÎMPĂRȚIT PE ZILELE DIN SĂPTĂMÂNĂ */}
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
                     <div>
                       <div className="bg-[#059669] text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900">
                         <div className="flex items-center space-x-1.5">
                           <Eye className="w-3.5 h-3.5 text-emerald-200" />
-                          <span className={fontThemeClasses[fontTheme].header}>ÎN BISERICĂ (POMELNICE & PELERINI)</span>
+                          <span className={fontThemeClasses[fontTheme].header}>ÎN BISERICĂ PE ZILE</span>
                         </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">7 zile</span>
+                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">pomelnice</span>
                       </div>
 
-                      <div className="p-1.5 space-y-1">
+                      <div className="p-2 space-y-1.5">
+                        <div className="text-[10px] font-bold text-emerald-950 uppercase tracking-wider bg-emerald-50 p-1 border border-emerald-200 text-center rounded-xs flex items-center justify-center space-x-1.5">
+                          <Calendar className="w-3 h-3 text-emerald-700" />
+                          <span>Primire Pomelnice & Pelerini (7 Zile)</span>
+                        </div>
+
                         {weekLiturgicalDays.map(item => {
                           const assign = bisericaModule ? getAssignment(item.dateStr, bisericaModule.id, bisericaModule.roles[0]?.id, 0) : null;
                           const personName = getPersonName(assign?.personId, true);
@@ -1181,16 +1019,16 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                           return (
                             <div
                               key={item.dateStr}
-                              className={`flex items-center justify-between px-2 py-0.5 rounded-xs border text-xs ${
+                              className={`flex items-center justify-between px-2 py-1.5 rounded-xs border text-xs ${
                                 item.isSunday
-                                  ? 'bg-red-50/70 border-red-200'
+                                  ? 'bg-red-50/80 border-red-300'
                                   : item.isSaturday
-                                  ? 'bg-amber-50/50 border-amber-200'
-                                  : 'bg-stone-50/60 border-stone-200'
+                                  ? 'bg-amber-50/60 border-amber-300'
+                                  : 'bg-stone-50 border-stone-200'
                               }`}
                             >
-                              <div className="flex items-center space-x-1.5">
-                                <span className={`w-9 text-[10px] font-black uppercase tracking-wider ${isWeekend ? 'text-amber-900' : 'text-stone-700'}`}>
+                              <div className="flex items-center space-x-2">
+                                <span className={`w-11 text-[10.5px] font-black uppercase tracking-wider ${isWeekend ? 'text-amber-950' : 'text-stone-800'}`}>
                                   {item.dayShort}
                                 </span>
                                 <span className="text-[9.5px] text-stone-500 font-mono">
@@ -1199,7 +1037,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               </div>
 
                               <div className="text-right">
-                                <span className={`${fontSizes.name} ${weightClass} ${personName === '—' ? 'text-stone-400 italic' : 'text-stone-950'}`}>
+                                <span className={`${fontSizes.name} ${weightClass} ${personName === '—' ? 'text-stone-400 italic' : 'text-stone-950'} text-xs sm:text-sm`}>
                                   {personName}
                                 </span>
                                 {assign?.notes && (
@@ -1215,13 +1053,86 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                     </div>
 
                     <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Primirea credincioșilor, pomelnice, îndrumare pelerini & bună-cuviință
+                      Primirea pomelnicelor, pelerini, supraveghere & bună-cuviință
+                    </div>
+                  </div>
+
+                  {/* DREPTUNGHIUL 4: ȘOFERUL DE RÂND */}
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                    <div>
+                      <div 
+                        className="text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
+                        style={{ backgroundColor: '#1d4ed8' }}
+                      >
+                        <div className="flex items-center space-x-1.5">
+                          <Car className="w-3.5 h-3.5 text-blue-200" />
+                          <span className={fontThemeClasses[fontTheme].header}>ȘOFERUL DE RÂND</span>
+                        </div>
+                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
+                      </div>
+
+                      <div className="p-2 space-y-2">
+                        <div className="text-[10px] font-bold text-blue-950 uppercase tracking-wider bg-blue-50 p-1 border border-blue-200 text-center rounded-xs">
+                          Transport Operativ & Auto (Toată Săpt.)
+                        </div>
+
+                        {/* Șofer de serviciu */}
+                        <div className="bg-stone-50 border-2 border-blue-300 p-2 rounded-xs space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
+                              Șofer de Serviciu:
+                            </span>
+                            <span className="text-[9px] text-blue-700 font-bold font-sans">Toată Săptămâna</span>
+                          </div>
+                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
+                            {getPersonName(soferAssignment?.personId, true)}
+                          </div>
+                          {soferAssignment?.notes && (
+                            <div className="text-[9px] text-stone-600 italic mt-0.5">{soferAssignment.notes}</div>
+                          )}
+                        </div>
+
+                        {/* De gardă / Urgențe */}
+                        <div className="bg-blue-50/40 border border-blue-200 p-2 rounded-xs space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold text-blue-950 tracking-wider">
+                              De Gardă & Urgențe:
+                            </span>
+                            <span className="text-[9px] text-blue-800 font-sans font-bold">24h / 7</span>
+                          </div>
+                          <div className="text-xs sm:text-sm font-bold text-stone-900 mt-0.5">
+                            Pr. Modest / Pr. Petru
+                          </div>
+                          <div className="text-[9px] text-stone-600 italic">Disponibili pentru urgențe și drumuri lungi</div>
+                        </div>
+
+                        {/* Domenii de deplasare */}
+                        <div className="text-[9.5px] text-stone-700 bg-stone-50 p-2 rounded border border-stone-200 space-y-1">
+                          <span className="font-bold text-stone-900 block uppercase tracking-wide">
+                            Domenii de deplasare:
+                          </span>
+                          <ul className="space-y-0.5 list-disc list-inside text-stone-600 text-[9px]">
+                            <li>Aprovizionare mănăstirească & alimente</li>
+                            <li>Transport aeroport, gară & spitale</li>
+                            <li>Pelerinaje și deplasări bisericești</li>
+                          </ul>
+                        </div>
+
+                        {/* Notă canonică */}
+                        <div className="p-1.5 bg-amber-50/60 border border-amber-200 rounded-xs text-[8.5px] text-amber-950 italic text-center">
+                          Plecarea din mănăstire se face exclusiv cu binecuvântarea Pr. Stareț.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
+                      Responsabil parc auto & deplasări monahale
                     </div>
                   </div>
 
                 </div>
 
-                {/* ROW 3: ALTE ASCULTĂRI (DACĂ EXISTĂ) */}
+                {/* ROW 2: ALTE ASCULTĂRI (DACĂ EXISTĂ) */}
                 {otherModules.length > 0 && (
                   <div className="border-2 border-stone-900 bg-white p-2 shadow-xs">
                     <div className="font-bold text-xs uppercase tracking-wider text-stone-900 pb-1 border-b border-stone-300 flex items-center space-x-1.5">
