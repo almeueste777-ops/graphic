@@ -298,8 +298,13 @@ export function generateSchedule({
             // Protopsalt 1: Glichentie, Ciprian, Mina, Avacum
             qualified = qualified.filter(p => ['p_glichentie', 'p_ciprian', 'p_mina', 'p_avacum'].includes(p.id) || p.skills.includes('strana'));
           } else if (role.id === 'strana_ajutor') {
-            // Strana 2 / Cititor: Avacum, Fr. Ioan, Damaschin
-            qualified = activePersons.filter(p => p.skills.includes('strana_ajutor') || ['p_avacum', 'p_ioan', 'p_damaschin'].includes(p.id));
+            // Strana 2 / Cititor: Fr. Ioan este ajutor permanent la Strană!
+            const frIoan = activePersons.find(p => p.id === 'p_ioan');
+            if (frIoan) {
+              qualified = [frIoan, ...activePersons.filter(p => p.id !== 'p_ioan' && (p.skills.includes('strana_ajutor') || ['p_avacum', 'p_damaschin'].includes(p.id)))];
+            } else {
+              qualified = activePersons.filter(p => p.skills.includes('strana_ajutor') || ['p_avacum', 'p_ioan', 'p_damaschin'].includes(p.id));
+            }
           } else if (role.id === 'paracliser_principal') {
             // Paracliser: Arghir, Ciprian, Modest, Avacum
             qualified = activePersons.filter(p => p.skills.includes('paracliserie') && ['p_arghir', 'p_ciprian', 'p_modest', 'p_avacum'].includes(p.id));
@@ -311,24 +316,40 @@ export function generateSchedule({
           }
 
           // Sort by fewest total assignments (fair share)
-          const sortedCandidates = [...qualified].sort((a, b) => {
+          let sortedCandidates = [...qualified].sort((a, b) => {
             return getAssignmentCount(a.id, newAssignments) - getAssignmentCount(b.id, newAssignments);
           });
 
+          // Permanent role check: Fr. Ioan is permanent helper for strana_ajutor
+          if (role.id === 'strana_ajutor') {
+            const frIoan = qualified.find(p => p.id === 'p_ioan');
+            if (frIoan) {
+              sortedCandidates = [frIoan, ...sortedCandidates.filter(c => c.id !== 'p_ioan')];
+            }
+          }
+
           // Pick the best candidate available for the whole week or substitute when absent
           let primaryCandidate: Person | null = null;
-          for (const cand of sortedCandidates) {
-            const hasConflict = days.some(day => {
-              const dateStr = format(day, 'yyyy-MM-dd');
-              if (!isPersonAvailableOnDate(cand, day)) return true;
-              if (isPersonAbsent(cand.id, day, absences)) return true;
-              if (avoidDoubleBooking && dailyBookings.get(dateStr)?.has(cand.id)) return true;
-              return false;
-            });
 
-            if (!hasConflict) {
-              primaryCandidate = cand;
-              break;
+          // Fr. Ioan is permanent helper for strana_ajutor
+          if (role.id === 'strana_ajutor') {
+            primaryCandidate = activePersons.find(p => p.id === 'p_ioan') || null;
+          }
+
+          if (!primaryCandidate) {
+            for (const cand of sortedCandidates) {
+              const hasConflict = days.some(day => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                if (!isPersonAvailableOnDate(cand, day)) return true;
+                if (isPersonAbsent(cand.id, day, absences)) return true;
+                if (avoidDoubleBooking && dailyBookings.get(dateStr)?.has(cand.id)) return true;
+                return false;
+              });
+
+              if (!hasConflict) {
+                primaryCandidate = cand;
+                break;
+              }
             }
           }
 

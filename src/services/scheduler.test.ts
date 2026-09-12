@@ -213,4 +213,57 @@ describe('Monastery Scheduler Engine & Custom Community Rules', () => {
     expect(protos?.personId).not.toBe('p_iliescu');
     expect(protos?.substitutedFromId).toBe('p_iliescu');
   });
+
+  it('permanently assigns Fr. Ioan to strana_ajutor and substitutes him when absent', () => {
+    // Normal week without absence: Fr. Ioan must be the helper for Strana 2
+    const weekStart = parseISO('2026-09-19');
+    const weekEnd = parseISO('2026-09-25');
+
+    const result = generateSchedule({
+      startDate: weekStart,
+      endDate: weekEnd,
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'strana'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+
+    const stranaAjutor = result.assignments.filter(a => a.roleId === 'strana_ajutor');
+    expect(stranaAjutor.length).toBe(7);
+    stranaAjutor.forEach(a => {
+      expect(a.personId).toBe('p_ioan');
+    });
+
+    // When Fr. Ioan is absent, he is substituted by Pr. Avacum or Pr. Damaschin
+    const absences: Absence[] = [
+      {
+        id: 'abs_ioan',
+        personId: 'p_ioan',
+        startDate: '2026-09-19',
+        endDate: '2026-09-25',
+        reason: 'Săptămână de chilie',
+      }
+    ];
+
+    const resultSub = generateSchedule({
+      startDate: weekStart,
+      endDate: weekEnd,
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'strana'),
+      absences,
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+
+    const stranaAjutorSub = resultSub.assignments.filter(a => a.roleId === 'strana_ajutor');
+    expect(stranaAjutorSub.length).toBe(7);
+    stranaAjutorSub.forEach(a => {
+      expect(a.status).toBe('substituted');
+      expect(a.substitutedFromId).toBe('p_ioan');
+      expect(['p_avacum', 'p_damaschin']).toContain(a.personId);
+    });
+  });
 });

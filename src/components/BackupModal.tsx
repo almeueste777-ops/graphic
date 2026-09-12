@@ -36,6 +36,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const [monasteryName, setMonasteryName] = useState(settings.monasteryName);
   const [abbotName, setAbbotName] = useState(settings.abbotName);
   const [ecclesiarchName, setEcclesiarchName] = useState(settings.ecclesiarchName);
+  const [economName, setEconomName] = useState(settings.economName || 'Protos. Mina');
+  const [secretaryName, setSecretaryName] = useState(settings.secretaryName || 'Pr. Modest');
   const [location, setLocation] = useState(settings.location);
   const [avoidDouble, setAvoidDouble] = useState(settings.autoAvoidDoubleBooking);
 
@@ -44,11 +46,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     setSettings({
-      monasteryName: monasteryName.trim() || 'Mănăstirea',
-      abbotName: abbotName.trim() || 'Stareț',
-      ecclesiarchName: ecclesiarchName.trim() || 'Eclesiarh',
+      monasteryName: monasteryName.trim() || 'Mănăstirea Bogdănești',
+      abbotName: abbotName.trim() || 'Protos. Pamvo Dima',
+      ecclesiarchName: ecclesiarchName.trim() || 'Ierom. Pantelimon',
+      economName: economName.trim() || 'Protos. Mina',
+      secretaryName: secretaryName.trim() || 'Pr. Modest',
       location: location.trim(),
-      weekStartDay: 1,
+      weekStartDay: settings.weekStartDay ?? 6,
       autoAvoidDoubleBooking: avoidDouble,
     });
     setFeedbackMsg({ text: 'Setările au fost salvate cu succes!', isError: false });
@@ -172,6 +176,31 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                     type="text"
                     value={ecclesiarchName}
                     onChange={e => setEcclesiarchName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
+                    Nume Econom
+                  </label>
+                  <input
+                    type="text"
+                    value={economName}
+                    onChange={e => setEconomName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
+                    Nume Secretar
+                  </label>
+                  <input
+                    type="text"
+                    value={secretaryName}
+                    onChange={e => setSecretaryName(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                   />
                 </div>

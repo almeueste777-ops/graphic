@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { Person, Module, Absence, SubstitutionRule, ScheduleAssignment, MonasterySettings } from '../types';
 
-const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v2';
-const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v2';
-const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v2';
-const STORAGE_KEY_RULES = 'graphic_monastery_rules_v2';
-const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v2';
-const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v2';
+const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v3';
+const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v3';
+const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v3';
+const STORAGE_KEY_RULES = 'graphic_monastery_rules_v3';
+const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v3';
+const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v3';
 
 export const DEFAULT_MODULES: Module[] = [
   {
@@ -42,7 +42,7 @@ export const DEFAULT_MODULES: Module[] = [
     description: 'Cântarea la strană, tipicul bisericesc, citirea Ceasurilor și a Apostolului',
     roles: [
       { id: 'strana_psalt', name: 'Protopsalt (Strana 1)', requiredCount: 1 },
-      { id: 'strana_ajutor', name: 'Ajutor / Cititor (Strana 2)', requiredCount: 1 }
+      { id: 'strana_ajutor', name: 'Ajutor Permanent / Cititor (Strana 2)', requiredCount: 1 }
     ]
   },
   {
@@ -71,13 +71,31 @@ export const DEFAULT_MODULES: Module[] = [
 
 export const DEFAULT_PERSONS: Person[] = [
   {
+    id: 'p_pamvo',
+    name: 'Protos. Pamvo Dima',
+    rank: 'Protosinghel',
+    skills: ['altar', 'predica'],
+    active: true,
+    colorTag: '#7f1d1d',
+    notes: 'Starețul Mănăstirii Bogdănești. Slujitor Altar & Predică la praznice și hramuri.',
+  },
+  {
     id: 'p_pantelimon',
-    name: 'Pr. Pantelimon',
+    name: 'Ierom. Pantelimon',
     rank: 'Ieromonah',
     skills: ['altar', 'predica'],
     active: true,
     colorTag: '#8b1d24',
-    notes: 'Preot slujitor Altar & Predică la sărbători mari.',
+    notes: 'Eclesiarhul Mănăstirii Bogdănești. Preot slujitor Altar & Predică.',
+  },
+  {
+    id: 'p_mina',
+    name: 'Protos. Mina',
+    rank: 'Protosinghel',
+    skills: ['altar', 'strana', 'predica'],
+    active: true,
+    colorTag: '#047857',
+    notes: 'Economul Mănăstirii Bogdănești. Preot slujitor Altar, Protopsalt Strană 1, Predică la praznice.',
   },
   {
     id: 'p_avacum',
@@ -87,15 +105,6 @@ export const DEFAULT_PERSONS: Person[] = [
     active: true,
     colorTag: '#b45309',
     notes: 'Slujitor Altar, Strană 1 & 2, Paracliserie, Șoferie, Predică la sărbători mari.',
-  },
-  {
-    id: 'p_mina',
-    name: 'Pr. Mina',
-    rank: 'Ieromonah',
-    skills: ['altar', 'strana', 'predica'],
-    active: true,
-    colorTag: '#047857',
-    notes: 'Preot slujitor Altar, Protopsalt Strană 1, Predică la praznice împărătești & mari.',
   },
   {
     id: 'p_sebastian',
@@ -132,7 +141,7 @@ export const DEFAULT_PERSONS: Person[] = [
     skills: ['altar', 'paracliserie', 'soferie', 'predica'],
     active: true,
     colorTag: '#7c3aed',
-    notes: 'Diacon la Altar, Șofer, Paracliserie, Predică (sâmbete & sărbători de sfinți).',
+    notes: 'Secretarul Mănăstirii Bogdănești. Diacon la Altar, Șofer, Paracliserie, Predică.',
   },
   {
     id: 'p_petru',
@@ -154,13 +163,22 @@ export const DEFAULT_PERSONS: Person[] = [
     notes: 'Protopsalt de bază la Strană 1.',
   },
   {
+    id: 'p_ioan',
+    name: 'Fr. Ioan',
+    rank: 'Frate',
+    skills: ['strana_ajutor', 'soferie'],
+    active: true,
+    colorTag: '#16a34a',
+    notes: 'Ajutor permanent la Strană (Strana 2 / Cititor Ceasuri & Apostol) și Șofer.',
+  },
+  {
     id: 'p_damaschin',
     name: 'Pr. Damaschin',
     rank: 'Ieromonah',
     skills: ['strana_ajutor'],
     active: true,
     colorTag: '#475569',
-    notes: 'Ajutor la Strană (Strana 2 / Cititor Ceasuri, Apostol).',
+    notes: 'Ajutor la Strană (înlocuitor Strana 2 / Cititor Ceasuri, Apostol).',
   },
   {
     id: 'p_arghir',
@@ -179,15 +197,6 @@ export const DEFAULT_PERSONS: Person[] = [
     active: true,
     colorTag: '#2563eb',
     notes: 'Șofer de bază al mănăstirii.',
-  },
-  {
-    id: 'p_ioan',
-    name: 'Fr. Ioan',
-    rank: 'Frate',
-    skills: ['strana_ajutor', 'soferie'],
-    active: true,
-    colorTag: '#16a34a',
-    notes: 'Ajutor Strană (Strana 2) și Șofer.',
   },
 ];
 
@@ -214,6 +223,13 @@ export const DEFAULT_RULES: SubstitutionRule[] = [
     notes: 'Dacă Pr. Glichentie este învoit, cântă Pr. Ciprian sau Pr. Mina.',
   },
   {
+    id: 'rule_strana_ajutor',
+    moduleId: 'strana',
+    targetPersonId: 'p_ioan',
+    substituteIds: ['p_avacum', 'p_damaschin'],
+    notes: 'Dacă Fr. Ioan (ajutor permanent la strană) este învoit, îl înlocuiește Pr. Avacum sau Pr. Damaschin.',
+  },
+  {
     id: 'rule_paracliserie',
     moduleId: 'paracliserie',
     targetPersonId: 'p_arghir',
@@ -230,10 +246,13 @@ export const DEFAULT_RULES: SubstitutionRule[] = [
 ];
 
 export const DEFAULT_SETTINGS: MonasterySettings = {
-  monasteryName: 'Sfânta Mănăstire',
-  abbotName: 'Pr. Pantelimon',
-  ecclesiarchName: 'Pr. Ciprian',
-  location: 'Schitul din Deal',
+  monasteryName: 'Mănăstirea Bogdănești',
+  monasterySubtitle: 'Arhiepiscopia Sucevei și Rădăuților',
+  abbotName: 'Protos. Pamvo Dima',
+  ecclesiarchName: 'Ierom. Pantelimon',
+  economName: 'Protos. Mina',
+  secretaryName: 'Pr. Modest',
+  location: 'Bogdănești, Suceava',
   weekStartDay: 6, // Sâmbătă seara începe rândul liturgic (practică monahală)
   autoAvoidDoubleBooking: true,
 };

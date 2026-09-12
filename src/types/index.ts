@@ -91,6 +91,8 @@ export interface MonasterySettings {
   monasterySubtitle?: string;
   abbotName: string;
   ecclesiarchName: string;
+  economName?: string;
+  secretaryName?: string;
   location: string;
   weekStartDay: 1 | 0 | 6; // 1 = Luni, 0 = Duminică, 6 = Sâmbătă (practică monahală)
   autoAvoidDoubleBooking: boolean; // cannot be in Altar and Strana or Driving on same day/service
