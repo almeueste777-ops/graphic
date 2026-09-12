@@ -35,7 +35,7 @@ export function App() {
   } = useMonasteryData();
 
   const [currentTab, setCurrentTab] = useState<'schedule' | 'calendar' | 'members' | 'modules' | 'absences' | 'print'>('schedule');
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date(2026, 8, 12));
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('graphic_dark_mode') !== 'false';
   });

@@ -50,6 +50,189 @@ export function getAssignmentCount(personId: string, assignments: ScheduleAssign
   return assignments.filter(a => a.personId === personId).length;
 }
 
+export type MonasticDutyCategory = 'altar' | 'strana' | 'ascultari' | 'liber';
+
+export interface PersonWeeklyDutyStatus {
+  personId: string;
+  category: MonasticDutyCategory;
+  label: string;
+  description: string;
+}
+
+/**
+ * Calculates the week index in the 4-week monastic cycle (1, 2, 3, 4).
+ */
+export function getMonasticWeekIndex(date: Date): number {
+  const day = date.getDate();
+  return ((Math.floor((day - 1) / 7)) % 4) + 1;
+}
+
+/**
+ * Calculates the 4-week monastic duty rotation for the serving hieromonks.
+ * Every hieromonk gets:
+ * - 1 week of Altar (Priest of the week)
+ * - 1 week of Strană (Chanting / Reading)
+ * - 1 week of Ascultări (Church standing, monastery duties)
+ * - 1 week Liberă (Cell, rest, prayer)
+ */
+export function getPriestMonthlyDuty(personId: string, weekIndex: number): MonasticDutyCategory {
+  const cycleIndex = ((weekIndex - 1) % 4) + 1; // 1, 2, 3, 4
+
+  // Rotation matrix:
+  // Week 1: Pantelimon (Altar), Avacum (Strană), Sebastian (Ascultări), Mina (Liber)
+  // Week 2: Avacum (Altar), Mina (Strană), Pantelimon (Ascultări), Sebastian (Liber)
+  // Week 3: Sebastian (Altar), Pantelimon (Strană), Mina (Ascultări), Avacum (Liber)
+  // Week 4: Mina (Altar), Sebastian (Strană), Avacum (Ascultări), Pantelimon (Liber)
+  const priestSchedule: Record<number, Record<string, MonasticDutyCategory>> = {
+    1: { p_pantelimon: 'altar', p_avacum: 'strana', p_sebastian: 'ascultari', p_mina: 'liber' },
+    2: { p_avacum: 'altar', p_mina: 'strana', p_pantelimon: 'ascultari', p_sebastian: 'liber' },
+    3: { p_sebastian: 'altar', p_pantelimon: 'strana', p_mina: 'ascultari', p_avacum: 'liber' },
+    4: { p_mina: 'altar', p_sebastian: 'strana', p_avacum: 'ascultari', p_pantelimon: 'liber' },
+  };
+
+  return priestSchedule[cycleIndex]?.[personId] || 'ascultari';
+}
+
+/**
+ * Finds which priest is designated for a specific duty in a given week of the month.
+ */
+export function getPriestByDuty(duty: MonasticDutyCategory, weekIndex: number): string | null {
+  const priests = ['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'];
+  for (const pId of priests) {
+    if (getPriestMonthlyDuty(pId, weekIndex) === duty) {
+      return pId;
+    }
+  }
+  return null;
+}
+
+/**
+ * Generates the weekly duty profile for every active person in the monastery.
+ */
+export function getCommunityWeeklyDuties(startDate: Date, persons: Person[]): PersonWeeklyDutyStatus[] {
+  const weekIndex = getMonasticWeekIndex(startDate);
+
+  return persons.filter(p => p.active).map(person => {
+    // Serving Hieromonks:
+    if (['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'].includes(person.id)) {
+      const category = getPriestMonthlyDuty(person.id, weekIndex);
+      const labels: Record<MonasticDutyCategory, { label: string; desc: string }> = {
+        altar: { label: 'Săptămână de Altar', desc: 'Preot slujitor de rând la Sf. Altar și predică duminică' },
+        strana: { label: 'Săptămână de Strană', desc: 'Cântăreț la strană, tipic și Ceasuri' },
+        ascultari: { label: 'Săptămână de Ascultări', desc: 'De rând în biserică, primire pelerini, ascultări' },
+        liber: { label: 'Săptămână Liberă', desc: 'Săptămână liberă pe lună: chilie, rugăciune, odihnă' },
+      };
+      return {
+        personId: person.id,
+        category,
+        label: labels[category].label,
+        description: labels[category].desc,
+      };
+    }
+
+    // Pr. Iliescu: Weekend Protos
+    if (person.id === 'p_iliescu') {
+      return {
+        personId: person.id,
+        category: 'altar',
+        label: 'Slujitor Weekend',
+        description: 'Protos sâmbăta, proscomidie, predică și stat în biserică',
+      };
+    }
+
+    // Starețul Protos. Pamvo Dima
+    if (person.id === 'p_pamvo') {
+      return {
+        personId: person.id,
+        category: 'altar',
+        label: 'Starețul Mănăstirii',
+        description: 'Binecuvântare, slujire la Praznice și Hramuri',
+      };
+    }
+
+    // Deacons:
+    if (person.id === 'p_petru') {
+      const isServing = weekIndex % 2 === 1;
+      return {
+        personId: person.id,
+        category: isServing ? 'altar' : 'liber',
+        label: isServing ? 'Diacon de rând & Șofer' : 'Săptămână Liberă de Diaconie',
+        description: isServing ? 'Slujește la Altar (săptămânile 1 & 3)' : 'Săptămână liberă de diaconie',
+      };
+    }
+
+    if (person.id === 'p_ciprian') {
+      const deacMap: Record<number, MonasticDutyCategory> = { 1: 'altar', 2: 'strana', 3: 'ascultari', 4: 'liber' };
+      const cat = deacMap[weekIndex] || 'ascultari';
+      return {
+        personId: person.id,
+        category: cat,
+        label: cat === 'altar' ? 'Diacon Altar' : cat === 'strana' ? 'Protopsalt Strană' : cat === 'ascultari' ? 'În Biserică (Marți & Joi)' : 'Săptămână Liberă',
+        description: 'Rotație lunară diaconească',
+      };
+    }
+
+    if (person.id === 'p_modest') {
+      const modMap: Record<number, MonasticDutyCategory> = { 1: 'ascultari', 2: 'ascultari', 3: 'altar', 4: 'liber' };
+      const cat = modMap[weekIndex] || 'ascultari';
+      return {
+        personId: person.id,
+        category: cat,
+        label: cat === 'altar' ? 'Diacon Altar' : cat === 'ascultari' ? 'Secretar & Șofer' : 'Săptămână Liberă',
+        description: 'Secretariat mănăstiresc, șoferie, diaconie',
+      };
+    }
+
+    // Monks and Brothers:
+    if (person.id === 'p_grichentie') {
+      const cat: MonasticDutyCategory = weekIndex === 4 ? 'liber' : 'strana';
+      return {
+        personId: person.id,
+        category: cat,
+        label: cat === 'strana' ? 'Protopsalt Strană 1' : 'Săptămână Liberă / Chilie',
+        description: 'Cântăreț de bază la Strană 1',
+      };
+    }
+
+    if (person.id === 'p_ioan') {
+      const cat: MonasticDutyCategory = weekIndex === 4 ? 'liber' : 'strana';
+      return {
+        personId: person.id,
+        category: cat,
+        label: cat === 'strana' ? 'Ajutor Permanent Strană 2' : 'Săptămână Liberă / Chilie',
+        description: 'Cititor Ceasuri, Apostol, ajutor strană',
+      };
+    }
+
+    if (person.id === 'p_arghir') {
+      const cat: MonasticDutyCategory = weekIndex === 4 ? 'liber' : 'ascultari';
+      return {
+        personId: person.id,
+        category: cat,
+        label: cat === 'ascultari' ? 'Paracliser de rând & În Biserică' : 'Săptămână Liberă / Chilie',
+        description: 'Paracliserie și de rând vineri în biserică',
+      };
+    }
+
+    if (person.id === 'p_spiridon') {
+      const cat: MonasticDutyCategory = weekIndex === 4 ? 'liber' : 'ascultari';
+      return {
+        personId: person.id,
+        category: cat,
+        label: cat === 'ascultari' ? 'Șofer de serviciu' : 'Săptămână Liberă',
+        description: 'Deplasări și ascultări mănăstirești',
+      };
+    }
+
+    return {
+      personId: person.id,
+      category: 'ascultari',
+      label: 'Ascultare Mănăstirească',
+      description: 'Ascultare obștească',
+    };
+  });
+}
+
 /**
  * Main Auto-Scheduler Engine with Monastery and Liturgical Typikon Rules
  */
@@ -506,8 +689,34 @@ export function generateSchedule({
           // Pick the best candidate available for the whole week or substitute when absent
           let primaryCandidate: Person | null = null;
 
-          if (role.id === 'altar_preot' && altarPriestOfTheWeekId) {
-            primaryCandidate = activePersons.find(p => p.id === altarPriestOfTheWeekId) || null;
+          if (role.id === 'altar_preot') {
+            if (altarPriestOfTheWeekId) {
+              primaryCandidate = activePersons.find(p => p.id === altarPriestOfTheWeekId) || null;
+            } else {
+              // 4-week monthly rotation engine: find designated priest for this week of month
+              const designatedPriestId = getPriestByDuty('altar', weekOfMonth);
+              if (designatedPriestId) {
+                const designatedPriest = activePersons.find(p => p.id === designatedPriestId);
+                if (designatedPriest && !isPersonAbsent(designatedPriest.id, startDate, absences)) {
+                  primaryCandidate = designatedPriest;
+                  altarPriestOfTheWeekId = designatedPriest.id;
+                } else if (designatedPriest && isPersonAbsent(designatedPriest.id, startDate, absences)) {
+                  // Designated priest is absent! Substitute from rules
+                  const rule = substitutionRules.find(r => r.targetPersonId === designatedPriest.id && (r.moduleId === 'altar' || r.moduleId === 'any'));
+                  if (rule) {
+                    for (const sId of rule.substituteIds) {
+                      const subPriest = activePersons.find(p => p.id === sId);
+                      if (subPriest && !isPersonAbsent(subPriest.id, startDate, absences) && !subPriest.weekendOnly && subPriest.id !== 'p_pamvo') {
+                        primaryCandidate = subPriest;
+                        altarPriestOfTheWeekId = subPriest.id;
+                        warnings.push(`${designatedPriest.name} (rânduit la Altar în săpt. ${weekOfMonth}) este înlocuit de ${subPriest.name}.`);
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
           } else if (role.id === 'strana_ajutor') {
             primaryCandidate = activePersons.find(p => p.id === 'p_ioan') || null;
           } else if (role.id === 'strana_psalt') {
@@ -517,7 +726,16 @@ export function generateSchedule({
           }
 
           if (!primaryCandidate) {
-            for (const cand of sortedCandidates) {
+            // Respect 'liber' week: filter out priests who are on their off-week
+            const nonLiberCandidates = sortedCandidates.filter(p => {
+              if (['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'].includes(p.id)) {
+                return getPriestMonthlyDuty(p.id, weekOfMonth) !== 'liber';
+              }
+              return true;
+            });
+            const candidatesToEvaluate = nonLiberCandidates.length > 0 ? nonLiberCandidates : sortedCandidates;
+
+            for (const cand of candidatesToEvaluate) {
               const hasConflict = days.some(day => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 if (!isPersonAvailableOnDate(cand, day)) return true;

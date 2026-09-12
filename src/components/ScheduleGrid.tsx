@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Person, Module, ScheduleAssignment, Absence, SubstitutionRule, MonasterySettings } from '../types';
-import { generateSchedule } from '../services/scheduler';
+import { generateSchedule, getMonasticWeekIndex, getCommunityWeeklyDuties } from '../services/scheduler';
 import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
 import { EditEntryModal } from './EditEntryModal';
 import { QuickAbsenceModal } from './QuickAbsenceModal';
@@ -27,7 +27,8 @@ import {
   Info,
   CheckCircle2,
   UserMinus,
-  X
+  X,
+  Layers
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
@@ -69,6 +70,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   } | null>(null);
 
   const [isQuickAbsenceOpen, setIsQuickAbsenceOpen] = useState(false);
+  const [isMonthlyModalOpen, setIsMonthlyModalOpen] = useState(false);
   const [generationAlerts, setGenerationAlerts] = useState<string[] | null>(null);
 
   // Week calculation (defaults to Saturday = 6 monastic typikon)
@@ -76,6 +78,10 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   const weekStart = startOfWeek(currentDate, { weekStartsOn });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+  // 4-Week Monastic Rotation State
+  const monasticWeekIndex = getMonasticWeekIndex(weekStart);
+  const communityDuties = getCommunityWeeklyDuties(weekStart, persons);
 
   const weekRangeTitle = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
@@ -300,6 +306,82 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             title="Curăță săptămâna"
           >
             <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* 4-Week Monastic Rotation Banner */}
+      <div className="apple-glass rounded-3xl p-4 sm:p-5 border border-white/[0.08] shadow-xl bg-gradient-to-r from-stone-900/90 via-stone-900/60 to-stone-900/90">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center flex-shrink-0 text-amber-400">
+              <Repeat className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                <h3 className="text-sm font-semibold text-white tracking-tight">
+                  Rânduiala Canonică a Obștei pe 4 Săptămâni
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  Săptămâna {monasticWeekIndex} din 4
+                </span>
+              </div>
+              <p className="text-[11px] text-white/50 mt-0.5">
+                Canonul mănăstiresc: 1 săpt. Altar, 1 săpt. Strană, 1 săpt. Ascultări, 1 săpt. Liberă pe lună
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Duty Summary Cards for the 4 Hieromonks */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
+            {/* Altar */}
+            <div className="px-3 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col">
+              <span className="text-[9px] uppercase font-bold text-amber-400/90 tracking-wider">
+                Altar (Preot de rând)
+              </span>
+              <span className="text-xs font-semibold text-white mt-0.5 truncate">
+                {persons.find(p => p.id === communityDuties.find(d => d.category === 'altar' && ['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'].includes(d.personId))?.personId)?.name || 'Nespecificat'}
+              </span>
+            </div>
+
+            {/* Strană */}
+            <div className="px-3 py-2 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex flex-col">
+              <span className="text-[9px] uppercase font-bold text-sky-400/90 tracking-wider">
+                La Strană
+              </span>
+              <span className="text-xs font-semibold text-white mt-0.5 truncate">
+                {persons.find(p => p.id === communityDuties.find(d => d.category === 'strana' && ['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'].includes(d.personId))?.personId)?.name || 'Nespecificat'}
+              </span>
+            </div>
+
+            {/* Ascultări */}
+            <div className="px-3 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col">
+              <span className="text-[9px] uppercase font-bold text-emerald-400/90 tracking-wider">
+                Ascultări / Biserică
+              </span>
+              <span className="text-xs font-semibold text-white mt-0.5 truncate">
+                {persons.find(p => p.id === communityDuties.find(d => d.category === 'ascultari' && ['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'].includes(d.personId))?.personId)?.name || 'Nespecificat'}
+              </span>
+            </div>
+
+            {/* Liber */}
+            <div className="px-3 py-2 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex flex-col">
+              <span className="text-[9px] uppercase font-bold text-purple-400/90 tracking-wider">
+                Săpt. Liberă
+              </span>
+              <span className="text-xs font-semibold text-white mt-0.5 truncate">
+                {persons.find(p => p.id === communityDuties.find(d => d.category === 'liber' && ['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'].includes(d.personId))?.personId)?.name || 'Nespecificat'}
+              </span>
+            </div>
+          </div>
+
+          {/* Detail Button */}
+          <button
+            onClick={() => setIsMonthlyModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-white/80 hover:text-white text-xs font-medium transition-all active:scale-95 flex-shrink-0"
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-400" />
+            <span>Detalii Rotație</span>
           </button>
         </div>
       </div>
@@ -637,6 +719,161 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         defaultDate={weekStart}
         onAddAbsenceAndRecalculate={handleQuickAbsenceAndRecalculate}
       />
+
+      {/* 4-Week Canonic Monastic Rotation Modal */}
+      {isMonthlyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="apple-glass rounded-3xl p-6 sm:p-8 max-w-4xl w-full border border-white/[0.12] shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            {/* Modal Close Button */}
+            <button
+              onClick={() => setIsMonthlyModalOpen(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/60 hover:text-white flex items-center justify-center transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Repeat className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                  Rânduiala Lunară a Obștei — Ciclul Canonic pe 4 Săptămâni
+                </h2>
+                <p className="text-xs text-white/60 mt-0.5">
+                  Mănăstirea Bogdănești • Fiecare ieromonah are garantat: 1 săpt. Altar, 1 săpt. Strană, 1 săpt. Ascultări, 1 săpt. Liberă pe lună
+                </p>
+              </div>
+            </div>
+
+            {/* 4-Week Matrix Table */}
+            <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-black/20 my-5">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-white/[0.05] border-b border-white/[0.08] text-white/50 text-[10px] uppercase font-bold tracking-wider">
+                    <th className="p-3.5">Săptămâna</th>
+                    <th className="p-3.5 text-amber-300">🟡 Altar (Preot de rând)</th>
+                    <th className="p-3.5 text-sky-300">🔵 Strană (Tipic / Cântare)</th>
+                    <th className="p-3.5 text-emerald-300">🟢 În Biserică / Ascultări</th>
+                    <th className="p-3.5 text-purple-300">🟣 Săpt. Liberă (Chilie / Odihnă)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.05]">
+                  {[
+                    {
+                      week: 1,
+                      altar: 'Pr. Pantelimon',
+                      strana: 'Pr. Avacum',
+                      ascultari: 'Pr. Sebastian',
+                      liber: 'Pr. Mina',
+                    },
+                    {
+                      week: 2,
+                      altar: 'Pr. Avacum',
+                      strana: 'Pr. Mina',
+                      ascultari: 'Pr. Pantelimon',
+                      liber: 'Pr. Sebastian',
+                    },
+                    {
+                      week: 3,
+                      altar: 'Pr. Sebastian',
+                      strana: 'Pr. Pantelimon',
+                      ascultari: 'Pr. Mina',
+                      liber: 'Pr. Avacum',
+                    },
+                    {
+                      week: 4,
+                      altar: 'Pr. Mina',
+                      strana: 'Pr. Sebastian',
+                      ascultari: 'Pr. Avacum',
+                      liber: 'Pr. Pantelimon',
+                    },
+                  ].map(row => {
+                    const isCurrentWeek = row.week === monasticWeekIndex;
+                    return (
+                      <tr
+                        key={row.week}
+                        className={`transition-colors ${
+                          isCurrentWeek 
+                            ? 'bg-amber-500/10 border-l-4 border-amber-400 font-semibold' 
+                            : 'hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        <td className="p-3.5 flex items-center space-x-2">
+                          <span className="text-white font-bold">Săptămâna {row.week}</span>
+                          {isCurrentWeek && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] bg-amber-500/30 text-amber-300 font-bold uppercase tracking-wider border border-amber-500/40">
+                              Curentă
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3.5 text-amber-200 font-medium">{row.altar}</td>
+                        <td className="p-3.5 text-sky-200 font-medium">{row.strana}</td>
+                        <td className="p-3.5 text-emerald-200 font-medium">{row.ascultari}</td>
+                        <td className="p-3.5 text-purple-200 font-medium">{row.liber}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Roles and Responsibilities Breakdown Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+                <h4 className="font-semibold text-amber-300 flex items-center space-x-2">
+                  <span>Rânduiala Slujitorilor și Conducerii</span>
+                </h4>
+                <ul className="space-y-1.5 text-white/70 text-[11px] leading-relaxed">
+                  <li>
+                    <strong className="text-white">Protos. Pamvo Dima (Starețul):</strong> Binecuvântare (<i>Din încredințarea Pr. Stareț</i>), Liturghii arhierești și mari Praznice.
+                  </li>
+                  <li>
+                    <strong className="text-white">Ierom. Pantelimon (Eclesiarh):</strong> Întocmește graficul săptămânal (<i>Întocmit Pr. Eclesiarh</i>) și slujește conform rotației.
+                  </li>
+                  <li>
+                    <strong className="text-white">Protos. Mina (Econom):</strong> Răspunde de gospodărie și slujește conform rotației lunare.
+                  </li>
+                  <li>
+                    <strong className="text-white">Pr. Iliescu (Weekend Protos):</strong> Protos sâmbăta, proscomidie, predică 2 sâmbete/lună și stat în biserică.
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+                <h4 className="font-semibold text-sky-300 flex items-center space-x-2">
+                  <span>Strană, Diaconie & Ascultări</span>
+                </h4>
+                <ul className="space-y-1.5 text-white/70 text-[11px] leading-relaxed">
+                  <li>
+                    <strong className="text-white">Strana Permanentă:</strong> Pr. Grichentie (Strana 1) & Fr. Ioan (Ajutor permanent Strană / cititor).
+                  </li>
+                  <li>
+                    <strong className="text-white">Diaconi:</strong> Pr. Ciprian, Pr. Modest (Secretar & Șofer), Pr. Petru (Șofer). Predică alternativ în 2 sâmbete și la sărbători de sfinți.
+                  </li>
+                  <li>
+                    <strong className="text-white">Paracliserie & Șoferie:</strong> Fr. Arghir, Pr. Spiridon, Pr. Damaschin.
+                  </li>
+                  <li>
+                    <strong className="text-white">În Biserică (Zilnic):</strong> S: Pr. Iliescu, D: Pr. Pantelimon, L: Pr. Avacum, M: Pr. Ciprian, M: Pr. Avacum, J: Pr. Ciprian, V: Fr. Arghir.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setIsMonthlyModalOpen(false)}
+                className="px-5 py-2.5 rounded-full bg-white/[0.1] hover:bg-white/[0.18] text-white text-xs font-semibold transition-all"
+              >
+                Închide fereastra
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import type { Person, Module, Absence, SubstitutionRule, ScheduleAssignment, MonasterySettings } from '../types';
+import { parseISO } from 'date-fns';
+import { generateSchedule } from '../services/scheduler';
 
-const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v4';
-const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v4';
-const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v4';
-const STORAGE_KEY_RULES = 'graphic_monastery_rules_v4';
-const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v4';
-const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v4';
+const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v5';
+const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v5';
+const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v5';
+const STORAGE_KEY_RULES = 'graphic_monastery_rules_v5';
+const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v5';
+const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v5';
 
 export const DEFAULT_MODULES: Module[] = [
   {
@@ -310,6 +312,29 @@ export const DEFAULT_SETTINGS: MonasterySettings = {
   autoAvoidDoubleBooking: true,
 };
 
+export const DEFAULT_ABSENCES: Absence[] = [
+  {
+    id: 'abs_sebastian_default',
+    personId: 'p_sebastian',
+    startDate: '2026-09-12',
+    endDate: '2026-09-18',
+    reason: 'Învoire / Misiune',
+    details: 'Plecat 7 zile (săptămână liberă / învoire)',
+    preferredSubstituteId: 'p_avacum',
+  }
+];
+
+export const DEFAULT_SCHEDULE: ScheduleAssignment[] = generateSchedule({
+  startDate: parseISO('2026-09-12'),
+  endDate: parseISO('2026-09-18'),
+  persons: DEFAULT_PERSONS,
+  modules: DEFAULT_MODULES,
+  absences: DEFAULT_ABSENCES,
+  substitutionRules: DEFAULT_RULES,
+  existingAssignments: [],
+  avoidDoubleBooking: true,
+}).assignments;
+
 // Global reactive event bus for storage synchronization across components
 const listeners: (() => void)[] = [];
 function notify() {
@@ -329,7 +354,7 @@ export function useMonasteryData() {
 
   const [absences, setAbsencesState] = useState<Absence[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_ABSENCES);
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : DEFAULT_ABSENCES;
   });
 
   const [rules, setRulesState] = useState<SubstitutionRule[]>(() => {
@@ -339,7 +364,7 @@ export function useMonasteryData() {
 
   const [schedule, setScheduleState] = useState<ScheduleAssignment[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SCHEDULE);
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : DEFAULT_SCHEDULE;
   });
 
   const [settings, setSettingsState] = useState<MonasterySettings>(() => {
@@ -466,9 +491,9 @@ export function useMonasteryData() {
   const resetToDefaults = () => {
     localStorage.setItem(STORAGE_KEY_PERSONS, JSON.stringify(DEFAULT_PERSONS));
     localStorage.setItem(STORAGE_KEY_MODULES, JSON.stringify(DEFAULT_MODULES));
-    localStorage.setItem(STORAGE_KEY_ABSENCES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_ABSENCES, JSON.stringify(DEFAULT_ABSENCES));
     localStorage.setItem(STORAGE_KEY_RULES, JSON.stringify(DEFAULT_RULES));
-    localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(DEFAULT_SCHEDULE));
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
     notify();
   };

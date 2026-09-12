@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { generateSchedule, isPersonAvailableOnDate } from './scheduler';
+import { 
+  generateSchedule, 
+  isPersonAvailableOnDate,
+  getPriestMonthlyDuty,
+  getMonasticWeekIndex,
+  getCommunityWeeklyDuties
+} from './scheduler';
 import { getOrthodoxEaster, getDayLiturgicalInfo } from './orthodoxCalendar';
 import { DEFAULT_PERSONS, DEFAULT_MODULES, DEFAULT_RULES } from '../store/monasteryStore';
 import type { Absence } from '../types';
@@ -412,5 +418,106 @@ describe('Monastery Scheduler Engine & Custom Community Rules', () => {
     expect(bisericaAssignments.find(a => a.date === '2026-09-16')?.personId).toBe('p_avacum');
     expect(bisericaAssignments.find(a => a.date === '2026-09-17')?.personId).toBe('p_ciprian');
     expect(bisericaAssignments.find(a => a.date === '2026-09-18')?.personId).toBe('p_arghir');
+  });
+
+  it('guarantees each priest has exactly 1 week of Altar, 1 of Strană, 1 of Ascultări, and 1 Liberă per month', () => {
+    const priests = ['p_pantelimon', 'p_avacum', 'p_mina', 'p_sebastian'];
+
+    priests.forEach(priestId => {
+      const dutiesAcrossMonth = [1, 2, 3, 4].map(w => getPriestMonthlyDuty(priestId, w));
+      
+      // Must contain all 4 distinct duty categories in a month
+      expect(dutiesAcrossMonth).toContain('altar');
+      expect(dutiesAcrossMonth).toContain('strana');
+      expect(dutiesAcrossMonth).toContain('ascultari');
+      expect(dutiesAcrossMonth).toContain('liber');
+
+      // Exactly 1 of each
+      expect(dutiesAcrossMonth.filter(d => d === 'altar').length).toBe(1);
+      expect(dutiesAcrossMonth.filter(d => d === 'strana').length).toBe(1);
+      expect(dutiesAcrossMonth.filter(d => d === 'ascultari').length).toBe(1);
+      expect(dutiesAcrossMonth.filter(d => d === 'liber').length).toBe(1);
+    });
+
+    // In Week 2 (12-18 Septembrie 2026), Avacum is on Altar, Mina is on Strană, Pantelimon on Ascultări, Sebastian is Liber
+    expect(getPriestMonthlyDuty('p_avacum', 2)).toBe('altar');
+    expect(getPriestMonthlyDuty('p_mina', 2)).toBe('strana');
+    expect(getPriestMonthlyDuty('p_pantelimon', 2)).toBe('ascultari');
+    expect(getPriestMonthlyDuty('p_sebastian', 2)).toBe('liber');
+  });
+
+  it('automatically rotates the weekly altar priest across weeks 1 to 4 when no manual override exists', () => {
+    // Week 1 (e.g. Sept 5 to Sept 11, 2026) -> Pr. Pantelimon
+    const resW1 = generateSchedule({
+      startDate: parseISO('2026-09-05'),
+      endDate: parseISO('2026-09-11'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'altar'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+    const priestW1 = resW1.assignments.find(a => a.roleId === 'altar_preot');
+    expect(priestW1?.personId).toBe('p_pantelimon');
+
+    // Week 2 (Sept 12 to Sept 18, 2026) -> Pr. Avacum
+    const resW2 = generateSchedule({
+      startDate: parseISO('2026-09-12'),
+      endDate: parseISO('2026-09-18'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'altar'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+    const priestW2 = resW2.assignments.find(a => a.roleId === 'altar_preot');
+    expect(priestW2?.personId).toBe('p_avacum');
+
+    // Week 3 (Sept 19 to Sept 25, 2026) -> Pr. Sebastian
+    const resW3 = generateSchedule({
+      startDate: parseISO('2026-09-19'),
+      endDate: parseISO('2026-09-25'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'altar'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+    const priestW3 = resW3.assignments.find(a => a.roleId === 'altar_preot');
+    expect(priestW3?.personId).toBe('p_sebastian');
+
+    // Week 4 (Sept 26 to Oct 2, 2026) -> Pr. Mina
+    const resW4 = generateSchedule({
+      startDate: parseISO('2026-09-26'),
+      endDate: parseISO('2026-10-02'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'altar'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+    const priestW4 = resW4.assignments.find(a => a.roleId === 'altar_preot');
+    expect(priestW4?.personId).toBe('p_mina');
+  });
+
+  it('computes correct monastic week index (1 to 4) and community weekly duty profile', () => {
+    const weekStart = parseISO('2026-09-12');
+    const weekIdx = getMonasticWeekIndex(weekStart);
+    expect(weekIdx).toBe(2);
+
+    const duties = getCommunityWeeklyDuties(weekStart, DEFAULT_PERSONS);
+    expect(duties.length).toBeGreaterThan(0);
+    const avacumDuty = duties.find(d => d.personId === 'p_avacum');
+    expect(avacumDuty?.category).toBe('altar');
+    const minaDuty = duties.find(d => d.personId === 'p_mina');
+    expect(minaDuty?.category).toBe('strana');
+    const pantelimonDuty = duties.find(d => d.personId === 'p_pantelimon');
+    expect(pantelimonDuty?.category).toBe('ascultari');
+    const sebastianDuty = duties.find(d => d.personId === 'p_sebastian');
+    expect(sebastianDuty?.category).toBe('liber');
   });
 });
