@@ -539,4 +539,52 @@ describe('Monastery Scheduler Engine & Custom Community Rules', () => {
       expect(a.personId).toBe('p_spiridon');
     });
   });
+
+  it('generates complete weekly assignments for all modular print view boxes (altar, strana, paracliserie, soferie, predica, biserica)', () => {
+    const res = generateSchedule({
+      startDate: parseISO('2026-09-12'),
+      endDate: parseISO('2026-09-18'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES,
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: false,
+    });
+
+    // 1. Altar (Preot de rând)
+    const altarPreot = res.assignments.filter(a => a.roleId === 'altar_preot');
+    expect(altarPreot.length).toBe(7);
+    expect(altarPreot[0].personId).toBe('p_avacum');
+
+    // 2. Strana (Protopsalt & Ajutor)
+    const stranaPsalt = res.assignments.filter(a => a.roleId === 'strana_psalt');
+    expect(stranaPsalt.length).toBe(7);
+    const stranaAjutor = res.assignments.filter(a => a.roleId === 'strana_ajutor');
+    expect(stranaAjutor.length).toBe(7);
+    expect(stranaAjutor[0].personId).toBe('p_ioan');
+
+    // 3. Paracliserie (Paracliser de rând)
+    const paracliser = res.assignments.filter(a => a.roleId === 'paracliser_principal');
+    expect(paracliser.length).toBe(7);
+    expect(paracliser[0].personId).toBe('p_arghir');
+
+    // 4. Șoferie (Șofer de serviciu)
+    const sofer = res.assignments.filter(a => a.roleId === 'sofer_garda');
+    expect(sofer.length).toBe(7);
+    expect(sofer[0].personId).toBe('p_spiridon');
+
+    // 5. Biserică (Pomelnice & Pelerini: 7 zile rotație)
+    const biserica = res.assignments.filter(a => a.roleId === 'biserica_rand');
+    expect(biserica.length).toBe(7);
+    // Saturday: Pr. Iliescu
+    const satBiserica = biserica.find(a => a.date === '2026-09-12');
+    expect(satBiserica?.personId).toBe('p_iliescu');
+    // Sunday: Pr. Pantelimon
+    const sunBiserica = biserica.find(a => a.date === '2026-09-13');
+    expect(sunBiserica?.personId).toBe('p_pantelimon');
+    // Monday: Pr. Avacum
+    const monBiserica = biserica.find(a => a.date === '2026-09-14');
+    expect(monBiserica?.personId).toBe('p_avacum');
+  });
 });
