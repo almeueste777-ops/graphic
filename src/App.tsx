@@ -86,7 +86,7 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 print:p-0 print:m-0 print:max-w-none">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 pb-28 md:pb-6 print:p-0 print:m-0 print:max-w-none">
         {currentTab === 'schedule' && (
           <ScheduleGrid
             currentDate={currentDate}
@@ -173,7 +173,7 @@ export function App() {
       </main>
 
       {/* Footer (Hidden on print) */}
-      <footer className="no-print border-t border-white/5 bg-black/40 backdrop-blur-xl py-6 text-center text-xs text-white/40">
+      <footer className="no-print border-t border-white/5 bg-black/40 backdrop-blur-xl py-6 pb-28 md:pb-6 text-center text-xs text-white/40">
         <p className="font-sf font-medium tracking-tight text-white/60">Graphic • Sistem Monahal Inteligent de Organizare & Ascultări</p>
         <p className="text-[11px] text-white/30 mt-1">Conceput cu standardele de claritate și fluiditate Apple • PWA Offline • {settings.monasteryName}</p>
       </footer>

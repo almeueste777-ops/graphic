@@ -355,23 +355,23 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
       {/* Add / Edit Member Modal (Apple Sheet Style) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="apple-glass rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden text-white border border-white/15">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden text-white border border-white/15">
             {/* Header */}
-            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02]">
+            <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02] shrink-0">
               <h3 className="font-semibold text-lg text-white">
                 {editingPerson ? 'Modificare Slujitor' : 'Adăugare Slujitor'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/60 hover:text-white flex items-center justify-center transition-all"
+                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/60 hover:text-white flex items-center justify-center transition-all shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSave} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto">
               {/* Name */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">

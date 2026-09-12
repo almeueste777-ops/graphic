@@ -512,10 +512,10 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
       {/* MODAL 1: ADAUGĂ ÎNVOIRE (Apple Action Sheet) */}
       {isAbsenceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="apple-glass rounded-3xl max-w-lg w-full overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+            <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02] shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
                   <CalendarOff className="w-4 h-4" />
@@ -532,7 +532,7 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveAbsence} className="p-5 space-y-4">
+            <form onSubmit={handleSaveAbsence} className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto">
               {/* Person */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
@@ -656,10 +656,10 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
       {/* MODAL 2: ADAUGĂ REGULĂ DE SUBSTITUȚIE */}
       {isRuleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="apple-glass rounded-3xl max-w-lg w-full overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+            <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02] shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
                   <ShieldCheck className="w-4 h-4" />
@@ -676,7 +676,7 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveRule} className="p-5 space-y-4">
+            <form onSubmit={handleSaveRule} className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto">
               {/* Target Person */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">

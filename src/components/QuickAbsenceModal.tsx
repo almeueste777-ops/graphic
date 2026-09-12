@@ -77,19 +77,19 @@ export const QuickAbsenceModal: React.FC<QuickAbsenceModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-fade-in">
       <div 
-        className="apple-glass rounded-3xl w-full max-w-lg border border-white/15 shadow-2xl overflow-hidden text-[#f5f5f7] transform transition-all duration-300"
+        className="apple-glass rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col border border-white/15 shadow-2xl overflow-hidden text-[#f5f5f7] transform transition-all duration-300"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-white/10 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-transparent">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-transparent shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300 shadow-inner">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300 shadow-inner shrink-0">
               <UserMinus className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold tracking-tight text-white flex items-center space-x-2">
+              <h3 className="text-base sm:text-lg font-semibold tracking-tight text-white flex items-center space-x-2">
                 <span>Părinte Plecat (X zile)</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">
                   Auto-Recalculare
@@ -102,14 +102,14 @@ export const QuickAbsenceModal: React.FC<QuickAbsenceModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white flex items-center justify-center transition-all"
+            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white flex items-center justify-center transition-all shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto">
           {/* Select Person */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-white/80 uppercase tracking-wider">

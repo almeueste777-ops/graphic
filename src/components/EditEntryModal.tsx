@@ -54,8 +54,8 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 font-sf">
-      <div className="apple-glass rounded-3xl max-w-lg w-full overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 font-sf">
+      <div className="apple-glass rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div 
           className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]"
@@ -84,7 +84,7 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4 max-h-[62vh] overflow-y-auto">
+        <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto">
           {/* Unassign option */}
           <div
             onClick={() => setSelectedPersonId(null)}

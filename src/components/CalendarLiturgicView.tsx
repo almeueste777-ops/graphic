@@ -119,21 +119,22 @@ export const CalendarLiturgicView: React.FC<CalendarLiturgicViewProps> = ({
         {/* Month Calendar Matrix */}
         <div className="lg:col-span-2 apple-card p-4 sm:p-6 rounded-3xl">
           {/* Day of Week Headers */}
-          <div className="grid grid-cols-7 gap-1.5 mb-2 text-center">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-2 text-center">
             {['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă', 'Duminică'].map((d, i) => (
               <div 
                 key={d} 
-                className={`text-[11px] font-semibold uppercase tracking-wider py-1.5 ${
+                className={`text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider py-1 sm:py-1.5 ${
                   i === 5 ? 'text-amber-300/80' : i === 6 ? 'text-rose-400 font-bold' : 'text-white/50'
                 }`}
               >
-                {d}
+                <span className="hidden sm:inline">{d}</span>
+                <span className="sm:hidden">{['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'][i]}</span>
               </div>
             ))}
           </div>
 
           {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {calendarDays.map(day => {
               const dateStr = format(day, 'yyyy-MM-dd');
               const litInfo = getDayLiturgicalInfo(day);
@@ -146,7 +147,7 @@ export const CalendarLiturgicView: React.FC<CalendarLiturgicViewProps> = ({
                 <div
                   key={dateStr}
                   onClick={() => setSelectedDayDate(day)}
-                  className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none relative overflow-hidden group ${
+                  className={`min-h-[64px] sm:min-h-[105px] p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between select-none relative overflow-hidden group ${
                     isSelected
                       ? 'ring-2 ring-amber-400/80 bg-white/[0.14] border-amber-400/40 shadow-[0_4px_20px_rgba(245,214,116,0.15)]'
                       : inMonth
@@ -159,7 +160,7 @@ export const CalendarLiturgicView: React.FC<CalendarLiturgicViewProps> = ({
                   {/* Top Bar: Date number + Cross */}
                   <div className="flex items-start justify-between">
                     <span 
-                      className={`text-xs sm:text-sm font-semibold rounded-full w-6 h-6 flex items-center justify-center ${
+                      className={`text-xs sm:text-sm font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center ${
                         isTodayDay
                           ? 'bg-amber-400 text-black font-bold shadow-sm'
                           : litInfo.isRedCross
@@ -171,7 +172,7 @@ export const CalendarLiturgicView: React.FC<CalendarLiturgicViewProps> = ({
                     </span>
 
                     {litInfo.isRedCross && (
-                      <span className="text-rose-500 font-bold text-sm leading-none" title={litInfo.feastTitle}>
+                      <span className="text-rose-500 font-bold text-xs sm:text-sm leading-none" title={litInfo.feastTitle}>
                         ✝
                       </span>
                     )}
@@ -179,9 +180,9 @@ export const CalendarLiturgicView: React.FC<CalendarLiturgicViewProps> = ({
 
                   {/* Feast Snippet */}
                   {litInfo.feastTitle && (
-                    <div className="my-1">
+                    <div className="my-0.5 sm:my-1">
                       <p 
-                        className={`text-[10px] sm:text-[11px] leading-tight font-medium line-clamp-2 ${
+                        className={`text-[9px] sm:text-[11px] leading-tight font-medium line-clamp-1 sm:line-clamp-2 ${
                           litInfo.isRedCross 
                             ? 'text-rose-300 font-semibold' 
                             : litInfo.isSaturday
@@ -195,17 +196,18 @@ export const CalendarLiturgicView: React.FC<CalendarLiturgicViewProps> = ({
                   )}
 
                   {/* Liturgical Duties Count / Avatars */}
-                  <div className="mt-auto flex items-center justify-between text-[10px] text-white/40 pt-1 border-t border-white/[0.05]">
+                  <div className="mt-auto flex items-center justify-between text-[10px] text-white/40 pt-0.5 sm:pt-1 border-t border-white/[0.05]">
                     {dayAssignments.length > 0 ? (
-                      <span className="px-1.5 py-0.5 rounded-full bg-white/[0.08] text-white/70 font-mono text-[9px]">
-                        {dayAssignments.length} slujitori
+                      <span className="px-1 sm:px-1.5 py-0.2 sm:py-0.5 rounded-full bg-white/[0.08] text-white/70 font-mono text-[8px] sm:text-[9px]">
+                        <span className="hidden sm:inline">{dayAssignments.length} slujitori</span>
+                        <span className="sm:hidden">{dayAssignments.length}</span>
                       </span>
                     ) : (
-                      <span className="text-[9px] italic opacity-40">-</span>
+                      <span className="text-[8px] sm:text-[9px] italic opacity-40">-</span>
                     )}
 
                     {litInfo.fasting && (
-                      <span className="text-[9px] text-amber-400/80 flex items-center space-x-0.5">
+                      <span className="text-[8px] sm:text-[9px] text-amber-400/80 flex items-center space-x-0.5" title={litInfo.fasting}>
                         <Flame className="w-2.5 h-2.5" />
                       </span>
                     )}

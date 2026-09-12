@@ -351,47 +351,51 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
           </div>
 
           {/* Layout Mode Segmented Picker */}
-          <div className="apple-segmented flex items-center p-1 w-full sm:w-auto justify-center">
+          <div className="apple-segmented flex items-center p-1 w-full lg:w-auto justify-start sm:justify-center overflow-x-auto no-scrollbar max-w-full">
             <button
               onClick={() => setLayoutMode('modular')}
-              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 min-h-[34px] ${
                 layoutMode === 'modular' ? 'active' : 'text-white/60 hover:text-white'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5 text-amber-400" />
-              <span>Panouri & Casete Mari</span>
-              <span className="text-[10px] px-1 rounded bg-amber-400/20 text-amber-300 ml-1">Recomandat A4</span>
+              <LayoutGrid className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">Panouri & Casete Mari</span>
+              <span className="sm:hidden">Panouri</span>
+              <span className="hidden md:inline text-[10px] px-1 rounded bg-amber-400/20 text-amber-300 ml-1">Recomandat A4</span>
             </button>
 
             <button
               onClick={() => setLayoutMode('split')}
-              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 min-h-[34px] ${
                 layoutMode === 'split' ? 'active' : 'text-white/60 hover:text-white'
               }`}
             >
-              <Columns className="w-3.5 h-3.5" />
-              <span>Sinteză Monahală</span>
-              <span className="text-[10px] px-1 rounded bg-amber-400/20 text-amber-300 ml-1">Litere Mari</span>
+              <Columns className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Sinteză Monahală</span>
+              <span className="sm:hidden">Sinteză</span>
+              <span className="hidden md:inline text-[10px] px-1 rounded bg-amber-400/20 text-amber-300 ml-1">Litere Mari</span>
             </button>
 
             <button
               onClick={() => setLayoutMode('matrix')}
-              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 min-h-[34px] ${
                 layoutMode === 'matrix' ? 'active' : 'text-white/60 hover:text-white'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Matrice 7 Zile</span>
+              <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Matrice 7 Zile</span>
+              <span className="sm:hidden">Matrice</span>
             </button>
 
             <button
               onClick={() => setLayoutMode('cards')}
-              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 min-h-[34px] ${
                 layoutMode === 'cards' ? 'active' : 'text-white/60 hover:text-white'
               }`}
             >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Tablou pe Zile</span>
+              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Tablou pe Zile</span>
+              <span className="sm:hidden">Tablou</span>
             </button>
           </div>
 
@@ -913,7 +917,8 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
       `}} />
 
       {/* ================= PRINTABLE SHEET AREA (OPTIMIZED FOR A4 LANDSCAPE OR PORTRAIT) ================= */}
-      <div className={`print-sheet-${pageOrientation} bg-[#ffffff] text-[#0c0a09] p-4 sm:p-6 rounded-2xl shadow-2xl border ${contrastClasses} ${fontThemeClasses[fontTheme].body} print:p-0 print:border-none print:shadow-none print:rounded-none relative ${printInkMode === 'laser_bw' ? 'laser-bw-print' : ''}`}>
+      <div className="w-full overflow-x-auto print:overflow-visible pb-4">
+        <div className={`print-sheet-${pageOrientation} bg-[#ffffff] text-[#0c0a09] p-4 sm:p-6 rounded-2xl shadow-2xl border ${contrastClasses} ${fontThemeClasses[fontTheme].body} print:p-0 print:border-none print:shadow-none print:rounded-none relative mx-auto ${printInkMode === 'laser_bw' ? 'laser-bw-print' : ''}`}>
         
         {/* Outer Frame with Byzantine Ornaments */}
         <div className={`p-3 sm:p-4 relative min-h-[500px] flex flex-col justify-between print-frame-contain ${
@@ -1861,6 +1866,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

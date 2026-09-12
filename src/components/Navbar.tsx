@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   PRO
                 </span>
               </div>
-              <p className="text-[11px] text-white/50 font-sans truncate max-w-[150px] sm:max-w-[220px]">
+              <p className="text-[11px] text-white/50 font-sans truncate max-w-[110px] xs:max-w-[160px] sm:max-w-[240px]">
                 {monasteryName}
               </p>
             </div>
@@ -175,61 +175,66 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Floating Bottom Navigation Bar for Mobile (iOS Tab Bar Style) */}
-      <div className="no-print md:hidden fixed bottom-4 left-3 right-3 z-50">
-        <div className="apple-glass rounded-full px-2 py-1.5 flex items-center justify-around shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-white/15">
+      <div className="no-print md:hidden fixed bottom-2.5 left-2 right-2 z-40 max-w-md mx-auto mb-[env(safe-area-inset-bottom,0px)]">
+        <div className="apple-glass rounded-2xl sm:rounded-full px-1.5 py-1.5 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.85)] border border-white/15 backdrop-blur-2xl">
           <button
             onClick={() => setCurrentTab('schedule')}
-            className={`flex flex-col items-center py-1 px-2.5 rounded-full transition-all ${
-              currentTab === 'schedule' ? 'text-amber-300 bg-white/10 font-semibold' : 'text-white/50'
+            className={`flex-1 min-w-0 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+              currentTab === 'schedule' ? 'text-amber-300 bg-white/10 font-bold shadow-xs' : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <CalendarDays className="w-4 h-4" />
-            <span className="text-[10px] mt-0.5">Grafic</span>
+            <CalendarDays className="w-4 h-4 shrink-0" />
+            <span className="text-[9.5px] tracking-tight truncate w-full text-center mt-0.5">Grafic</span>
           </button>
+
           <button
             onClick={() => setCurrentTab('calendar')}
-            className={`flex flex-col items-center py-1 px-2.5 rounded-full transition-all ${
-              currentTab === 'calendar' ? 'text-rose-400 bg-white/10 font-semibold' : 'text-white/50'
+            className={`flex-1 min-w-0 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+              currentTab === 'calendar' ? 'text-rose-400 bg-white/10 font-bold shadow-xs' : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <span className="text-sm font-bold leading-none">✝</span>
-            <span className="text-[10px] mt-0.5">Calendar</span>
+            <span className="text-sm font-bold leading-none shrink-0">✝</span>
+            <span className="text-[9.5px] tracking-tight truncate w-full text-center mt-0.5">Calendar</span>
           </button>
+
           <button
             onClick={() => setCurrentTab('members')}
-            className={`flex flex-col items-center py-1 px-2.5 rounded-full transition-all ${
-              currentTab === 'members' ? 'text-emerald-400 bg-white/10 font-semibold' : 'text-white/50'
+            className={`flex-1 min-w-0 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+              currentTab === 'members' ? 'text-emerald-400 bg-white/10 font-bold shadow-xs' : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <Users className="w-4 h-4" />
-            <span className="text-[10px] mt-0.5">Obștea</span>
+            <Users className="w-4 h-4 shrink-0" />
+            <span className="text-[9.5px] tracking-tight truncate w-full text-center mt-0.5">Obștea</span>
           </button>
+
           <button
             onClick={() => setCurrentTab('modules')}
-            className={`flex flex-col items-center py-1 px-3 rounded-full transition-all ${
-              currentTab === 'modules' ? 'text-sky-400 bg-white/10 font-semibold' : 'text-white/50'
+            className={`flex-1 min-w-0 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+              currentTab === 'modules' ? 'text-sky-400 bg-white/10 font-bold shadow-xs' : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <Layers className="w-4 h-4" />
-            <span className="text-[10px] mt-0.5">Ascultări</span>
+            <Layers className="w-4 h-4 shrink-0" />
+            <span className="text-[9.5px] tracking-tight truncate w-full text-center mt-0.5">Ascultări</span>
           </button>
+
           <button
             onClick={() => setCurrentTab('absences')}
-            className={`flex flex-col items-center py-1 px-3 rounded-full transition-all ${
-              currentTab === 'absences' ? 'text-violet-400 bg-white/10 font-semibold' : 'text-white/50'
+            className={`flex-1 min-w-0 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+              currentTab === 'absences' ? 'text-violet-400 bg-white/10 font-bold shadow-xs' : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <UserCheck className="w-4 h-4" />
-            <span className="text-[10px] mt-0.5">Învoiri</span>
+            <UserCheck className="w-4 h-4 shrink-0" />
+            <span className="text-[9.5px] tracking-tight truncate w-full text-center mt-0.5">Învoiri</span>
           </button>
+
           <button
             onClick={() => setCurrentTab('print')}
-            className={`flex flex-col items-center py-1 px-3 rounded-full transition-all ${
-              currentTab === 'print' ? 'text-rose-400 bg-white/10 font-semibold' : 'text-white/50'
+            className={`flex-1 min-w-0 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 touch-manipulation ${
+              currentTab === 'print' ? 'text-rose-400 bg-white/10 font-bold shadow-xs' : 'text-white/50 hover:text-white/80'
             }`}
           >
-            <Printer className="w-4 h-4" />
-            <span className="text-[10px] mt-0.5">Avizier</span>
+            <Printer className="w-4 h-4 shrink-0" />
+            <span className="text-[9.5px] tracking-tight truncate w-full text-center mt-0.5">Avizier</span>
           </button>
         </div>
       </div>
