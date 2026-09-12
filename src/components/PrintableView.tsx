@@ -1090,52 +1090,38 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
 
             {/* SIGNATURES BLOCK */}
             {showSignatures && (
-              <div className="pt-1 flex items-center justify-between font-sans text-xs text-stone-950 px-4">
-                <div className="text-center min-w-[90px]">
-                  <p className={`${fontThemeClasses[fontTheme].header} font-bold uppercase tracking-wider text-stone-600 text-[10px]`}>Binecuvântează,</p>
-                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm`}>Stareț,</p>
-                  <div className="h-5 flex items-center justify-center">
+              <div className="pt-2 flex items-center justify-between font-sans text-xs text-stone-950 px-12 sm:px-16">
+                <div className="text-center min-w-[140px]">
+                  <p className={`${fontThemeClasses[fontTheme].header} font-bold tracking-wider text-stone-600 text-[10px]`}>
+                    Din încredințarea
+                  </p>
+                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm text-stone-900`}>
+                    Pr. Stareț,
+                  </p>
+                  <div className="h-6 flex items-center justify-center">
                     <span className="text-[9px] text-stone-400 italic">(Semnătura)</span>
                   </div>
-                  <p className={`font-bold text-xs text-stone-900 ${weightClass}`}>{settings.abbotName}</p>
+                  <p className={`font-bold text-xs sm:text-sm text-stone-900 ${weightClass}`}>{settings.abbotName}</p>
                 </div>
 
-                {settings.economName && (
-                  <div className="text-center min-w-[90px]">
-                    <p className={`${fontThemeClasses[fontTheme].header} font-bold uppercase tracking-wider text-stone-600 text-[10px]`}>Văzut,</p>
-                    <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm`}>Econom,</p>
-                    <div className="h-5 flex items-center justify-center">
-                      <span className="text-[9px] text-stone-400 italic">(Semnătura)</span>
-                    </div>
-                    <p className={`font-bold text-xs text-stone-900 ${weightClass}`}>{settings.economName}</p>
-                  </div>
-                )}
-
-                <div className="text-center opacity-50 px-1">
-                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-stone-400 flex items-center justify-center mx-auto text-[8px] uppercase tracking-widest text-stone-500 font-cinzel">
+                <div className="text-center opacity-50 px-4">
+                  <div className="w-12 h-12 rounded-full border-2 border-dashed border-stone-400 flex items-center justify-center mx-auto text-[8px] uppercase tracking-widest text-stone-500 font-cinzel">
                     Pecetea
                   </div>
                 </div>
 
-                <div className="text-center min-w-[90px]">
-                  <p className={`${fontThemeClasses[fontTheme].header} font-bold uppercase tracking-wider text-stone-600 text-[10px]`}>Întocmit,</p>
-                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm`}>Eclesiarh,</p>
-                  <div className="h-5 flex items-center justify-center">
+                <div className="text-center min-w-[140px]">
+                  <p className={`${fontThemeClasses[fontTheme].header} font-bold tracking-wider text-stone-600 text-[10px]`}>
+                    Întocmit,
+                  </p>
+                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm text-stone-900`}>
+                    Pr. Eclesiarh,
+                  </p>
+                  <div className="h-6 flex items-center justify-center">
                     <span className="text-[9px] text-stone-400 italic">(Semnătura)</span>
                   </div>
-                  <p className={`font-bold text-xs text-stone-900 ${weightClass}`}>{settings.ecclesiarchName}</p>
+                  <p className={`font-bold text-xs sm:text-sm text-stone-900 ${weightClass}`}>{settings.ecclesiarchName}</p>
                 </div>
-
-                {settings.secretaryName && (
-                  <div className="text-center min-w-[90px]">
-                    <p className={`${fontThemeClasses[fontTheme].header} font-bold uppercase tracking-wider text-stone-600 text-[10px]`}>Verificat,</p>
-                    <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm`}>Secretar,</p>
-                    <div className="h-5 flex items-center justify-center">
-                      <span className="text-[9px] text-stone-400 italic">(Semnătura)</span>
-                    </div>
-                    <p className={`font-bold text-xs text-stone-900 ${weightClass}`}>{settings.secretaryName}</p>
-                  </div>
-                )}
               </div>
             )}
           </div>
