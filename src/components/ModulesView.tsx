@@ -1,0 +1,477 @@
+import React, { useState } from 'react';
+import type { Module, ModuleRole, Person } from '../types';
+import { AVAILABLE_ICONS, renderModuleIcon } from '../utils/iconHelper';
+import { 
+  Plus, 
+  Trash2, 
+  Edit3, 
+  X, 
+  Check, 
+  Layers,
+  Users
+} from 'lucide-react';
+
+const PRESET_MODULE_COLORS = [
+  '#8b1d24', '#b38210', '#1d4ed8', '#047857', '#c2410c',
+  '#7c3aed', '#db2777', '#0891b2', '#4b5563', '#0f766e'
+];
+
+interface ModulesViewProps {
+  modules: Module[];
+  setModules: (updater: Module[] | ((prev: Module[]) => Module[])) => void;
+  persons: Person[];
+}
+
+export const ModulesView: React.FC<ModulesViewProps> = ({
+  modules,
+  setModules,
+  persons,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
+
+  // Form states
+  const [formName, setFormName] = useState('');
+  const [formIcon, setFormIcon] = useState('Church');
+  const [formColor, setFormColor] = useState(PRESET_MODULE_COLORS[0]);
+  const [formCycle, setFormCycle] = useState<'weekly' | 'daily'>('weekly');
+  const [formDescription, setFormDescription] = useState('');
+  const [formRoles, setFormRoles] = useState<{ id: string; name: string; requiredCount: number }[]>([
+    { id: 'role_1', name: 'Slujitor principal de rând', requiredCount: 1 }
+  ]);
+
+  const openAddModal = () => {
+    setEditingModule(null);
+    setFormName('');
+    setFormIcon('Church');
+    setFormColor(PRESET_MODULE_COLORS[Math.floor(Math.random() * PRESET_MODULE_COLORS.length)]);
+    setFormCycle('weekly');
+    setFormDescription('');
+    setFormRoles([{ id: `role_${Date.now()}`, name: 'Persoană de rând', requiredCount: 1 }]);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (mod: Module) => {
+    setEditingModule(mod);
+    setFormName(mod.name);
+    setFormIcon(mod.iconName);
+    setFormColor(mod.color);
+    setFormCycle(mod.rotationCycle);
+    setFormDescription(mod.description || '');
+    setFormRoles(mod.roles.map(r => ({ ...r })));
+    setIsModalOpen(true);
+  };
+
+  const handleAddRoleRow = () => {
+    setFormRoles(prev => [
+      ...prev,
+      { id: `role_${Date.now()}`, name: `Rol #${prev.length + 1}`, requiredCount: 1 }
+    ]);
+  };
+
+  const handleRemoveRoleRow = (index: number) => {
+    if (formRoles.length <= 1) return;
+    setFormRoles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRoleChange = (index: number, name: string, requiredCount: number) => {
+    setFormRoles(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], name, requiredCount };
+      return updated;
+    });
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) return;
+
+    const formattedRoles: ModuleRole[] = formRoles
+      .filter(r => r.name.trim().length > 0)
+      .map(r => ({
+        id: r.id,
+        name: r.name.trim(),
+        requiredCount: Math.max(1, r.requiredCount || 1),
+      }));
+
+    if (formattedRoles.length === 0) {
+      formattedRoles.push({ id: `role_${Date.now()}`, name: 'Slujitor de rând', requiredCount: 1 });
+    }
+
+    if (editingModule) {
+      setModules(prev =>
+        prev.map(m =>
+          m.id === editingModule.id
+            ? {
+                ...m,
+                name: formName.trim(),
+                iconName: formIcon,
+                color: formColor,
+                rotationCycle: formCycle,
+                description: formDescription.trim() || undefined,
+                roles: formattedRoles,
+              }
+            : m
+        )
+      );
+    } else {
+      const newModule: Module = {
+        id: `mod_${Date.now()}`,
+        name: formName.trim(),
+        iconName: formIcon,
+        color: formColor,
+        rotationCycle: formCycle,
+        isSystem: false,
+        description: formDescription.trim() || undefined,
+        roles: formattedRoles,
+      };
+      setModules(prev => [...prev, newModule]);
+    }
+
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Sigur doriți să ștergeți modulul „${name}”?`)) {
+      setModules(prev => prev.filter(m => m.id !== id));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header & Add Module Action */}
+      <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
+            <Layers className="w-5 h-5 text-amber-500 inline-block" />
+            <span>Ascultări & Module Monahale</span>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-stone-300 font-sans font-normal border border-stone-700">
+              {modules.length} module
+            </span>
+          </h2>
+          <p className="text-xs text-stone-400 mt-0.5">
+            Personalizați ascultările existente sau adăugați module noi după trebuința mănăstirii
+          </p>
+        </div>
+
+        <button
+          onClick={openAddModal}
+          className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-all active:scale-95"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Adaugă Modul Nou</span>
+        </button>
+      </div>
+
+      {/* Modules Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {modules.map(mod => {
+          const qualifiedCount = persons.filter(p => p.skills.includes(mod.id) && p.active).length;
+
+          return (
+            <div
+              key={mod.id}
+              className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow transition-all hover:border-stone-700 flex flex-col justify-between"
+            >
+              <div>
+                {/* Header of card */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner"
+                      style={{ backgroundColor: `${mod.color}20`, color: mod.color }}
+                    >
+                      {renderModuleIcon(mod.iconName, { className: 'w-6 h-6' })}
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-bold text-stone-100 text-lg">{mod.name}</h3>
+                      <div className="flex items-center space-x-2 mt-0.5">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-stone-800 text-stone-300 font-semibold border border-stone-700">
+                          {mod.rotationCycle === 'weekly' ? 'Săptămânal' : 'Zilnic'}
+                        </span>
+                        {mod.isSystem ? (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-400 border border-amber-800/40">
+                            Modul de bază
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
+                            Personalizat
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => openEditModal(mod)}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                      title="Editează modulul"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    {!mod.isSystem && (
+                      <button
+                        onClick={() => handleDelete(mod.id, mod.name)}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-stone-800 transition-colors"
+                        title="Șterge modulul"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                {mod.description && (
+                  <p className="mt-3 text-xs text-stone-400 leading-relaxed">
+                    {mod.description}
+                  </p>
+                )}
+
+                {/* Roles list */}
+                <div className="mt-4 space-y-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-500 block">
+                    Posturi & Roluri:
+                  </span>
+                  {mod.roles.map(role => (
+                    <div
+                      key={role.id}
+                      className="flex items-center justify-between text-xs bg-stone-950/50 px-2.5 py-1.5 rounded-lg border border-stone-800"
+                    >
+                      <span className="text-stone-300 font-medium">{role.name}</span>
+                      <span className="text-[11px] text-amber-400/90 font-semibold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-900/40">
+                        {role.requiredCount} {role.requiredCount === 1 ? 'persoană' : 'persoane'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer info: qualified monks */}
+              <div className="mt-4 pt-3 border-t border-stone-800/80 flex items-center justify-between text-xs text-stone-400">
+                <div className="flex items-center space-x-1.5">
+                  <Users className="w-3.5 h-3.5 text-stone-500" />
+                  <span>Slujitori calificați:</span>
+                </div>
+                <span className={`font-semibold ${qualifiedCount > 0 ? 'text-stone-200' : 'text-rose-400'}`}>
+                  {qualifiedCount} {qualifiedCount === 1 ? 'slujitor' : 'slujitori'}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add / Edit Module Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-stone-900 border border-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden text-stone-100">
+            {/* Header */}
+            <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/40">
+              <h3 className="font-serif font-bold text-lg text-amber-100">
+                {editingModule ? `Modificare: ${editingModule.name}` : 'Adăugare Ascultare / Modul Nou'}
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Name */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                  Denumire Ascultare / Modul *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: Pangar, Ghidaj Pelerini, Gospodărie..."
+                  value={formName}
+                  onChange={e => setFormName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                  Descriere sau Responsabilități
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Ex: Îngrijirea pangarului, vânzarea lumânărilor și cărților..."
+                  value={formDescription}
+                  onChange={e => setFormDescription(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Rotation Cycle */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
+                  Ciclul de Rotație
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    onClick={() => setFormCycle('weekly')}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      formCycle === 'weekly'
+                        ? 'bg-amber-950/40 border-amber-500 text-white'
+                        : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold">Săptămânal</span>
+                      {formCycle === 'weekly' && <Check className="w-4 h-4 text-amber-400" />}
+                    </div>
+                    <p className="text-[10px] text-stone-400 mt-1">
+                      O persoană preia rândul pentru toată săptămâna
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => setFormCycle('daily')}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      formCycle === 'daily'
+                        ? 'bg-amber-950/40 border-amber-500 text-white'
+                        : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold">Zilnic</span>
+                      {formCycle === 'daily' && <Check className="w-4 h-4 text-amber-400" />}
+                    </div>
+                    <p className="text-[10px] text-stone-400 mt-1">
+                      Turele se schimbă în fiecare zi (ex: șoferie)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Icon Picker */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
+                  Pictogramă
+                </label>
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                  {AVAILABLE_ICONS.map(icon => {
+                    const isSelected = formIcon.toLowerCase() === icon.name.toLowerCase();
+                    return (
+                      <button
+                        type="button"
+                        key={icon.name}
+                        onClick={() => setFormIcon(icon.name)}
+                        title={icon.label}
+                        className={`p-2 rounded-lg flex items-center justify-center border transition-all ${
+                          isSelected
+                            ? 'bg-amber-500 text-stone-950 border-amber-400 scale-105'
+                            : 'border-stone-800 hover:bg-stone-800 text-stone-300'
+                        }`}
+                      >
+                        {renderModuleIcon(icon.name, { className: 'w-5 h-5' })}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Color Picker */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
+                  Culoare Tematică
+                </label>
+                <div className="flex items-center space-x-2">
+                  {PRESET_MODULE_COLORS.map(c => (
+                    <button
+                      type="button"
+                      key={c}
+                      onClick={() => setFormColor(c)}
+                      className={`w-7 h-7 rounded-full transition-transform ${
+                        formColor === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-stone-900' : 'hover:scale-110'
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Roles & Required Persons */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                    Roluri & Număr de Slujitori
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddRoleRow}
+                    className="text-xs text-amber-400 hover:text-amber-300 flex items-center space-x-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Adaugă rol</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {formRoles.map((role, idx) => (
+                    <div key={role.id || idx} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        placeholder="Nume rol (ex: Ajutor, Responsabil)"
+                        value={role.name}
+                        onChange={e => handleRoleChange(idx, e.target.value, role.requiredCount)}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                      />
+                      <div className="flex items-center space-x-1 bg-stone-800 border border-stone-700 rounded-lg px-2 py-1">
+                        <span className="text-[10px] text-stone-400">Nr:</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={5}
+                          value={role.requiredCount}
+                          onChange={e => handleRoleChange(idx, role.name, parseInt(e.target.value) || 1)}
+                          className="w-10 text-xs text-center bg-transparent text-amber-300 font-bold focus:outline-none"
+                        />
+                      </div>
+                      {formRoles.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRoleRow(idx)}
+                          className="p-1.5 text-stone-500 hover:text-red-400"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="pt-4 border-t border-stone-800 flex items-center justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                >
+                  Anulează
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-colors"
+                >
+                  {editingModule ? 'Salvează Modificările' : 'Creează Modul'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="36" fill="#8b1d24"/>
+  <circle cx="96" cy="96" r="72" fill="#72141a" stroke="#d4af37" stroke-width="4"/>
+  <!-- Byzantine / Orthodox Cross symbol -->
+  <path d="M96 44 v104 M64 74 h64 M76 126 l40 -12" stroke="#f5e6be" stroke-width="8" stroke-linecap="round"/>
+</svg>
