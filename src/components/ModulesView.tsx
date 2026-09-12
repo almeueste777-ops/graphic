@@ -7,11 +7,11 @@ import {
   Edit3, 
   X, 
   Check, 
-  Layers,
-  Users,
-  ArrowUp,
-  ArrowDown,
-  Palette
+  Layers, 
+  Users, 
+  ArrowUp, 
+  ArrowDown, 
+  Palette 
 } from 'lucide-react';
 
 const PRESET_MODULE_COLORS = [
@@ -147,30 +147,32 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header & Add Module Action */}
-      <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="apple-glass rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
-            <Layers className="w-5 h-5 text-amber-500 inline-block" />
-            <span>Gestionare Ascultări & Module</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-stone-300 font-sans font-normal border border-stone-700">
-              {modules.length} ascultări active
+          <div className="flex items-center space-x-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-white flex items-center space-x-2">
+              <Layers className="w-5 h-5 text-amber-400" />
+              <span>Gestionare Ascultări & Module</span>
+            </h2>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-white/70 font-mono border border-white/5">
+              {modules.length}
             </span>
-          </h2>
-          <p className="text-xs text-stone-400 mt-0.5">
-            Puteți adăuga, edita, șterge sau reordona orice ascultare după nevoile specifice ale mănăstirii
+          </div>
+          <p className="text-xs text-white/40 mt-0.5">
+            Personalizați, ordonați sau adăugați ascultări pentru slujbele și activitățile mănăstirii
           </p>
         </div>
 
         <button
           onClick={openAddModal}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-all active:scale-95"
+          className="apple-gold-button flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold shadow-sm active:scale-95 transition-all"
         >
-          <Plus className="w-4 h-4" />
-          <span>Adaugă Ascultare Nouă</span>
+          <Plus className="w-3.5 h-3.5 fill-black text-black" />
+          <span>Adaugă Ascultare</span>
         </button>
       </div>
 
-      {/* Modules Cards Grid */}
+      {/* Modules Cards Grid (Apple Settings Style) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {modules.map((mod, index) => {
           const qualifiedCount = persons.filter(p => p.skills.includes(mod.id) && p.active).length;
@@ -178,31 +180,33 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
           return (
             <div
               key={mod.id}
-              className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow transition-all hover:border-stone-700 flex flex-col justify-between relative overflow-hidden"
+              className="apple-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden transition-all duration-300"
             >
-              <div 
-                className="absolute top-0 left-0 right-0 h-1.5" 
-                style={{ backgroundColor: mod.color }} 
-              />
-
               <div>
                 {/* Header of card */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3.5">
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner"
-                      style={{ backgroundColor: `${mod.color}25`, color: mod.color }}
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md"
+                      style={{ 
+                        backgroundColor: `${mod.color}20`, 
+                        color: mod.color,
+                        border: `1px solid ${mod.color}40`,
+                        boxShadow: `0 4px 14px ${mod.color}25`
+                      }}
                     >
                       {renderModuleIcon(mod.iconName, { className: 'w-6 h-6' })}
                     </div>
                     <div>
-                      <h3 className="font-serif font-bold text-stone-100 text-lg">{mod.name}</h3>
-                      <div className="flex items-center space-x-2 mt-0.5">
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-stone-800 text-stone-300 font-semibold border border-stone-700">
+                      <h3 className="font-semibold text-white text-base tracking-tight leading-snug">
+                        {mod.name}
+                      </h3>
+                      <div className="flex items-center space-x-1.5 mt-1">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/5">
                           {mod.rotationCycle === 'weekly' ? 'Săptămânal' : 'Zilnic'}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800/80 text-stone-400 border border-stone-700">
-                          Poziția #{index + 1}
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-white/40">
+                          #{index + 1}
                         </span>
                       </div>
                     </div>
@@ -210,62 +214,58 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
 
                   {/* Actions: Reorder, Edit, Delete */}
                   <div className="flex items-center space-x-1">
-                    {/* Move Up */}
                     <button
                       onClick={() => moveModule(index, 'up')}
                       disabled={index === 0}
-                      className="p-1 rounded-lg text-stone-500 hover:text-white hover:bg-stone-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                      className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-white/50 hover:text-white flex items-center justify-center disabled:opacity-20 transition-all"
                       title="Mută mai sus în grafic"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
                     </button>
-                    {/* Move Down */}
                     <button
                       onClick={() => moveModule(index, 'down')}
                       disabled={index === modules.length - 1}
-                      className="p-1 rounded-lg text-stone-500 hover:text-white hover:bg-stone-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                      className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-white/50 hover:text-white flex items-center justify-center disabled:opacity-20 transition-all"
                       title="Mută mai jos în grafic"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
                     </button>
-                    {/* Edit */}
                     <button
                       onClick={() => openEditModal(mod)}
-                      className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                      className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-white/60 hover:text-white flex items-center justify-center transition-all"
                       title="Modifică ascultarea"
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="w-3.5 h-3.5" />
                     </button>
-                    {/* Delete: ALWAYS AVAILABLE */}
                     <button
                       onClick={() => handleDelete(mod.id, mod.name)}
-                      className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-stone-800 transition-colors"
+                      className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-rose-500/20 text-white/40 hover:text-rose-300 flex items-center justify-center transition-all"
                       title="Șterge ascultarea"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
                 {/* Description */}
                 {mod.description && (
-                  <p className="mt-3 text-xs text-stone-400 leading-relaxed">
+                  <p className="mt-3 text-xs text-white/50 leading-relaxed">
                     {mod.description}
                   </p>
                 )}
 
                 {/* Roles list */}
                 <div className="mt-4 space-y-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-500 block">
-                    Posturi & Roluri:
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40 block">
+                    Roluri & Posturi:
                   </span>
                   {mod.roles.map(role => (
                     <div
                       key={role.id}
-                      className="flex items-center justify-between text-xs bg-stone-950/50 px-2.5 py-1.5 rounded-lg border border-stone-800"
+                      className="flex items-center justify-between text-xs bg-white/[0.03] px-3 py-1.5 rounded-2xl border border-white/[0.05]"
                     >
-                      <span className="text-stone-300 font-medium">{role.name}</span>
-                      <span className="text-[11px] text-amber-400/90 font-semibold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-900/40">
+                      <span className="text-white/80 font-medium">{role.name}</span>
+                      <span className="text-[10px] text-amber-300/90 font-semibold bg-white/[0.06] px-2 py-0.5 rounded-full border border-white/5">
                         {role.requiredCount} {role.requiredCount === 1 ? 'persoană' : 'persoane'}
                       </span>
                     </div>
@@ -274,12 +274,12 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
               </div>
 
               {/* Footer info: qualified monks */}
-              <div className="mt-4 pt-3 border-t border-stone-800/80 flex items-center justify-between text-xs text-stone-400">
+              <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-white/40">
                 <div className="flex items-center space-x-1.5">
-                  <Users className="w-3.5 h-3.5 text-stone-500" />
+                  <Users className="w-3.5 h-3.5 text-white/30" />
                   <span>Slujitori apți:</span>
                 </div>
-                <span className={`font-semibold ${qualifiedCount > 0 ? 'text-stone-200' : 'text-rose-400'}`}>
+                <span className={`font-semibold ${qualifiedCount > 0 ? 'text-white/90' : 'text-rose-400'}`}>
                   {qualifiedCount} {qualifiedCount === 1 ? 'slujitor' : 'slujitori'}
                 </span>
               </div>
@@ -290,88 +290,88 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
 
       {/* Add / Edit Module Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-stone-900 border border-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden text-stone-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden text-white border border-white/15">
             {/* Header */}
-            <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/40">
-              <h3 className="font-serif font-bold text-lg text-amber-100">
-                {editingModule ? `Modificare: ${editingModule.name}` : 'Adăugare Ascultare / Modul Nou'}
+            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02]">
+              <h3 className="font-semibold text-lg text-white">
+                {editingModule ? `Modificare: ${editingModule.name}` : 'Adăugare Ascultare Nouă'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/60 hover:text-white flex items-center justify-center transition-all"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Name */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                   Denumire Ascultare *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Altar, Strană, Pangar, Bucătărie, Atelier..."
+                  placeholder="Ex: Altar, Strană, Pangar, Bucătărie..."
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 transition-all"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                   Descriere sau Responsabilități
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Ex: Îndatoriri, rânduială, program de slujbă..."
+                  placeholder="Ex: Îndatoriri, rânduială, program..."
                   value={formDescription}
                   onChange={e => setFormDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 transition-all"
                 />
               </div>
 
-              {/* Rotation Cycle */}
+              {/* Rotation Cycle (Apple Segmented Control) */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                   Ciclul de Rotație
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     onClick={() => setFormCycle('weekly')}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                       formCycle === 'weekly'
-                        ? 'bg-amber-950/40 border-amber-500 text-white'
-                        : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                        ? 'bg-amber-500/15 border-amber-400/50 text-white shadow-xs'
+                        : 'border-white/[0.08] hover:bg-white/[0.04] text-white/60'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold">Săptămânal</span>
                       {formCycle === 'weekly' && <Check className="w-4 h-4 text-amber-400" />}
                     </div>
-                    <p className="text-[10px] text-stone-400 mt-1">
+                    <p className="text-[10px] text-white/40 mt-1">
                       Aceeași persoană este de rând toată săptămâna
                     </p>
                   </div>
 
                   <div
                     onClick={() => setFormCycle('daily')}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                       formCycle === 'daily'
-                        ? 'bg-amber-950/40 border-amber-500 text-white'
-                        : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                        ? 'bg-amber-500/15 border-amber-400/50 text-white shadow-xs'
+                        : 'border-white/[0.08] hover:bg-white/[0.04] text-white/60'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold">Zilnic</span>
                       {formCycle === 'daily' && <Check className="w-4 h-4 text-amber-400" />}
                     </div>
-                    <p className="text-[10px] text-stone-400 mt-1">
+                    <p className="text-[10px] text-white/40 mt-1">
                       Turele se schimbă în fiecare zi
                     </p>
                   </div>
@@ -380,7 +380,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
 
               {/* Visual Icon Picker */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                   Pictogramă
                 </label>
                 <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
@@ -392,13 +392,13 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                         key={icon.name}
                         onClick={() => setFormIcon(icon.name)}
                         title={icon.label}
-                        className={`p-2 rounded-lg flex items-center justify-center border transition-all ${
+                        className={`p-2.5 rounded-2xl flex items-center justify-center border transition-all ${
                           isSelected
-                            ? 'bg-amber-500 text-stone-950 border-amber-400 scale-105'
-                            : 'border-stone-800 hover:bg-stone-800 text-stone-300'
+                            ? 'bg-amber-400 text-black border-amber-300 scale-105 shadow-md'
+                            : 'border-white/[0.08] hover:bg-white/[0.06] text-white/70'
                         }`}
                       >
-                        {renderModuleIcon(icon.name, { className: 'w-5 h-5' })}
+                        {renderModuleIcon(icon.name, { className: 'w-4 h-4' })}
                       </button>
                     );
                   })}
@@ -407,12 +407,9 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
 
               {/* Color Picker: Palette + Custom Color */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 flex items-center justify-between">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 flex items-center justify-between">
                   <span>Culoare Tematică</span>
-                  <span className="flex items-center space-x-1 text-stone-400 font-mono text-[10px]">
-                    <Palette className="w-3 h-3 text-amber-400" />
-                    <span>{formColor}</span>
-                  </span>
+                  <span className="text-[10px] font-mono text-white/40">{formColor}</span>
                 </label>
                 <div className="flex flex-wrap items-center gap-2">
                   {PRESET_MODULE_COLORS.map(c => (
@@ -421,15 +418,14 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                       key={c}
                       onClick={() => setFormColor(c)}
                       className={`w-7 h-7 rounded-full transition-transform ${
-                        formColor === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-stone-900' : 'hover:scale-110'
+                        formColor === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-neutral-900' : 'hover:scale-110'
                       }`}
                       style={{ backgroundColor: c }}
                     />
                   ))}
-                  {/* Custom color input */}
                   <label 
-                    className="w-7 h-7 rounded-full border border-stone-600 flex items-center justify-center cursor-pointer overflow-hidden relative shadow-sm"
-                    title="Alege orice culoare personalizată"
+                    className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center cursor-pointer relative shadow-sm hover:scale-110 transition-transform"
+                    title="Alege orice culoare"
                   >
                     <input
                       type="color"
@@ -437,7 +433,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                       onChange={e => setFormColor(e.target.value)}
                       className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
                     />
-                    <Palette className="w-3.5 h-3.5 text-stone-300" />
+                    <Palette className="w-3.5 h-3.5 text-white/70" />
                   </label>
                 </div>
               </div>
@@ -445,16 +441,16 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
               {/* Roles & Required Persons */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                    Roluri / Posturi & Număr de Slujitori
+                  <label className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">
+                    Roluri & Număr de Slujitori
                   </label>
                   <button
                     type="button"
                     onClick={handleAddRoleRow}
-                    className="text-xs text-amber-400 hover:text-amber-300 flex items-center space-x-1"
+                    className="text-xs text-amber-300 hover:text-amber-200 flex items-center space-x-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Adaugă post/rol</span>
+                    <span>Adaugă rol</span>
                   </button>
                 </div>
 
@@ -463,30 +459,29 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                     <div key={role.id || idx} className="flex items-center space-x-2">
                       <input
                         type="text"
-                        placeholder="Nume rol (ex: Slujitor de rând, Ajutor)"
+                        placeholder="Nume rol (ex: Slujitor de rând)"
                         value={role.name}
                         onChange={e => handleRoleChange(idx, e.target.value, role.requiredCount)}
-                        className="flex-1 px-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                        className="flex-1 px-4 py-2 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 transition-all"
                       />
-                      <div className="flex items-center space-x-1 bg-stone-800 border border-stone-700 rounded-lg px-2 py-1">
-                        <span className="text-[10px] text-stone-400">Nr:</span>
+                      <div className="flex items-center space-x-1 bg-white/[0.06] border border-white/[0.08] rounded-2xl px-2.5 py-1.5">
+                        <span className="text-[10px] text-white/40">Nr:</span>
                         <input
                           type="number"
                           min={1}
                           max={5}
                           value={role.requiredCount}
                           onChange={e => handleRoleChange(idx, role.name, parseInt(e.target.value) || 1)}
-                          className="w-10 text-xs text-center bg-transparent text-amber-300 font-bold focus:outline-none"
+                          className="w-8 text-xs text-center bg-transparent text-amber-300 font-bold focus:outline-none"
                         />
                       </div>
                       {formRoles.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveRoleRow(idx)}
-                          className="p-1.5 text-stone-500 hover:text-red-400"
-                          title="Șterge rol"
+                          className="w-7 h-7 rounded-full text-white/40 hover:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-all"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
@@ -495,19 +490,19 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
               </div>
 
               {/* Buttons */}
-              <div className="pt-4 border-t border-stone-800 flex items-center justify-end space-x-3">
+              <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                  className="px-4 py-2 rounded-full text-xs font-semibold text-white/60 hover:text-white hover:bg-white/[0.08] transition-all"
                 >
                   Anulează
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-colors"
+                  className="apple-gold-button px-5 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-all"
                 >
-                  {editingModule ? 'Salvează Modificările' : 'Creează Ascultarea'}
+                  {editingModule ? 'Salvează' : 'Creează'}
                 </button>
               </div>
             </form>

@@ -63,29 +63,29 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Action Bar (Hidden when printing) */}
-      <div className="no-print glass-panel rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="no-print apple-glass rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-white/10 shadow-lg font-sf">
         <div className="flex items-center space-x-3">
           <button
             onClick={onBackToGrid}
-            className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 text-stone-300 hover:text-white text-xs font-semibold transition-colors"
+            className="apple-button flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-semibold transition-all"
           >
             <ArrowLeft className="w-4 h-4 text-amber-400" />
             <span>Înapoi la Grafic</span>
           </button>
 
-          <div className="flex items-center space-x-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-stone-800">
+          <div className="flex items-center space-x-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10">
             <button
               onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
-              className="p-1 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white"
+              className="p-1 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs font-cinzel text-amber-200 font-bold px-2">
+            <span className="text-xs text-amber-200 font-semibold px-2 tracking-wide">
               {weekRangeFormatted}
             </span>
             <button
               onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
-              className="p-1 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white"
+              className="p-1 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -95,25 +95,25 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
         <div className="flex items-center space-x-3">
           <button
             onClick={() => window.print()}
-            className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 text-stone-950 font-cinzel font-black text-sm shadow-[0_4px_20px_rgba(212,175,55,0.4)] hover:shadow-[0_6px_25px_rgba(212,175,55,0.6)] transition-all active:scale-95"
+            className="apple-gold-button flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-semibold shadow-md"
           >
-            <Printer className="w-4 h-4 fill-stone-950 text-stone-950" />
+            <Printer className="w-4 h-4 text-stone-950" />
             <span>Tipărește Foaia (A4 / PDF)</span>
           </button>
         </div>
       </div>
 
       {/* Editable Announcement for the board (Hidden when printing) */}
-      <div className="no-print glass-panel rounded-2xl p-4 text-xs space-y-2">
-        <div className="flex items-center space-x-2 text-amber-300 font-cinzel font-bold text-xs uppercase tracking-wider">
+      <div className="no-print apple-glass rounded-2xl p-4 text-xs space-y-2 border border-white/10 font-sf">
+        <div className="flex items-center space-x-2 text-amber-300 font-semibold text-xs tracking-wide">
           <FileText className="w-4 h-4 text-amber-400" />
-          <span>Mențiuni și rânduieli particulare pentru afișaj:</span>
+          <span>Mențiuni și rânduieli particulare pentru avizier:</span>
         </div>
         <textarea
           rows={2}
           value={customAnnouncement}
           onChange={e => setCustomAnnouncement(e.target.value)}
-          className="w-full p-3 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-200 text-xs focus:outline-none focus:border-amber-500"
+          className="w-full p-3 rounded-xl bg-white/[0.05] border border-white/10 text-white text-xs placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.08] transition-all"
           placeholder="Scrieți aici orice anunț, sărbătoare cu priveghere sau tipic special pentru această săptămână..."
         />
       </div>

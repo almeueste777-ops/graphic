@@ -69,7 +69,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen apple-ambient-bg text-[#f5f5f7] flex flex-col font-sf antialiased selection:bg-amber-500/30 selection:text-amber-200">
       {/* Navbar */}
       <Navbar
         currentTab={currentTab}
@@ -142,9 +142,9 @@ export function App() {
       </main>
 
       {/* Footer (Hidden on print) */}
-      <footer className="no-print border-t border-stone-900 bg-stone-950/80 py-4 text-center text-xs text-stone-500">
-        <p className="font-serif">Graphic • Sistem de Rânduială Monahală & Planificare a Ascultărilor</p>
-        <p className="text-[11px] text-stone-600 mt-0.5">Versiune PWA Offline • {settings.monasteryName}</p>
+      <footer className="no-print border-t border-white/5 bg-black/40 backdrop-blur-xl py-6 text-center text-xs text-white/40">
+        <p className="font-sf font-medium tracking-tight text-white/60">Graphic • Sistem Monahal Inteligent de Organizare & Ascultări</p>
+        <p className="text-[11px] text-white/30 mt-1">Conceput cu standardele de claritate și fluiditate Apple • PWA Offline • {settings.monasteryName}</p>
       </footer>
 
       {/* Backup & Settings Modal */}

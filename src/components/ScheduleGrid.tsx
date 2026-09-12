@@ -15,7 +15,7 @@ import { ro } from 'date-fns/locale';
 import { 
   ChevronLeft, 
   ChevronRight, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Sparkles, 
   Trash2, 
   Printer, 
@@ -150,104 +150,109 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Week Navigator & Actions Toolbar with Glassmorphism */}
-      <div className="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Date Selector Navigation */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
-            className="p-2.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 hover:border-amber-500/40 text-stone-300 hover:text-white transition-all shadow-sm"
-            title="Săptămâna anterioară"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+    <div className="space-y-5">
+      {/* Apple-style Calendar Header Toolbar */}
+      <div className="apple-glass rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300">
+        
+        {/* Date Scrubber */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center p-1 rounded-full bg-white/[0.06] border border-white/[0.08]">
+            <button
+              onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+              title="Săptămâna anterioară"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={() => setCurrentDate(new Date())}
-            className="px-3.5 py-1.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-xs font-bold text-amber-300 uppercase tracking-widest transition-all shadow-xs"
-          >
-            Astăzi
-          </button>
+            <button
+              onClick={() => setCurrentDate(new Date())}
+              className="px-3 py-1 rounded-full text-xs font-semibold text-amber-300/90 hover:text-amber-200 hover:bg-white/10 active:scale-95 transition-all"
+            >
+              Astăzi
+            </button>
 
-          <div className="text-center sm:text-left">
-            <h2 className="text-lg sm:text-xl font-cinzel font-bold tracking-wide text-amber-100 flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-amber-400 inline-block" />
-              <span>{weekRangeTitle}</span>
-            </h2>
-            <p className="text-xs text-stone-400 font-sans mt-0.5">
-              Rânduiala liturgică și a ascultărilor obștii
-            </p>
+            <button
+              onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+              title="Săptămâna viitoare"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
 
-          <button
-            onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
-            className="p-2.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 hover:border-amber-500/40 text-stone-300 hover:text-white transition-all shadow-sm"
-            title="Săptămâna viitoare"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          <div>
+            <div className="flex items-center space-x-2">
+              <CalendarIcon className="w-4 h-4 text-amber-400/90" />
+              <h2 className="text-base sm:text-lg font-semibold tracking-tight text-white capitalize">
+                {weekRangeTitle}
+              </h2>
+            </div>
+            <p className="text-[11px] text-white/40 font-sans mt-0.5">
+              Rânduiala liturgică și graficul săptămânal de rând
+            </p>
+          </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-2.5 w-full md:w-auto justify-end">
+        {/* Action Controls */}
+        <div className="flex items-center space-x-2 w-full md:w-auto justify-end">
           <button
             onClick={handleAutoGenerate}
-            className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-stone-950 text-xs sm:text-sm font-bold shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_22px_rgba(212,175,55,0.5)] transition-all active:scale-95"
+            className="apple-gold-button flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-all"
           >
-            <Sparkles className="w-4 h-4 fill-stone-950 text-stone-950" />
-            <span>Generează Grafic</span>
+            <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
+            <span>Generează Automat</span>
           </button>
 
           <button
             onClick={onNavigateToPrint}
-            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-stone-900/80 hover:bg-stone-800 border border-stone-800 hover:border-rose-500/40 text-stone-200 hover:text-white text-xs sm:text-sm font-medium transition-all shadow-sm"
-            title="Format de tipărit A4 pentru avizier"
+            className="flex items-center space-x-2 px-4 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.08] text-white text-xs font-medium active:scale-95 transition-all"
+            title="Afișaj Avizier A4"
           >
-            <Printer className="w-4 h-4 text-rose-400" />
-            <span className="hidden sm:inline">Tipărește A4</span>
+            <Printer className="w-3.5 h-3.5 text-rose-400" />
+            <span className="hidden sm:inline">Tipărește</span>
           </button>
 
           <button
             onClick={handleClearWeek}
-            className="p-2.5 rounded-xl bg-stone-900/60 hover:bg-rose-950/60 border border-stone-800/80 hover:border-rose-800/50 hover:text-rose-300 text-stone-400 transition-colors"
-            title="Curăță programările din această săptămână"
+            className="w-9 h-9 rounded-full bg-white/[0.05] hover:bg-rose-500/20 hover:text-rose-300 text-white/40 border border-white/[0.08] flex items-center justify-center active:scale-95 transition-all"
+            title="Curăță săptămâna"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Generation Alerts / Success Banner */}
+      {/* Generation Alerts (Apple Toast / Banner style) */}
       {generationAlerts && (
-        <div className={`p-4 rounded-2xl border backdrop-blur-md text-sm transition-all shadow-lg ${
+        <div className={`p-4 rounded-3xl backdrop-blur-2xl border transition-all duration-300 text-xs shadow-xl ${
           generationAlerts.length > 0 
-            ? 'bg-amber-950/40 border-amber-500/40 text-amber-200' 
-            : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+            ? 'bg-amber-950/30 border-amber-500/30 text-amber-200' 
+            : 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200'
         }`}>
           <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-2.5 font-semibold">
+            <div className="flex items-center space-x-2 font-medium">
               {generationAlerts.length > 0 ? (
                 <>
-                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                  <span>Grafic generat cu {generationAlerts.length} ajustări / înlocuiri:</span>
+                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <span>Grafic completat cu {generationAlerts.length} ajustări de rotație / substituție:</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                  <span>Grafic completat cu succes! Toate ascultările au fost rânduite echitabil.</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span>Grafic generat fără conflicte! Toate ascultările au fost rânduite armonios.</span>
                 </>
               )}
             </div>
             <button
               onClick={() => setGenerationAlerts(null)}
-              className="text-stone-400 hover:text-white text-xs underline ml-4"
+              className="text-white/40 hover:text-white text-[11px] underline ml-4"
             >
               Închide
             </button>
           </div>
           {generationAlerts.length > 0 && (
-            <ul className="mt-2.5 pl-7 list-disc space-y-1 text-xs text-amber-300/90 max-h-36 overflow-y-auto">
+            <ul className="mt-2 pl-6 list-disc space-y-0.5 text-[11px] text-amber-200/80 max-h-32 overflow-y-auto">
               {generationAlerts.map((w, idx) => (
                 <li key={idx}>{w}</li>
               ))}
@@ -256,15 +261,15 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         </div>
       )}
 
-      {/* The Schedule Matrix */}
-      <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl">
+      {/* The Grid Table (Apple Health / Calendar Matrix) */}
+      <div className="apple-glass rounded-3xl overflow-hidden shadow-2xl border border-white/[0.08]">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse min-w-[850px]">
+          <table className="w-full border-collapse min-w-[860px]">
             {/* Table Header: Days of the week */}
             <thead>
-              <tr className="bg-black/60 border-b border-stone-800/80 text-stone-300">
-                <th className="p-3.5 text-left font-cinzel font-bold text-xs uppercase tracking-wider w-48 text-stone-400">
-                  Ascultare / Post
+              <tr className="bg-white/[0.02] border-b border-white/[0.06] text-white/70">
+                <th className="p-4 text-left text-xs font-semibold uppercase tracking-wider w-44 text-white/40">
+                  Ascultare
                 </th>
                 {weekDays.map(day => {
                   const dayIsToday = isToday(day);
@@ -272,21 +277,27 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   return (
                     <th
                       key={day.toISOString()}
-                      className={`p-3 text-center border-l border-stone-800/60 transition-colors ${
-                        dayIsToday ? 'bg-amber-950/25 border-t-2 border-t-amber-400' : ''
+                      className={`p-3 text-center border-l border-white/[0.04] transition-colors ${
+                        dayIsToday ? 'bg-white/[0.03]' : ''
                       }`}
                     >
                       <div className="flex flex-col items-center">
-                        <span className={`text-[11px] uppercase tracking-wider font-semibold ${
-                          isSunday ? 'text-red-400 font-bold' : 'text-stone-400'
+                        <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 ${
+                          isSunday ? 'text-rose-400' : 'text-white/40'
                         }`}>
-                          {format(day, 'EEEE', { locale: ro })}
+                          {format(day, 'EEE', { locale: ro })}
                         </span>
-                        <span className={`text-sm font-cinzel font-extrabold mt-0.5 ${
-                          dayIsToday ? 'gold-text-gradient drop-shadow-sm' : 'text-stone-200'
+                        
+                        {/* Apple Date Badge Circle */}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                          dayIsToday 
+                            ? 'bg-amber-400 text-black font-extrabold shadow-[0_0_12px_rgba(251,191,36,0.6)]' 
+                            : isSunday 
+                            ? 'text-rose-400 hover:bg-white/[0.06]' 
+                            : 'text-white hover:bg-white/[0.06]'
                         }`}>
-                          {format(day, 'd MMM', { locale: ro })}
-                        </span>
+                          {format(day, 'd', { locale: ro })}
+                        </div>
                       </div>
                     </th>
                   );
@@ -294,42 +305,42 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
               </tr>
             </thead>
 
-            {/* Table Body: Modules and Roles */}
-            <tbody className="divide-y divide-stone-800/60">
+            {/* Table Body: Modules & Roles */}
+            <tbody className="divide-y divide-white/[0.05]">
               {modules.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-12 text-center text-stone-400">
-                    <p className="text-base font-cinzel">Nu există nicio ascultare definită.</p>
-                    <p className="text-xs text-stone-500 mt-1">Mergeți în secțiunea „Ascultări” pentru a crea modulele dorite.</p>
+                  <td colSpan={8} className="p-12 text-center text-white/40">
+                    <p className="text-sm font-medium">Nu este definită nicio ascultare.</p>
+                    <p className="text-xs text-white/30 mt-1">Accesați secțiunea „Ascultări” pentru a adăuga modulele comunității.</p>
                   </td>
                 </tr>
               ) : (
                 modules.map(module => (
                   <React.Fragment key={module.id}>
-                    {/* Module Subheader Row */}
-                    <tr className="bg-gradient-to-r from-stone-950/90 via-stone-900/60 to-stone-950/90">
-                      <td colSpan={8} className="px-4 py-2 border-y border-stone-800/60">
+                    {/* Module Subheader */}
+                    <tr className="bg-white/[0.02]">
+                      <td colSpan={8} className="px-4 py-2.5 border-y border-white/[0.06]">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <span 
-                              className="w-7 h-7 rounded-lg flex items-center justify-center shadow-inner"
+                              className="w-7 h-7 rounded-[9px] flex items-center justify-center shadow-xs"
                               style={{ 
                                 backgroundColor: `${module.color}25`, 
                                 color: module.color,
-                                boxShadow: `0 0 10px ${module.color}30`
+                                border: `1px solid ${module.color}40`
                               }}
                             >
                               {renderModuleIcon(module.iconName, { className: 'w-4 h-4' })}
                             </span>
-                            <span className="font-cinzel font-bold text-stone-100 text-sm tracking-wider">
+                            <span className="font-semibold text-white text-xs sm:text-sm tracking-tight">
                               {module.name}
                             </span>
-                            <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-stone-800/80 text-stone-300 border border-stone-700/80">
-                              {module.rotationCycle === 'weekly' ? 'Săptămână de rând' : 'Rotație zilnică'}
+                            <span className="text-[10px] font-medium tracking-tight px-2 py-0.5 rounded-full bg-white/[0.06] text-white/60 border border-white/[0.05]">
+                              {module.rotationCycle === 'weekly' ? 'Săptămânal' : 'Zilnic'}
                             </span>
                           </div>
                           {module.description && (
-                            <span className="text-[11px] text-stone-400 italic hidden md:inline">
+                            <span className="text-[11px] text-white/40 hidden md:inline truncate max-w-md">
                               {module.description}
                             </span>
                           )}
@@ -337,17 +348,17 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                       </td>
                     </tr>
 
-                    {/* Roles for this module */}
+                    {/* Roles rows */}
                     {module.roles.map(role => (
                       <React.Fragment key={role.id}>
                         {Array.from({ length: role.requiredCount }).map((_, slotIdx) => (
-                          <tr key={`${role.id}_${slotIdx}`} className="hover:bg-stone-800/20 transition-colors">
+                          <tr key={`${role.id}_${slotIdx}`} className="hover:bg-white/[0.015] transition-colors">
                             {/* Role label column */}
-                            <td className="p-3 text-xs text-stone-300 font-medium pl-6 border-r border-stone-800/60 bg-stone-950/30">
+                            <td className="p-3 text-xs text-white/70 font-medium pl-6 border-r border-white/[0.04] bg-white/[0.01]">
                               <div className="flex flex-col">
-                                <span className="font-semibold text-stone-200">{role.name}</span>
+                                <span className="text-white/80 font-medium">{role.name}</span>
                                 {role.requiredCount > 1 && (
-                                  <span className="text-[10px] text-stone-500 font-mono">Post #{slotIdx + 1}</span>
+                                  <span className="text-[10px] text-white/35 font-mono">Post #{slotIdx + 1}</span>
                                 )}
                               </div>
                             </td>
@@ -372,62 +383,61 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                       assignment,
                                     })
                                   }
-                                  className={`p-1.5 border-l border-stone-800/60 align-top cursor-pointer group transition-all ${
-                                    isCurrentDay ? 'bg-amber-950/15' : ''
-                                  } hover:bg-stone-800/40`}
+                                  className={`p-1.5 border-l border-white/[0.04] align-top cursor-pointer group transition-all duration-200 ${
+                                    isCurrentDay ? 'bg-white/[0.015]' : ''
+                                  }`}
                                 >
                                   {person ? (
                                     <div 
-                                      className="p-2.5 rounded-xl border text-left relative overflow-hidden transition-all duration-200 group-hover:scale-[1.02] shadow-sm"
+                                      className="apple-card p-2.5 rounded-2xl text-left relative overflow-hidden transition-all duration-200 group-hover:scale-[1.02] group-active:scale-[0.98]"
                                       style={{
-                                        backgroundColor: `${person.colorTag}18`,
-                                        borderColor: `${person.colorTag}45`,
-                                        boxShadow: `0 4px 14px ${person.colorTag}15`
+                                        borderLeft: `3px solid ${person.colorTag}`,
+                                        background: `linear-gradient(135deg, ${person.colorTag}15 0%, rgba(24,24,27,0.7) 100%)`
                                       }}
                                     >
                                       <div className="flex items-center justify-between mb-1">
-                                        <span 
-                                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                          style={{ 
-                                            backgroundColor: person.colorTag,
-                                            boxShadow: `0 0 6px ${person.colorTag}`
-                                          }}
-                                        />
+                                        <div className="flex items-center space-x-1.5">
+                                          <span 
+                                            className="w-2 h-2 rounded-full flex-shrink-0 shadow-xs"
+                                            style={{ backgroundColor: person.colorTag }}
+                                          />
+                                          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+                                            {person.rank}
+                                          </span>
+                                        </div>
+
                                         {assignment?.status === 'substituted' && (
                                           <span 
-                                            title="Înlocuitor desemnat"
-                                            className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-950 text-violet-300 rounded border border-violet-700/80 flex items-center space-x-0.5"
+                                            title="Înlocuitor automat"
+                                            className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 flex items-center space-x-0.5"
                                           >
                                             <Repeat className="w-2.5 h-2.5" />
-                                            <span>Înlocuit</span>
+                                            <span>Subst</span>
                                           </span>
                                         )}
                                         {doubleBooked && (
                                           <span 
-                                            title="Atenție: dublă ascultare în această zi!"
-                                            className="text-[9px] p-0.5 bg-rose-950 text-rose-300 rounded animate-pulse"
+                                            title="Atenție: are două ascultări în aceeași zi!"
+                                            className="text-[9px] p-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse"
                                           >
-                                            <AlertCircle className="w-3.5 h-3.5" />
+                                            <AlertCircle className="w-3 h-3" />
                                           </span>
                                         )}
                                       </div>
 
-                                      <p className="text-xs font-bold text-stone-100 truncate tracking-tight">
+                                      <p className="text-xs font-semibold text-white truncate tracking-tight">
                                         {person.name}
-                                      </p>
-                                      <p className="text-[10px] text-stone-400 truncate mt-0.5">
-                                        {person.rank}
                                       </p>
 
                                       {assignment?.notes && (
-                                        <p className="text-[10px] text-amber-300/90 mt-1 truncate flex items-center space-x-1">
-                                          <Info className="w-2.5 h-2.5 flex-shrink-0 text-amber-400" />
+                                        <p className="text-[10px] text-amber-300/80 mt-1 truncate flex items-center space-x-1">
+                                          <Info className="w-2.5 h-2.5 flex-shrink-0" />
                                           <span>{assignment.notes}</span>
                                         </p>
                                       )}
                                     </div>
                                   ) : (
-                                    <div className="h-16 rounded-xl border border-dashed border-stone-800/80 flex flex-col items-center justify-center text-stone-500 group-hover:border-amber-500/40 group-hover:text-amber-300 transition-colors bg-stone-950/20">
+                                    <div className="h-16 rounded-2xl border border-dashed border-white/[0.08] hover:border-amber-400/40 hover:bg-white/[0.03] flex flex-col items-center justify-center text-white/30 hover:text-amber-300 transition-all duration-200">
                                       <Plus className="w-3.5 h-3.5" />
                                       <span className="text-[10px] mt-0.5 font-medium">Liber</span>
                                     </div>

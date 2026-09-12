@@ -9,7 +9,11 @@ import {
   Trash2, 
   X, 
   ArrowRight,
-  Info
+  Info,
+  Calendar,
+  Sparkles,
+  ShieldCheck,
+  Clock
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
@@ -128,26 +132,32 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
   const getPerson = (id: string) => persons.find(p => p.id === id);
 
   return (
-    <div className="space-y-8">
-      {/* SECTION 1: ÎNVOIRI & CONCEDII (PUNCTUALE) */}
+    <div className="space-y-10 font-sf animate-in fade-in duration-300">
+      {/* SECTION 1: ÎNVOIRI & CONCEDII (Apple Focus / Reminders Style) */}
       <div className="space-y-4">
-        <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
-              <CalendarOff className="w-5 h-5 text-rose-400 inline-block" />
-              <span>Învoiri & Excepții de la Regulă</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-stone-300 font-sans font-normal border border-stone-700">
-                {absences.length} învoiri
-              </span>
-            </h2>
-            <p className="text-xs text-stone-400 mt-0.5">
-              Înregistrați perioadele când un slujitor lipsește și desemnați înlocuitorul preferat
-            </p>
+        <div className="apple-glass rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-white/10 shadow-lg">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center text-rose-400 shadow-inner">
+              <CalendarOff className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2.5">
+                <h2 className="text-lg font-semibold tracking-tight text-white">
+                  Învoiri & Excepții de la Rânduială
+                </h2>
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 font-medium border border-rose-500/20">
+                  {absences.length} active
+                </span>
+              </div>
+              <p className="text-xs text-white/50 mt-0.5">
+                Înregistrați perioadele de chilie, spital sau misiuni externe pentru repartizare corectă
+              </p>
+            </div>
           </div>
 
           <button
             onClick={openAddAbsence}
-            className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-rose-800 hover:bg-rose-700 text-white text-sm font-semibold shadow transition-all active:scale-95"
+            className="apple-button flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-semibold shadow-[0_4px_16px_rgba(225,29,72,0.3)]"
           >
             <Plus className="w-4 h-4" />
             <span>Adaugă Învoire</span>
@@ -155,11 +165,13 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
         </div>
 
         {absences.length === 0 ? (
-          <div className="bg-stone-900/60 border border-dashed border-stone-800 rounded-xl p-8 text-center text-stone-400">
-            <CalendarOff className="w-8 h-8 text-stone-600 mx-auto mb-2" />
-            <p className="text-sm font-medium">Nicio învoire înregistrată în acest moment</p>
-            <p className="text-xs text-stone-500 mt-1">
-              Toți slujitorii sunt considerați disponibili pentru repartizarea automată a ascultărilor.
+          <div className="apple-glass rounded-3xl p-10 text-center border border-white/5 border-dashed">
+            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3 text-white/40 shadow-inner">
+              <CalendarOff className="w-7 h-7" />
+            </div>
+            <p className="text-sm font-semibold text-white/90">Nicio învoire înregistrată</p>
+            <p className="text-xs text-white/40 max-w-md mx-auto mt-1 leading-relaxed">
+              Toți slujitorii sunt activi și disponibili. Algoritmul de rotație va asigura o distribuire optimă între toți membrii obștii.
             </p>
           </div>
         ) : (
@@ -167,27 +179,32 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
             {absences.map(abs => {
               const person = getPerson(abs.personId);
               const substitute = abs.preferredSubstituteId ? getPerson(abs.preferredSubstituteId) : null;
-              const formattedStart = format(parseISO(abs.startDate), 'd MMM yyyy', { locale: ro });
+              const formattedStart = format(parseISO(abs.startDate), 'd MMM', { locale: ro });
               const formattedEnd = format(parseISO(abs.endDate), 'd MMM yyyy', { locale: ro });
 
               return (
                 <div
                   key={abs.id}
-                  className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow relative overflow-hidden flex flex-col justify-between"
+                  className="apple-card rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between border border-white/10 hover:border-white/20 group"
                 >
                   <div>
                     {/* Header */}
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-2.5">
-                        <span
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: person?.colorTag || '#999' }}
-                        />
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-md ring-1 ring-white/15"
+                          style={{
+                            background: `linear-gradient(135deg, ${person?.colorTag || '#888'}, ${person?.colorTag || '#888'}88)`,
+                            color: '#ffffff',
+                          }}
+                        >
+                          {person?.name.charAt(0) || '?'}
+                        </div>
                         <div>
-                          <h4 className="font-semibold text-stone-100 text-sm">
+                          <h4 className="font-semibold text-white text-sm tracking-tight">
                             {person?.name || 'Necunoscut'}
                           </h4>
-                          <span className="text-[11px] text-stone-400">
+                          <span className="text-[11px] text-white/50">
                             {person?.rank}
                           </span>
                         </div>
@@ -195,7 +212,7 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
                       <button
                         onClick={() => handleDeleteAbsence(abs.id)}
-                        className="p-1 rounded-lg text-stone-500 hover:text-red-400 hover:bg-stone-800 transition-colors"
+                        className="opacity-60 hover:opacity-100 p-1.5 rounded-lg text-white/50 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                         title="Șterge învoirea"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -203,23 +220,26 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                     </div>
 
                     {/* Dates & Reason */}
-                    <div className="mt-3 space-y-1 text-xs">
-                      <div className="flex items-center justify-between bg-stone-950/40 p-2 rounded border border-stone-800">
-                        <span className="text-stone-400">Perioada:</span>
-                        <span className="font-medium text-amber-300">
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center justify-between bg-white/[0.04] px-3 py-2 rounded-xl border border-white/5">
+                        <div className="flex items-center space-x-2 text-white/50 text-xs">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Perioada:</span>
+                        </div>
+                        <span className="text-xs font-semibold text-amber-300">
                           {formattedStart} – {formattedEnd}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between py-1">
-                        <span className="text-stone-400">Motiv:</span>
-                        <span className="font-medium text-rose-300 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs text-white/50">Motiv:</span>
+                        <span className="text-[11px] font-medium text-rose-300 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/20">
                           {abs.reason}
                         </span>
                       </div>
 
                       {abs.details && (
-                        <p className="text-stone-400 italic text-[11px] pt-1">
+                        <p className="text-white/60 italic text-xs px-1 pt-1 leading-relaxed">
                           „{abs.details}”
                         </p>
                       )}
@@ -227,18 +247,20 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                   </div>
 
                   {/* Preferred Substitute */}
-                  <div className="mt-3 pt-3 border-t border-stone-800/80">
-                    <span className="text-[10px] uppercase font-semibold text-stone-500 block mb-1">
+                  <div className="mt-4 pt-3 border-t border-white/5">
+                    <span className="text-[10px] uppercase font-semibold text-white/40 tracking-wider block mb-1.5">
                       Înlocuitor desemnat:
                     </span>
                     {substitute ? (
-                      <div className="flex items-center space-x-2 text-xs bg-amber-950/20 text-amber-200 p-1.5 rounded border border-amber-900/30">
-                        <Repeat className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="font-medium">{substitute.name} ({substitute.rank})</span>
+                      <div className="flex items-center space-x-2 text-xs bg-amber-500/10 text-amber-200 px-3 py-2 rounded-xl border border-amber-500/20">
+                        <Repeat className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                        <span className="font-semibold">{substitute.name}</span>
+                        <span className="text-white/40 text-[10px]">({substitute.rank})</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-stone-500 italic">
-                        Se alege automat conform regulilor generale
+                      <span className="text-xs text-white/40 italic flex items-center space-x-1.5 px-1">
+                        <Clock className="w-3.5 h-3.5 text-white/30" />
+                        <span>Se alege automat prin rotație</span>
                       </span>
                     )}
                   </div>
@@ -250,24 +272,30 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
       </div>
 
       {/* SECTION 2: REGULI DE SUBSTITUȚIE & PRIORITĂȚI GENERALE */}
-      <div className="space-y-4 pt-4 border-t border-stone-800">
-        <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
-              <Repeat className="w-5 h-5 text-violet-400 inline-block" />
-              <span>Reguli de Înlocuire Automată (Lanț de Priorități)</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-stone-300 font-sans font-normal border border-stone-700">
-                {rules.length} reguli
-              </span>
-            </h2>
-            <p className="text-xs text-stone-400 mt-0.5">
-              Definiți cine pe cine înlocuiește: „Dacă Părintele X nu poate, intră Y, apoi Z”
-            </p>
+      <div className="space-y-4 pt-4 border-t border-white/10">
+        <div className="apple-glass rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-white/10 shadow-lg">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400 shadow-inner">
+              <Repeat className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2.5">
+                <h2 className="text-lg font-semibold tracking-tight text-white">
+                  Lanț de Priorități la Înlocuire
+                </h2>
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 font-medium border border-violet-500/20">
+                  {rules.length} reguli
+                </span>
+              </div>
+              <p className="text-xs text-white/50 mt-0.5">
+                Rânduieli automate de tip: „Dacă Părintele X nu poate, intră Y, apoi Z”
+              </p>
+            </div>
           </div>
 
           <button
             onClick={openAddRule}
-            className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-violet-800 hover:bg-violet-700 text-white text-sm font-semibold shadow transition-all active:scale-95"
+            className="apple-button flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-700 hover:from-violet-500 hover:to-indigo-600 text-white text-xs font-semibold shadow-[0_4px_16px_rgba(139,92,246,0.3)]"
           >
             <Plus className="w-4 h-4" />
             <span>Adaugă Regulă</span>
@@ -275,11 +303,13 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
         </div>
 
         {rules.length === 0 ? (
-          <div className="bg-stone-900/60 border border-dashed border-stone-800 rounded-xl p-8 text-center text-stone-400">
-            <Repeat className="w-8 h-8 text-stone-600 mx-auto mb-2" />
-            <p className="text-sm font-medium">Nicio regulă de înlocuire prestabilită</p>
-            <p className="text-xs text-stone-500 mt-1">
-              În caz de învoire, algoritmul va alege automat persoana calificată cu cele mai puține ture (echitate).
+          <div className="apple-glass rounded-3xl p-10 text-center border border-white/5 border-dashed">
+            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3 text-white/40 shadow-inner">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <p className="text-sm font-semibold text-white/90">Nicio regulă de înlocuire prestabilită</p>
+            <p className="text-xs text-white/40 max-w-md mx-auto mt-1 leading-relaxed">
+              În caz de învoire, motorul inteligent va repartiza automat persoana calificată cu cele mai puține ture pentru echitate maximă.
             </p>
           </div>
         ) : (
@@ -291,19 +321,19 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
               return (
                 <div
                   key={rule.id}
-                  className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow flex flex-col justify-between"
+                  className="apple-card rounded-2xl p-5 border border-white/10 hover:border-white/20 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
                           Ascultare:
                         </span>
                         {targetModule ? (
                           <span
-                            className="text-xs px-2 py-0.5 rounded-md flex items-center space-x-1 border"
+                            className="text-xs px-2.5 py-0.5 rounded-lg flex items-center space-x-1.5 border font-medium"
                             style={{
-                              backgroundColor: `${targetModule.color}15`,
+                              backgroundColor: `${targetModule.color}20`,
                               borderColor: `${targetModule.color}40`,
                               color: targetModule.color,
                             }}
@@ -312,7 +342,7 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                             <span>{targetModule.name}</span>
                           </span>
                         ) : (
-                          <span className="text-xs px-2 py-0.5 rounded bg-stone-800 text-stone-300">
+                          <span className="text-xs px-2.5 py-0.5 rounded-lg bg-white/10 text-white/80 font-medium border border-white/10">
                             Toate ascultările
                           </span>
                         )}
@@ -320,7 +350,7 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
                       <button
                         onClick={() => handleDeleteRule(rule.id)}
-                        className="p-1 rounded-lg text-stone-500 hover:text-red-400 hover:bg-stone-800 transition-colors"
+                        className="opacity-60 hover:opacity-100 p-1.5 rounded-lg text-white/50 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                         title="Șterge regula"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -328,30 +358,30 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                     </div>
 
                     {/* Target and Replacement Flow */}
-                    <div className="mt-3 bg-stone-950/60 p-3 rounded-lg border border-stone-800 space-y-2">
-                      <div className="flex items-center space-x-2 text-sm text-stone-200">
-                        <span className="text-xs text-rose-400 font-semibold uppercase">Când lipsește:</span>
+                    <div className="mt-4 bg-black/40 p-4 rounded-xl border border-white/5 space-y-3">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <span className="text-[11px] text-rose-400 font-semibold uppercase tracking-wide">Când lipsește:</span>
                         <span className="font-bold text-amber-200">{target?.name || 'Persoană'}</span>
-                        <span className="text-xs text-stone-400">({target?.rank})</span>
+                        <span className="text-xs text-white/40">({target?.rank})</span>
                       </div>
 
-                      <div className="text-xs text-stone-400 flex items-center space-x-1 pt-1">
+                      <div className="text-xs text-white/50 flex items-center space-x-1.5 pt-1">
                         <ArrowRight className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
-                        <span className="font-semibold text-violet-300 uppercase tracking-wider">
+                        <span className="font-semibold text-violet-300 uppercase tracking-wider text-[10px]">
                           Ordinea înlocuitorilor:
                         </span>
                       </div>
 
-                      <div className="pl-4 space-y-1">
+                      <div className="pl-3 space-y-2">
                         {rule.substituteIds.map((subId, idx) => {
                           const subPerson = getPerson(subId);
                           return (
-                            <div key={subId} className="flex items-center space-x-2 text-xs">
-                              <span className="w-4 h-4 rounded-full bg-violet-950 text-violet-300 font-bold flex items-center justify-center text-[10px] border border-violet-800">
+                            <div key={subId} className="flex items-center space-x-2.5 text-xs">
+                              <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-300 font-bold flex items-center justify-center text-[10px] border border-violet-500/30">
                                 {idx + 1}
                               </span>
-                              <span className="font-medium text-stone-200">{subPerson?.name}</span>
-                              <span className="text-stone-500">({subPerson?.rank})</span>
+                              <span className="font-semibold text-white/90">{subPerson?.name}</span>
+                              <span className="text-white/40 text-[11px]">({subPerson?.rank})</span>
                             </div>
                           );
                         })}
@@ -359,8 +389,8 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                     </div>
 
                     {rule.notes && (
-                      <p className="mt-2 text-stone-400 text-xs italic flex items-center space-x-1">
-                        <Info className="w-3 h-3 text-stone-500 flex-shrink-0" />
+                      <p className="mt-3 text-white/50 text-xs italic flex items-center space-x-1.5">
+                        <Info className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
                         <span>{rule.notes}</span>
                       </p>
                     )}
@@ -372,35 +402,41 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
         )}
       </div>
 
-      {/* MODAL 1: ADAUGĂ ÎNVOIRE */}
+      {/* MODAL 1: ADAUGĂ ÎNVOIRE (Apple Action Sheet) */}
       {isAbsenceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-stone-900 border border-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden text-stone-100">
-            <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/40">
-              <h3 className="font-serif font-bold text-lg text-amber-100">
-                Înregistrare Învoire / Excepție
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl max-w-lg w-full overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                  <CalendarOff className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-base text-white">
+                  Înregistrare Învoire / Excepție
+                </h3>
+              </div>
               <button
                 onClick={() => setIsAbsenceModalOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveAbsence} className="p-4 space-y-4">
+            <form onSubmit={handleSaveAbsence} className="p-5 space-y-4">
               {/* Person */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                   Slujitorul care va lipsi *
                 </label>
                 <select
                   value={absPersonId}
                   onChange={e => setAbsPersonId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 >
                   {persons.map(p => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.id} value={p.id} className="bg-stone-900 text-white">
                       {p.name} ({p.rank})
                     </option>
                   ))}
@@ -410,7 +446,7 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
               {/* Start & End Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                     De la data *
                   </label>
                   <input
@@ -418,11 +454,11 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                     required
                     value={absStartDate}
                     onChange={e => setAbsStartDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                     Până la data *
                   </label>
                   <input
@@ -430,77 +466,77 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                     required
                     value={absEndDate}
                     onChange={e => setAbsEndDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                   />
                 </div>
               </div>
 
               {/* Reason */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                   Motivul absenței
                 </label>
                 <select
                   value={absReason}
                   onChange={e => setAbsReason(e.target.value as AbsenceReason)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 >
                   {ABSENCE_REASONS.map(r => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r} className="bg-stone-900 text-white">{r}</option>
                   ))}
                 </select>
               </div>
 
               {/* Preferred Substitute */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1.5 block">
                   Înlocuitor preferat direct (opțional)
                 </label>
                 <select
                   value={absPreferredSubstitute}
                   onChange={e => setAbsPreferredSubstitute(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 >
-                  <option value="">-- Se alege automat prin rotație --</option>
+                  <option value="" className="bg-stone-900 text-white">-- Se alege automat prin rotație echitabilă --</option>
                   {persons
                     .filter(p => p.id !== absPersonId)
                     .map(p => (
-                      <option key={p.id} value={p.id}>
+                      <option key={p.id} value={p.id} className="bg-stone-900 text-white">
                         {p.name} ({p.rank})
                       </option>
                     ))}
                 </select>
-                <p className="text-[11px] text-stone-400 mt-1">
+                <p className="text-[11px] text-white/40 mt-1">
                   Dacă alegeți un înlocuitor, algoritmul îi va da prioritate maximă la generare.
                 </p>
               </div>
 
               {/* Details */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                   Detalii suplimentare (opțional)
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Consult medical la Cluj, binecuvântare primită de la Stareț..."
+                  placeholder="Ex: Consult medical, binecuvântare primită de la Stareț..."
                   value={absDetails}
                   onChange={e => setAbsDetails(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 />
               </div>
 
               {/* Buttons */}
-              <div className="pt-4 border-t border-stone-800 flex items-center justify-end space-x-3">
+              <div className="pt-4 border-t border-white/10 flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setIsAbsenceModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   Anulează
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-rose-700 hover:bg-rose-600 text-white text-sm font-semibold shadow transition-colors"
+                  className="apple-button px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-semibold shadow-[0_4px_16px_rgba(225,29,72,0.35)]"
                 >
                   Salvează Învoirea
                 </button>
@@ -512,33 +548,39 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
       {/* MODAL 2: ADAUGĂ REGULĂ DE SUBSTITUȚIE */}
       {isRuleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-stone-900 border border-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden text-stone-100">
-            <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/40">
-              <h3 className="font-serif font-bold text-lg text-amber-100">
-                Adăugare Regulă de Înlocuire Automată
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl max-w-lg w-full overflow-hidden text-white border border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-base text-white">
+                  Rânduială de Înlocuire Automată
+                </h3>
+              </div>
               <button
                 onClick={() => setIsRuleModalOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveRule} className="p-4 space-y-4">
+            <form onSubmit={handleSaveRule} className="p-5 space-y-4">
               {/* Target Person */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                   Când lipsește slujitorul: *
                 </label>
                 <select
                   value={ruleTargetPersonId}
                   onChange={e => setRuleTargetPersonId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 >
                   {persons.map(p => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.id} value={p.id} className="bg-stone-900 text-white">
                       {p.name} ({p.rank})
                     </option>
                   ))}
@@ -547,17 +589,17 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
               {/* Module */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
                   La ascultarea:
                 </label>
                 <select
                   value={ruleModuleId}
                   onChange={e => setRuleModuleId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 >
-                  <option value="any">Toate ascultările</option>
+                  <option value="any" className="bg-stone-900 text-white">Toate ascultările</option>
                   {modules.map(m => (
-                    <option key={m.id} value={m.id}>
+                    <option key={m.id} value={m.id} className="bg-stone-900 text-white">
                       {m.name}
                     </option>
                   ))}
@@ -566,8 +608,8 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
               {/* Substitutes Selection */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-violet-400 mb-1 block">
-                  Selectează înlocuitorii (în ordinea preferinței):
+                <label className="text-xs font-semibold uppercase tracking-wider text-violet-400 mb-1.5 block">
+                  Selectează înlocuitorii (în ordinea priorității):
                 </label>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                   {persons
@@ -580,21 +622,22 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
                         <div
                           key={p.id}
                           onClick={() => toggleRuleSubstitute(p.id)}
-                          className={`p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
+                          className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
                             isSelected
-                              ? 'bg-violet-950/40 border-violet-500 text-white'
-                              : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                              ? 'bg-violet-500/20 border-violet-500/50 text-white shadow-sm'
+                              : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.07] text-white/70'
                           }`}
                         >
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2.5">
                             <span
-                              className="w-2.5 h-2.5 rounded-full"
+                              className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: p.colorTag }}
                             />
-                            <span className="text-xs font-medium">{p.name} ({p.rank})</span>
+                            <span className="text-xs font-semibold">{p.name}</span>
+                            <span className="text-white/40 text-[11px]">({p.rank})</span>
                           </div>
                           {isSelected && (
-                            <span className="text-xs font-bold text-violet-300 bg-violet-900/60 px-2 py-0.5 rounded">
+                            <span className="text-[11px] font-bold text-violet-300 bg-violet-500/30 px-2.5 py-0.5 rounded-full border border-violet-500/30">
                               Prioritate #{priorityIndex + 1}
                             </span>
                           )}
@@ -606,33 +649,33 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
 
               {/* Notes */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
-                  Notițe / Explicație
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
+                  Notițe / Tipic particular
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Părintele X este primul înlocuitor conform tipicului..."
+                  placeholder="Ex: Primul înlocuitor conform rânduielii..."
                   value={ruleNotes}
                   onChange={e => setRuleNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.07] border border-white/15 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400 focus:bg-white/[0.1] transition-all"
                 />
               </div>
 
               {/* Buttons */}
-              <div className="pt-4 border-t border-stone-800 flex items-center justify-end space-x-3">
+              <div className="pt-4 border-t border-white/10 flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setIsRuleModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   Anulează
                 </button>
                 <button
                   type="submit"
                   disabled={ruleSubstituteIds.length === 0}
-                  className="px-5 py-2 rounded-lg bg-violet-700 hover:bg-violet-600 disabled:opacity-50 text-white text-sm font-semibold shadow transition-colors"
+                  className="apple-button px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-700 hover:from-violet-500 hover:to-indigo-600 disabled:opacity-40 text-white text-xs font-semibold shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
                 >
-                  Salvează Regula
+                  Salvează Rânduiala
                 </button>
               </div>
             </form>
@@ -642,3 +685,4 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
     </div>
   );
 };
+

@@ -7,7 +7,7 @@ import {
   Trash2, 
   Edit3, 
   Search, 
-  X,
+  X, 
   Sparkles,
   Palette
 } from 'lucide-react';
@@ -165,31 +165,33 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header & Filter Toolbar */}
-      <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Header & Apple-style Search Toolbar */}
+      <div className="apple-glass rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
-            <span>Obștea Mănăstirii</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-stone-300 font-sans font-normal border border-stone-700">
-              {persons.length} slujitori
+          <div className="flex items-center space-x-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-white">
+              Obștea Mănăstirii
+            </h2>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-white/70 font-mono border border-white/5">
+              {persons.length}
             </span>
-          </h2>
-          <p className="text-xs text-stone-400 mt-0.5">
-            Definiți membrii, rangurile personalizate și ascultările fiecăruia
+          </div>
+          <p className="text-xs text-white/40 mt-0.5">
+            Evidența părinților și fraților, rangurile și ascultările încredințate
           </p>
         </div>
 
         {/* Search, Filter, Add */}
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          {/* Search */}
-          <div className="relative flex-1 sm:w-48">
-            <Search className="w-4 h-4 text-stone-400 absolute left-2.5 top-2.5" />
+          {/* Apple Search Pill */}
+          <div className="relative flex-1 sm:w-52">
+            <Search className="w-3.5 h-3.5 text-white/40 absolute left-3.5 top-3" />
             <input
               type="text"
-              placeholder="Caută după nume..."
+              placeholder="Caută slujitor..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 text-xs text-stone-200 placeholder-stone-500 focus:outline-none focus:border-amber-500"
+              className="w-full pl-9 pr-3 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] text-xs text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 focus:bg-white/[0.09] transition-all"
             />
           </div>
 
@@ -197,26 +199,26 @@ export const MembersView: React.FC<MembersViewProps> = ({
           <select
             value={selectedRank}
             onChange={e => setSelectedRank(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+            className="px-3.5 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] text-xs text-white/80 focus:outline-none focus:border-amber-400/50 transition-all"
           >
-            <option value="all">Toate rangurile</option>
+            <option value="all" className="bg-neutral-900">Toate rangurile</option>
             {PRESET_RANKS.filter(r => r !== 'Alt rang...').map(r => (
-              <option key={r} value={r}>{r}</option>
+              <option key={r} value={r} className="bg-neutral-900">{r}</option>
             ))}
           </select>
 
           {/* Add Member Button */}
           <button
             onClick={openAddModal}
-            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs sm:text-sm font-medium shadow transition-colors"
+            className="apple-gold-button flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold shadow-sm active:scale-95 transition-all"
           >
-            <UserPlus className="w-4 h-4" />
+            <UserPlus className="w-3.5 h-3.5 fill-black text-black" />
             <span>Adaugă Slujitor</span>
           </button>
         </div>
       </div>
 
-      {/* Members Grid */}
+      {/* Members Grid (Apple Contacts Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPersons.map(person => {
           const dutyCount = getDutyCount(person.id);
@@ -232,81 +234,87 @@ export const MembersView: React.FC<MembersViewProps> = ({
           return (
             <div
               key={person.id}
-              className={`bg-stone-900 border rounded-xl p-4 shadow transition-all hover:border-stone-700 relative overflow-hidden ${
-                person.active ? 'border-stone-800' : 'border-stone-800/40 opacity-60'
+              className={`apple-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden transition-all duration-300 ${
+                person.active ? 'opacity-100' : 'opacity-50 grayscale'
               }`}
             >
-              <div 
-                className="absolute top-0 left-0 right-0 h-1" 
-                style={{ backgroundColor: person.colorTag }} 
-              />
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3.5">
+                    {/* Apple Contact Avatar with Gradient Ring */}
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm text-white shadow-md flex-shrink-0 relative overflow-hidden"
+                      style={{ 
+                        backgroundColor: person.colorTag,
+                        boxShadow: `0 4px 14px ${person.colorTag}40`
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-white/30 pointer-events-none" />
+                      <span className="relative z-10">{initials}</span>
+                    </div>
 
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center font-serif font-bold text-base text-white shadow-inner flex-shrink-0"
-                    style={{ backgroundColor: person.colorTag }}
-                  >
-                    {initials}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-stone-100 text-base">{person.name}</h3>
-                    <div className="flex items-center space-x-2 mt-0.5">
-                      <span className="text-xs px-2 py-0.5 rounded bg-stone-800 text-amber-300 font-medium border border-stone-700/60">
-                        {person.rank}
-                      </span>
-                      {!person.active && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-300">
-                          Inactiv
+                    <div>
+                      <h3 className="font-semibold text-white text-base tracking-tight leading-snug">
+                        {person.name}
+                      </h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/5">
+                          {person.rank}
                         </span>
-                      )}
+                        {!person.active && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            Inactiv
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Edit / Delete actions */}
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => openEditModal(person)}
-                    className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
-                    title="Modifică slujitor"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(person.id, person.name)}
-                    className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-stone-800 transition-colors"
-                    title="Șterge slujitor"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Contact info & Notes */}
-              <div className="mt-3 text-xs space-y-1 text-stone-400">
-                {person.phone && (
-                  <div className="flex items-center space-x-1.5">
-                    <Phone className="w-3.5 h-3.5 text-stone-500" />
-                    <span>{person.phone}</span>
+                  {/* Actions */}
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => openEditModal(person)}
+                      className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-white/60 hover:text-white flex items-center justify-center transition-all"
+                      title="Modifică slujitor"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(person.id, person.name)}
+                      className="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-rose-500/20 text-white/40 hover:text-rose-300 flex items-center justify-center transition-all"
+                      title="Șterge slujitor"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                )}
-                {person.notes && (
-                  <p className="text-stone-400/90 italic bg-stone-950/40 p-2 rounded border border-stone-800/60">
-                    „{person.notes}”
-                  </p>
-                )}
+                </div>
+
+                {/* Details / Phone */}
+                <div className="mt-3.5 text-xs space-y-1.5 text-white/50">
+                  {person.phone && (
+                    <div className="flex items-center space-x-2">
+                      <Phone className="w-3.5 h-3.5 text-white/40" />
+                      <span className="font-mono text-[11px]">{person.phone}</span>
+                    </div>
+                  )}
+                  {person.notes && (
+                    <p className="text-white/60 italic text-[11px] bg-white/[0.03] p-2 rounded-2xl border border-white/[0.04]">
+                      „{person.notes}”
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Skills / Modules Pills */}
-              <div className="mt-3 pt-3 border-t border-stone-800/80">
-                <div className="flex items-center justify-between text-[11px] text-stone-400 mb-1.5">
-                  <span className="font-semibold uppercase tracking-wider text-stone-400">Ascultări compatibile:</span>
-                  <span className="text-amber-400 flex items-center space-x-0.5" title="Total ture efectuate/programate">
+              {/* Skills Tags */}
+              <div className="mt-4 pt-3 border-t border-white/[0.06]">
+                <div className="flex items-center justify-between text-[11px] text-white/40 mb-2">
+                  <span className="font-medium">Ascultări compatibile</span>
+                  <span className="text-amber-300/90 font-mono flex items-center space-x-1">
                     <Sparkles className="w-3 h-3" />
                     <span>{dutyCount} ture</span>
                   </span>
                 </div>
+
                 <div className="flex flex-wrap gap-1.5">
                   {person.skills.length > 0 ? (
                     person.skills.map(modId => {
@@ -315,10 +323,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       return (
                         <span
                           key={modId}
-                          className="text-[11px] px-2 py-0.5 rounded-md flex items-center space-x-1 border"
+                          className="text-[11px] px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 border transition-all"
                           style={{
                             backgroundColor: `${mod.color}15`,
-                            borderColor: `${mod.color}40`,
+                            borderColor: `${mod.color}35`,
                             color: mod.color,
                           }}
                         >
@@ -328,7 +336,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       );
                     })
                   ) : (
-                    <span className="text-xs text-stone-500 italic">Nicio ascultare selectată</span>
+                    <span className="text-xs text-white/30 italic">Nicio ascultare asignată</span>
                   )}
                 </div>
               </div>
@@ -337,69 +345,69 @@ export const MembersView: React.FC<MembersViewProps> = ({
         })}
       </div>
 
-      {/* Add / Edit Member Modal */}
+      {/* Add / Edit Member Modal (Apple Sheet Style) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-stone-900 border border-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden text-stone-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="apple-glass rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden text-white border border-white/15">
             {/* Header */}
-            <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-950/40">
-              <h3 className="font-serif font-bold text-lg text-amber-100">
-                {editingPerson ? 'Modificare Slujitor' : 'Adăugare Slujitor Nou'}
+            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02]">
+              <h3 className="font-semibold text-lg text-white">
+                {editingPerson ? 'Modificare Slujitor' : 'Adăugare Slujitor'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/60 hover:text-white flex items-center justify-center transition-all"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Name */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                   Nume Monahal sau de Mirean *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Părintele Sofronie, Maica Teodora, Fratele Mihail..."
+                  placeholder="Ex: Părintele Paisie, Maica Teodora..."
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 transition-all"
                 />
               </div>
 
               {/* Rank & Custom Rank Input */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                     Rang / Statut
                   </label>
                   <select
                     value={formRankSelect}
                     onChange={e => setFormRankSelect(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-neutral-900 border border-white/[0.08] text-sm text-white focus:outline-none focus:border-amber-400/50 transition-all"
                   >
                     {PRESET_RANKS.map(r => (
-                      <option key={r} value={r}>{r}</option>
+                      <option key={r} value={r} className="bg-neutral-900">{r}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
                     {formRankSelect === 'Alt rang...' ? 'Specifică Rangul *' : 'Telefon (opțional)'}
                   </label>
                   {formRankSelect === 'Alt rang...' ? (
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Egumen, Muncitor, Ghid..."
+                      placeholder="Ex: Egumen, Diacon..."
                       value={formCustomRank}
                       onChange={e => setFormCustomRank(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-amber-500 text-sm text-white placeholder-stone-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-amber-400/50 text-sm text-white placeholder-white/30 focus:outline-none"
                     />
                   ) : (
                     <input
@@ -407,7 +415,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       placeholder="Ex: 0740 000 000"
                       value={formPhone}
                       onChange={e => setFormPhone(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                      className="w-full px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 transition-all"
                     />
                   )}
                 </div>
@@ -415,9 +423,9 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
               {/* Color Tag with Custom Picker */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 flex items-center justify-between">
-                  <span>Culoare Distinctivă în Grafic</span>
-                  <span className="text-[10px] font-mono text-stone-400">{formColor}</span>
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-2 flex items-center justify-between">
+                  <span>Culoare Identificare</span>
+                  <span className="text-[10px] font-mono text-white/40">{formColor}</span>
                 </label>
                 <div className="flex flex-wrap items-center gap-2">
                   {PRESET_COLORS.map(c => (
@@ -426,15 +434,14 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       key={c}
                       onClick={() => setFormColor(c)}
                       className={`w-7 h-7 rounded-full transition-transform ${
-                        formColor === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-stone-900' : 'hover:scale-110'
+                        formColor === c ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-neutral-900' : 'hover:scale-110'
                       }`}
                       style={{ backgroundColor: c }}
                     />
                   ))}
-                  {/* Custom color input */}
                   <label 
-                    className="w-7 h-7 rounded-full border border-stone-600 flex items-center justify-center cursor-pointer overflow-hidden relative shadow-sm"
-                    title="Alege orice culoare personalizată"
+                    className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center cursor-pointer relative shadow-sm hover:scale-110 transition-transform"
+                    title="Alege orice culoare"
                   >
                     <input
                       type="color"
@@ -442,18 +449,18 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       onChange={e => setFormColor(e.target.value)}
                       className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
                     />
-                    <Palette className="w-3.5 h-3.5 text-stone-300" />
+                    <Palette className="w-3.5 h-3.5 text-white/70" />
                   </label>
                 </div>
               </div>
 
               {/* Module Qualifications / Skills */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2 block">
+                <label className="text-xs font-semibold uppercase tracking-wider text-amber-300/90 mb-2 block">
                   Ascultări la care poate fi programat:
                 </label>
                 {modules.length === 0 ? (
-                  <p className="text-xs text-stone-500 italic">Nu există nicio ascultare definită încă.</p>
+                  <p className="text-xs text-white/40 italic">Nu există nicio ascultare definită încă.</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {modules.map(mod => {
@@ -462,13 +469,13 @@ export const MembersView: React.FC<MembersViewProps> = ({
                         <div
                           key={mod.id}
                           onClick={() => toggleSkill(mod.id)}
-                          className={`p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
+                          className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
                             isChecked
-                              ? 'bg-amber-950/30 border-amber-500 text-white'
-                              : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                              ? 'bg-amber-500/15 border-amber-400/50 text-white shadow-xs'
+                              : 'border-white/[0.08] hover:bg-white/[0.04] text-white/60'
                           }`}
                         >
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2.5">
                             <span style={{ color: mod.color }}>
                               {renderModuleIcon(mod.iconName, { className: 'w-4 h-4' })}
                             </span>
@@ -484,46 +491,48 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
               {/* Notes */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
-                  Notițe / Mențiuni (permis auto, tipic, sănătate etc.)
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1.5 block">
+                  Observații / Mențiuni (permis, tipic, sănătate etc.)
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Permis categoria B & D, bun cântăreț etc."
+                  placeholder="Ex: Permis categoria B & D..."
                   value={formNotes}
                   onChange={e => setFormNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400/50 transition-all"
                 />
               </div>
 
-              {/* Active Toggle */}
-              <div className="flex items-center space-x-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="formActive"
-                  checked={formActive}
-                  onChange={e => setFormActive(e.target.checked)}
-                  className="rounded bg-stone-800 border-stone-700 text-amber-600 focus:ring-amber-500 w-4 h-4"
-                />
-                <label htmlFor="formActive" className="text-xs text-stone-300 select-none cursor-pointer">
-                  Membru activ în obște (poate fi repartizat de algoritm)
+              {/* Active Toggle (Apple Switch Style) */}
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-white/80 font-medium">
+                  Membru activ în obște (poate primi ascultări)
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formActive}
+                    onChange={e => setFormActive(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
               </div>
 
               {/* Buttons */}
-              <div className="pt-4 border-t border-stone-800 flex items-center justify-end space-x-3">
+              <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                  className="px-4 py-2 rounded-full text-xs font-semibold text-white/60 hover:text-white hover:bg-white/[0.08] transition-all"
                 >
                   Anulează
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-colors"
+                  className="apple-gold-button px-5 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-all"
                 >
-                  {editingPerson ? 'Salvează Modificările' : 'Adaugă Slujitor'}
+                  {editingPerson ? 'Salvează' : 'Adaugă'}
                 </button>
               </div>
             </form>
