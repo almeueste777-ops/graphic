@@ -131,11 +131,18 @@
     radial-gradient(ellipse 60% 40% at 0% 80%, rgba(120, 20, 28, 0.12), transparent);
 }
 
-/* Printable Sheet */
+/* Printable Sheet & A4 Landscape Optimization */
 @media print {
-  body {
-    background-color: white !important;
-    color: black !important;
+  html, body, #root, main {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .no-print {
@@ -148,7 +155,27 @@
 
   @page {
     size: A4 landscape;
-    margin: 6mm 6mm 6mm 6mm;
+    margin: 5mm 6mm 5mm 6mm;
+  }
+
+  .print-sheet-landscape {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background-color: #ffffff !important;
+    color: #0c0a09 !important;
+  }
+
+  table {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 
