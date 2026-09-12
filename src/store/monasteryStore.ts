@@ -15,7 +15,6 @@ export const DEFAULT_MODULES: Module[] = [
     iconName: 'Church',
     color: '#8b1d24', // Roșu bizantin
     rotationCycle: 'weekly',
-    isSystem: true,
     description: 'Slujitor de rând la Sfântul Altar (Sf. Liturghie, Vecernie, Utrenie)',
     roles: [
       { id: 'altar_preot', name: 'Preot slujitor de rând', requiredCount: 1 },
@@ -28,7 +27,6 @@ export const DEFAULT_MODULES: Module[] = [
     iconName: 'BookOpen',
     color: '#b38210', // Auriu
     rotationCycle: 'weekly',
-    isSystem: true,
     description: 'Cântarea la strană, tipicul bisericesc, citirea Ceasurilor și a Apostolului',
     roles: [
       { id: 'strana_psalt', name: 'Protopsalt (Strana 1)', requiredCount: 1 },
@@ -41,7 +39,6 @@ export const DEFAULT_MODULES: Module[] = [
     iconName: 'Bell',
     color: '#c2410c', // Oranj roșiatic
     rotationCycle: 'weekly',
-    isSystem: true,
     description: 'Pregătirea bisericii, cădelnița, lumânările, toaca și clopotele',
     roles: [
       { id: 'paracliser_principal', name: 'Paracliser de rând', requiredCount: 1 }
@@ -53,7 +50,6 @@ export const DEFAULT_MODULES: Module[] = [
     iconName: 'Car',
     color: '#1d4ed8', // Albastru
     rotationCycle: 'daily',
-    isSystem: true,
     description: 'Deplasări, aprovizionare, aeroport, urgențe mănăstirești',
     roles: [
       { id: 'sofer_garda', name: 'Șofer de serviciu', requiredCount: 1 }
@@ -65,7 +61,6 @@ export const DEFAULT_MODULES: Module[] = [
     iconName: 'Utensils',
     color: '#047857', // Verde smarald
     rotationCycle: 'weekly',
-    isSystem: false,
     description: 'Gătirea mesei pentru obște și pelerini, orânduirea trapezei',
     roles: [
       { id: 'bucatar_rand', name: 'Bucătar de rând', requiredCount: 1 },
@@ -299,6 +294,30 @@ export function useMonasteryData() {
     });
   };
 
+  // Delete any module cleanly and update skills & rules
+  const deleteModule = (moduleId: string) => {
+    setModules(prev => prev.filter(m => m.id !== moduleId));
+    setPersons(prev => prev.map(p => ({
+      ...p,
+      skills: p.skills.filter(s => s !== moduleId)
+    })));
+    setRules(prev => prev.filter(r => r.moduleId !== moduleId));
+    setSchedule(prev => prev.filter(a => a.moduleId !== moduleId));
+  };
+
+  // Reorder modules (Up / Down)
+  const moveModule = (index: number, direction: 'up' | 'down') => {
+    setModules(prev => {
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
+  };
+
   const resetToDefaults = () => {
     localStorage.setItem(STORAGE_KEY_PERSONS, JSON.stringify(DEFAULT_PERSONS));
     localStorage.setItem(STORAGE_KEY_MODULES, JSON.stringify(DEFAULT_MODULES));
@@ -358,6 +377,8 @@ export function useMonasteryData() {
     setRules,
     setSchedule,
     setSettings,
+    deleteModule,
+    moveModule,
     resetToDefaults,
     exportAllDataJson,
     importAllDataJson,

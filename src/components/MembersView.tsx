@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Person, Module, MonasticRank, ScheduleAssignment } from '../types';
+import type { Person, Module, ScheduleAssignment } from '../types';
 import { 
   UserPlus, 
   Phone, 
@@ -8,24 +8,33 @@ import {
   Edit3, 
   Search, 
   X,
-  Sparkles
+  Sparkles,
+  Palette
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
-const RANKS: MonasticRank[] = [
+const PRESET_RANKS = [
   'Arhimandrit',
   'Protosinghel',
   'Ieromonah',
   'Ierodiacon',
+  'Stareț',
+  'Stareță',
   'Monah',
+  'Monahie',
   'Rasofor',
+  'Rasoforă',
   'Frate',
+  'Soră',
+  'Maică',
   'Voluntar / Miren',
+  'Alt rang...'
 ];
 
 const PRESET_COLORS = [
   '#8b1d24', '#b38210', '#1d4ed8', '#047857', '#d97706',
-  '#7c3aed', '#db2777', '#0891b2', '#4b5563', '#4338ca'
+  '#7c3aed', '#db2777', '#0891b2', '#4b5563', '#4338ca',
+  '#be123c', '#0f766e', '#0369a1', '#581c87'
 ];
 
 interface MembersViewProps {
@@ -48,7 +57,8 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
   // Form State
   const [formName, setFormName] = useState('');
-  const [formRank, setFormRank] = useState<MonasticRank>('Ieromonah');
+  const [formRankSelect, setFormRankSelect] = useState('Ieromonah');
+  const [formCustomRank, setFormCustomRank] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formSkills, setFormSkills] = useState<string[]>([]);
   const [formColor, setFormColor] = useState(PRESET_COLORS[0]);
@@ -58,9 +68,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
   const openAddModal = () => {
     setEditingPerson(null);
     setFormName('');
-    setFormRank('Ieromonah');
+    setFormRankSelect('Ieromonah');
+    setFormCustomRank('');
     setFormPhone('');
-    setFormSkills(['altar', 'strana']);
+    setFormSkills(modules.slice(0, 2).map(m => m.id));
     setFormColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)]);
     setFormNotes('');
     setFormActive(true);
@@ -70,7 +81,13 @@ export const MembersView: React.FC<MembersViewProps> = ({
   const openEditModal = (person: Person) => {
     setEditingPerson(person);
     setFormName(person.name);
-    setFormRank(person.rank);
+    if (PRESET_RANKS.includes(person.rank)) {
+      setFormRankSelect(person.rank);
+      setFormCustomRank('');
+    } else {
+      setFormRankSelect('Alt rang...');
+      setFormCustomRank(person.rank);
+    }
     setFormPhone(person.phone || '');
     setFormSkills(person.skills || []);
     setFormColor(person.colorTag);
@@ -83,6 +100,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
     e.preventDefault();
     if (!formName.trim()) return;
 
+    const finalRank = formRankSelect === 'Alt rang...' 
+      ? (formCustomRank.trim() || 'Slujitor') 
+      : formRankSelect;
+
     if (editingPerson) {
       setPersons(prev =>
         prev.map(p =>
@@ -90,7 +111,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
             ? {
                 ...p,
                 name: formName.trim(),
-                rank: formRank,
+                rank: finalRank,
                 phone: formPhone.trim() || undefined,
                 skills: formSkills,
                 colorTag: formColor,
@@ -104,7 +125,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
       const newPerson: Person = {
         id: `person_${Date.now()}`,
         name: formName.trim(),
-        rank: formRank,
+        rank: finalRank,
         phone: formPhone.trim() || undefined,
         skills: formSkills,
         colorTag: formColor,
@@ -154,7 +175,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
             </span>
           </h2>
           <p className="text-xs text-stone-400 mt-0.5">
-            Definiți membrii, rânduiala rangurilor și ascultările pentru fiecare
+            Definiți membrii, rangurile personalizate și ascultările fiecăruia
           </p>
         </div>
 
@@ -179,7 +200,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
             className="px-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
           >
             <option value="all">Toate rangurile</option>
-            {RANKS.map(r => (
+            {PRESET_RANKS.filter(r => r !== 'Alt rang...').map(r => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
@@ -200,7 +221,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
         {filteredPersons.map(person => {
           const dutyCount = getDutyCount(person.id);
           const initials = person.name
-            .replace(/Părintele|Fratele|Ierom\.|Arhim\./g, '')
+            .replace(/Părintele|Fratele|Maica|Sora|Ierom\.|Arhim\./g, '')
             .trim()
             .split(' ')
             .map(n => n[0])
@@ -334,7 +355,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Name */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
@@ -343,25 +364,25 @@ export const MembersView: React.FC<MembersViewProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Părintele Sofronie sau Fratele Mihail"
+                  placeholder="Ex: Părintele Sofronie, Maica Teodora, Fratele Mihail..."
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              {/* Rank & Phone */}
+              {/* Rank & Custom Rank Input */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
                     Rang / Statut
                   </label>
                   <select
-                    value={formRank}
-                    onChange={e => setFormRank(e.target.value as MonasticRank)}
+                    value={formRankSelect}
+                    onChange={e => setFormRankSelect(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white focus:outline-none focus:border-amber-500"
                   >
-                    {RANKS.map(r => (
+                    {PRESET_RANKS.map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -369,24 +390,36 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
-                    Telefon (opțional)
+                    {formRankSelect === 'Alt rang...' ? 'Specifică Rangul *' : 'Telefon (opțional)'}
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: 0740 000 000"
-                    value={formPhone}
-                    onChange={e => setFormPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
-                  />
+                  {formRankSelect === 'Alt rang...' ? (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Egumen, Muncitor, Ghid..."
+                      value={formCustomRank}
+                      onChange={e => setFormCustomRank(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-amber-500 text-sm text-white placeholder-stone-500 focus:outline-none"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Ex: 0740 000 000"
+                      value={formPhone}
+                      onChange={e => setFormPhone(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+                    />
+                  )}
                 </div>
               </div>
 
-              {/* Color Tag */}
+              {/* Color Tag with Custom Picker */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
-                  Culoare Distinctivă în Grafic
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 flex items-center justify-between">
+                  <span>Culoare Distinctivă în Grafic</span>
+                  <span className="text-[10px] font-mono text-stone-400">{formColor}</span>
                 </label>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {PRESET_COLORS.map(c => (
                     <button
                       type="button"
@@ -398,6 +431,19 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       style={{ backgroundColor: c }}
                     />
                   ))}
+                  {/* Custom color input */}
+                  <label 
+                    className="w-7 h-7 rounded-full border border-stone-600 flex items-center justify-center cursor-pointer overflow-hidden relative shadow-sm"
+                    title="Alege orice culoare personalizată"
+                  >
+                    <input
+                      type="color"
+                      value={formColor}
+                      onChange={e => setFormColor(e.target.value)}
+                      className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
+                    />
+                    <Palette className="w-3.5 h-3.5 text-stone-300" />
+                  </label>
                 </div>
               </div>
 
@@ -406,30 +452,34 @@ export const MembersView: React.FC<MembersViewProps> = ({
                 <label className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2 block">
                   Ascultări la care poate fi programat:
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {modules.map(mod => {
-                    const isChecked = formSkills.includes(mod.id);
-                    return (
-                      <div
-                        key={mod.id}
-                        onClick={() => toggleSkill(mod.id)}
-                        className={`p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
-                          isChecked
-                            ? 'bg-amber-950/30 border-amber-500 text-white'
-                            : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <span style={{ color: mod.color }}>
-                            {renderModuleIcon(mod.iconName, { className: 'w-4 h-4' })}
-                          </span>
-                          <span className="text-xs font-medium">{mod.name}</span>
+                {modules.length === 0 ? (
+                  <p className="text-xs text-stone-500 italic">Nu există nicio ascultare definită încă.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {modules.map(mod => {
+                      const isChecked = formSkills.includes(mod.id);
+                      return (
+                        <div
+                          key={mod.id}
+                          onClick={() => toggleSkill(mod.id)}
+                          className={`p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
+                            isChecked
+                              ? 'bg-amber-950/30 border-amber-500 text-white'
+                              : 'border-stone-800 hover:bg-stone-800/40 text-stone-400'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <span style={{ color: mod.color }}>
+                              {renderModuleIcon(mod.iconName, { className: 'w-4 h-4' })}
+                            </span>
+                            <span className="text-xs font-medium">{mod.name}</span>
+                          </div>
+                          {isChecked && <Check className="w-4 h-4 text-amber-400" />}
                         </div>
-                        {isChecked && <Check className="w-4 h-4 text-amber-400" />}
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Notes */}

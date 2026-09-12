@@ -8,24 +8,32 @@ import {
   X, 
   Check, 
   Layers,
-  Users
+  Users,
+  ArrowUp,
+  ArrowDown,
+  Palette
 } from 'lucide-react';
 
 const PRESET_MODULE_COLORS = [
   '#8b1d24', '#b38210', '#1d4ed8', '#047857', '#c2410c',
-  '#7c3aed', '#db2777', '#0891b2', '#4b5563', '#0f766e'
+  '#7c3aed', '#db2777', '#0891b2', '#4b5563', '#0f766e',
+  '#b45309', '#4338ca', '#be123c', '#15803d', '#334155'
 ];
 
 interface ModulesViewProps {
   modules: Module[];
   setModules: (updater: Module[] | ((prev: Module[]) => Module[])) => void;
   persons: Person[];
+  deleteModule: (moduleId: string) => void;
+  moveModule: (index: number, direction: 'up' | 'down') => void;
 }
 
 export const ModulesView: React.FC<ModulesViewProps> = ({
   modules,
   setModules,
   persons,
+  deleteModule,
+  moveModule,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
@@ -121,7 +129,6 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
         iconName: formIcon,
         color: formColor,
         rotationCycle: formCycle,
-        isSystem: false,
         description: formDescription.trim() || undefined,
         roles: formattedRoles,
       };
@@ -132,8 +139,8 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
   };
 
   const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Sigur doriți să ștergeți modulul „${name}”?`)) {
-      setModules(prev => prev.filter(m => m.id !== id));
+    if (window.confirm(`Sigur doriți să ștergeți ascultarea „${name}”? Aceasta va fi eliminată din grafic și din lista tuturor slujitorilor.`)) {
+      deleteModule(id);
     }
   };
 
@@ -144,13 +151,13 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
         <div>
           <h2 className="text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
             <Layers className="w-5 h-5 text-amber-500 inline-block" />
-            <span>Ascultări & Module Monahale</span>
+            <span>Gestionare Ascultări & Module</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-800 text-stone-300 font-sans font-normal border border-stone-700">
-              {modules.length} module
+              {modules.length} ascultări active
             </span>
           </h2>
           <p className="text-xs text-stone-400 mt-0.5">
-            Personalizați ascultările existente sau adăugați module noi după trebuința mănăstirii
+            Puteți adăuga, edita, șterge sau reordona orice ascultare după nevoile specifice ale mănăstirii
           </p>
         </div>
 
@@ -159,27 +166,32 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
           className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
-          <span>Adaugă Modul Nou</span>
+          <span>Adaugă Ascultare Nouă</span>
         </button>
       </div>
 
       {/* Modules Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {modules.map(mod => {
+        {modules.map((mod, index) => {
           const qualifiedCount = persons.filter(p => p.skills.includes(mod.id) && p.active).length;
 
           return (
             <div
               key={mod.id}
-              className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow transition-all hover:border-stone-700 flex flex-col justify-between"
+              className="bg-stone-900 border border-stone-800 rounded-xl p-4 shadow transition-all hover:border-stone-700 flex flex-col justify-between relative overflow-hidden"
             >
+              <div 
+                className="absolute top-0 left-0 right-0 h-1.5" 
+                style={{ backgroundColor: mod.color }} 
+              />
+
               <div>
                 {/* Header of card */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner"
-                      style={{ backgroundColor: `${mod.color}20`, color: mod.color }}
+                      style={{ backgroundColor: `${mod.color}25`, color: mod.color }}
                     >
                       {renderModuleIcon(mod.iconName, { className: 'w-6 h-6' })}
                     </div>
@@ -189,37 +201,49 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                         <span className="text-[10px] px-2 py-0.5 rounded bg-stone-800 text-stone-300 font-semibold border border-stone-700">
                           {mod.rotationCycle === 'weekly' ? 'Săptămânal' : 'Zilnic'}
                         </span>
-                        {mod.isSystem ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-400 border border-amber-800/40">
-                            Modul de bază
-                          </span>
-                        ) : (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-                            Personalizat
-                          </span>
-                        )}
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800/80 text-stone-400 border border-stone-700">
+                          Poziția #{index + 1}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions: Reorder, Edit, Delete */}
                   <div className="flex items-center space-x-1">
+                    {/* Move Up */}
+                    <button
+                      onClick={() => moveModule(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 rounded-lg text-stone-500 hover:text-white hover:bg-stone-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                      title="Mută mai sus în grafic"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Move Down */}
+                    <button
+                      onClick={() => moveModule(index, 'down')}
+                      disabled={index === modules.length - 1}
+                      className="p-1 rounded-lg text-stone-500 hover:text-white hover:bg-stone-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                      title="Mută mai jos în grafic"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Edit */}
                     <button
                       onClick={() => openEditModal(mod)}
                       className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
-                      title="Editează modulul"
+                      title="Modifică ascultarea"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    {!mod.isSystem && (
-                      <button
-                        onClick={() => handleDelete(mod.id, mod.name)}
-                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-stone-800 transition-colors"
-                        title="Șterge modulul"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                    {/* Delete: ALWAYS AVAILABLE */}
+                    <button
+                      onClick={() => handleDelete(mod.id, mod.name)}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-red-400 hover:bg-stone-800 transition-colors"
+                      title="Șterge ascultarea"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
@@ -253,7 +277,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
               <div className="mt-4 pt-3 border-t border-stone-800/80 flex items-center justify-between text-xs text-stone-400">
                 <div className="flex items-center space-x-1.5">
                   <Users className="w-3.5 h-3.5 text-stone-500" />
-                  <span>Slujitori calificați:</span>
+                  <span>Slujitori apți:</span>
                 </div>
                 <span className={`font-semibold ${qualifiedCount > 0 ? 'text-stone-200' : 'text-rose-400'}`}>
                   {qualifiedCount} {qualifiedCount === 1 ? 'slujitor' : 'slujitori'}
@@ -282,16 +306,16 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Name */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1 block">
-                  Denumire Ascultare / Modul *
+                  Denumire Ascultare *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Pangar, Ghidaj Pelerini, Gospodărie..."
+                  placeholder="Ex: Altar, Strană, Pangar, Bucătărie, Atelier..."
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
@@ -305,7 +329,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Ex: Îngrijirea pangarului, vânzarea lumânărilor și cărților..."
+                  placeholder="Ex: Îndatoriri, rânduială, program de slujbă..."
                   value={formDescription}
                   onChange={e => setFormDescription(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
@@ -331,7 +355,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                       {formCycle === 'weekly' && <Check className="w-4 h-4 text-amber-400" />}
                     </div>
                     <p className="text-[10px] text-stone-400 mt-1">
-                      O persoană preia rândul pentru toată săptămâna
+                      Aceeași persoană este de rând toată săptămâna
                     </p>
                   </div>
 
@@ -348,7 +372,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                       {formCycle === 'daily' && <Check className="w-4 h-4 text-amber-400" />}
                     </div>
                     <p className="text-[10px] text-stone-400 mt-1">
-                      Turele se schimbă în fiecare zi (ex: șoferie)
+                      Turele se schimbă în fiecare zi
                     </p>
                   </div>
                 </div>
@@ -381,12 +405,16 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                 </div>
               </div>
 
-              {/* Color Picker */}
+              {/* Color Picker: Palette + Custom Color */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 block">
-                  Culoare Tematică
+                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1.5 flex items-center justify-between">
+                  <span>Culoare Tematică</span>
+                  <span className="flex items-center space-x-1 text-stone-400 font-mono text-[10px]">
+                    <Palette className="w-3 h-3 text-amber-400" />
+                    <span>{formColor}</span>
+                  </span>
                 </label>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {PRESET_MODULE_COLORS.map(c => (
                     <button
                       type="button"
@@ -398,6 +426,19 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                       style={{ backgroundColor: c }}
                     />
                   ))}
+                  {/* Custom color input */}
+                  <label 
+                    className="w-7 h-7 rounded-full border border-stone-600 flex items-center justify-center cursor-pointer overflow-hidden relative shadow-sm"
+                    title="Alege orice culoare personalizată"
+                  >
+                    <input
+                      type="color"
+                      value={formColor}
+                      onChange={e => setFormColor(e.target.value)}
+                      className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
+                    />
+                    <Palette className="w-3.5 h-3.5 text-stone-300" />
+                  </label>
                 </div>
               </div>
 
@@ -405,7 +446,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                    Roluri & Număr de Slujitori
+                    Roluri / Posturi & Număr de Slujitori
                   </label>
                   <button
                     type="button"
@@ -413,7 +454,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                     className="text-xs text-amber-400 hover:text-amber-300 flex items-center space-x-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Adaugă rol</span>
+                    <span>Adaugă post/rol</span>
                   </button>
                 </div>
 
@@ -422,7 +463,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                     <div key={role.id || idx} className="flex items-center space-x-2">
                       <input
                         type="text"
-                        placeholder="Nume rol (ex: Ajutor, Responsabil)"
+                        placeholder="Nume rol (ex: Slujitor de rând, Ajutor)"
                         value={role.name}
                         onChange={e => handleRoleChange(idx, e.target.value, role.requiredCount)}
                         className="flex-1 px-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
@@ -443,6 +484,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                           type="button"
                           onClick={() => handleRemoveRoleRow(idx)}
                           className="p-1.5 text-stone-500 hover:text-red-400"
+                          title="Șterge rol"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -465,7 +507,7 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
                   type="submit"
                   className="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow transition-colors"
                 >
-                  {editingModule ? 'Salvează Modificările' : 'Creează Modul'}
+                  {editingModule ? 'Salvează Modificările' : 'Creează Ascultarea'}
                 </button>
               </div>
             </form>

@@ -24,6 +24,8 @@ export function App() {
     setRules,
     setSchedule,
     setSettings,
+    deleteModule,
+    moveModule,
     resetToDefaults,
     exportAllDataJson,
     importAllDataJson,
@@ -110,6 +112,8 @@ export function App() {
             modules={modules}
             setModules={setModules}
             persons={persons}
+            deleteModule={deleteModule}
+            moveModule={moveModule}
           />
         )}
 

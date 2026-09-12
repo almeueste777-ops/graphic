@@ -3,10 +3,16 @@ export type MonasticRank =
   | 'Protosinghel'
   | 'Ieromonah'
   | 'Ierodiacon'
+  | 'Stareț'
+  | 'Stareță'
   | 'Monah'
+  | 'Monahie'
   | 'Rasofor'
+  | 'Rasoforă'
   | 'Frate'
-  | 'Voluntar / Miren';
+  | 'Soră'
+  | 'Voluntar / Miren'
+  | string;
 
 export interface Person {
   id: string;
@@ -34,8 +40,9 @@ export interface Module {
   color: string;
   roles: ModuleRole[];
   rotationCycle: 'weekly' | 'daily';
-  isSystem: boolean; // default builtin modules vs custom user modules
+  isSystem?: boolean;
   description?: string;
+  orderIndex?: number;
 }
 
 export type AbsenceReason = 
@@ -44,7 +51,8 @@ export type AbsenceReason =
   | 'Spital / Medical'
   | 'Deplasare / Aprovizionare'
   | 'Ascultare externă'
-  | 'Alt motiv';
+  | 'Alt motiv'
+  | string;
 
 export interface Absence {
   id: string;
@@ -78,9 +86,10 @@ export interface ScheduleAssignment {
 
 export interface MonasterySettings {
   monasteryName: string;
+  monasterySubtitle?: string;
   abbotName: string;
   ecclesiarchName: string;
   location: string;
-  weekStartDay: 1; // 1 = Monday
+  weekStartDay: 1 | 0; // 1 = Monday, 0 = Sunday
   autoAvoidDoubleBooking: boolean; // cannot be in Altar and Strana or Driving on same day/service
 }
