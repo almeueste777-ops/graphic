@@ -36,6 +36,30 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
+.font-eb-garamond {
+  font-family: 'EB Garamond', Georgia, serif;
+}
+
+.font-merriweather {
+  font-family: 'Merriweather', Georgia, serif;
+}
+
+.font-lora {
+  font-family: 'Lora', Georgia, serif;
+}
+
+.font-playfair {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-jakarta {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-inter {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 /* Apple Materials & Frosted Glass (visionOS / iOS 18 style) */
 .apple-glass {
   background: rgba(18, 18, 20, 0.72);
