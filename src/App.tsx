@@ -124,6 +124,7 @@ export function App() {
             setPersons={setPersons}
             modules={modules}
             schedule={schedule}
+            setSchedule={setSchedule}
           />
         )}
 
@@ -134,6 +135,12 @@ export function App() {
             persons={persons}
             deleteModule={deleteModule}
             moveModule={moveModule}
+            schedule={schedule}
+            setSchedule={setSchedule}
+            settings={settings}
+            absences={absences}
+            rules={rules}
+            currentDate={currentDate}
           />
         )}
 
@@ -145,6 +152,10 @@ export function App() {
             setAbsences={setAbsences}
             rules={rules}
             setRules={setRules}
+            schedule={schedule}
+            setSchedule={setSchedule}
+            settings={settings}
+            currentDate={currentDate}
           />
         )}
 

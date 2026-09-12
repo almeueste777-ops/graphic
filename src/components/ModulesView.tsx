@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import type { Module, ModuleRole, Person } from '../types';
+import type { Module, ModuleRole, Person, ScheduleAssignment, MonasterySettings, Absence, SubstitutionRule } from '../types';
 import { AVAILABLE_ICONS, renderModuleIcon } from '../utils/iconHelper';
+import { generateSchedule } from '../services/scheduler';
+import { startOfWeek, endOfWeek } from 'date-fns';
 import { 
   Plus, 
   Trash2, 
@@ -11,7 +13,8 @@ import {
   Users, 
   ArrowUp, 
   ArrowDown, 
-  Palette 
+  Palette,
+  CheckCircle2
 } from 'lucide-react';
 
 const PRESET_MODULE_COLORS = [
@@ -26,6 +29,12 @@ interface ModulesViewProps {
   persons: Person[];
   deleteModule: (moduleId: string) => void;
   moveModule: (index: number, direction: 'up' | 'down') => void;
+  schedule?: ScheduleAssignment[];
+  setSchedule?: (updater: ScheduleAssignment[] | ((prev: ScheduleAssignment[]) => ScheduleAssignment[])) => void;
+  settings?: MonasterySettings;
+  absences?: Absence[];
+  rules?: SubstitutionRule[];
+  currentDate?: Date;
 }
 
 export const ModulesView: React.FC<ModulesViewProps> = ({
@@ -34,9 +43,16 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
   persons,
   deleteModule,
   moveModule,
+  schedule,
+  setSchedule,
+  settings,
+  absences,
+  rules,
+  currentDate,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -106,22 +122,23 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
       formattedRoles.push({ id: `role_${Date.now()}`, name: 'Slujitor de rând', requiredCount: 1 });
     }
 
+    let updatedModules: Module[];
+
     if (editingModule) {
-      setModules(prev =>
-        prev.map(m =>
-          m.id === editingModule.id
-            ? {
-                ...m,
-                name: formName.trim(),
-                iconName: formIcon,
-                color: formColor,
-                rotationCycle: formCycle,
-                description: formDescription.trim() || undefined,
-                roles: formattedRoles,
-              }
-            : m
-        )
+      updatedModules = modules.map(m =>
+        m.id === editingModule.id
+          ? {
+              ...m,
+              name: formName.trim(),
+              iconName: formIcon,
+              color: formColor,
+              rotationCycle: formCycle,
+              description: formDescription.trim() || undefined,
+              roles: formattedRoles,
+            }
+          : m
       );
+      setModules(updatedModules);
     } else {
       const newModule: Module = {
         id: `mod_${Date.now()}`,
@@ -132,7 +149,31 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
         description: formDescription.trim() || undefined,
         roles: formattedRoles,
       };
-      setModules(prev => [...prev, newModule]);
+      updatedModules = [...modules, newModule];
+      setModules(updatedModules);
+    }
+
+    // Cross-module correlation: automatically update schedule with modified modules
+    if (setSchedule && schedule && settings && absences && rules) {
+      const weekStartsOn = settings.weekStartDay ?? 6;
+      const curDate = currentDate || new Date(2026, 8, 12);
+      const weekStart = startOfWeek(curDate, { weekStartsOn });
+      const weekEnd = endOfWeek(curDate, { weekStartsOn });
+
+      const result = generateSchedule({
+        startDate: weekStart,
+        endDate: weekEnd,
+        persons,
+        modules: updatedModules,
+        absences,
+        substitutionRules: rules,
+        existingAssignments: schedule,
+        avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+      });
+
+      setSchedule(result.assignments);
+      setSyncFeedback(`Ascultarea „${formName.trim()}” a fost salvată! Programul și foaia de tipărit au fost sincronizate.`);
+      setTimeout(() => setSyncFeedback(null), 6000);
     }
 
     setIsModalOpen(false);
@@ -141,11 +182,21 @@ export const ModulesView: React.FC<ModulesViewProps> = ({
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Sigur doriți să ștergeți ascultarea „${name}”? Aceasta va fi eliminată din grafic și din lista tuturor slujitorilor.`)) {
       deleteModule(id);
+      setSyncFeedback(`Ascultarea „${name}” a fost ștearsă și curățată din grafic.`);
+      setTimeout(() => setSyncFeedback(null), 6000);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Sync Feedback Toast */}
+      {syncFeedback && (
+        <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center space-x-2.5 animate-in fade-in duration-200 shadow-lg">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span>{syncFeedback}</span>
+        </div>
+      )}
+
       {/* Header & Add Module Action */}
       <div className="apple-glass rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>

@@ -520,4 +520,23 @@ describe('Monastery Scheduler Engine & Custom Community Rules', () => {
     const sebastianDuty = duties.find(d => d.personId === 'p_sebastian');
     expect(sebastianDuty?.category).toBe('liber');
   });
+
+  it('assigns weekly obedience for soferie to Pr. Spiridon across all 7 days of the week', () => {
+    const res = generateSchedule({
+      startDate: parseISO('2026-09-12'),
+      endDate: parseISO('2026-09-18'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'soferie'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: true,
+    });
+
+    const soferAssignments = res.assignments.filter(a => a.moduleId === 'soferie');
+    expect(soferAssignments.length).toBe(7);
+    soferAssignments.forEach(a => {
+      expect(a.personId).toBe('p_spiridon');
+    });
+  });
 });

@@ -104,6 +104,18 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
     );
   };
 
+  // Robust resolver for weekly assignments that searches across all days of the viewed week
+  const getWeeklyAssignment = (moduleId: string, roleId: string, slotIndex: number) => {
+    for (const day of weekDays) {
+      const dStr = format(day, 'yyyy-MM-dd');
+      const found = schedule.find(
+        a => a.date === dStr && a.moduleId === moduleId && a.roleId === roleId && a.slotIndex === slotIndex && a.personId
+      );
+      if (found) return found;
+    }
+    return getAssignment(format(weekDays[0], 'yyyy-MM-dd'), moduleId, roleId, slotIndex);
+  };
+
   // Group modules into weekly and daily
   const weeklyModules = modules.filter(m => m.rotationCycle === 'weekly');
   const dailyModules = modules.filter(m => m.rotationCycle === 'daily');
@@ -704,8 +716,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                           {module.roles.map(role => (
                             <div key={role.id} className="space-y-1">
                               {Array.from({ length: role.requiredCount }).map((_, slotIdx) => {
-                                const dateStr = format(weekDays[0], 'yyyy-MM-dd');
-                                const assignment = getAssignment(dateStr, module.id, role.id, slotIdx);
+                                const assignment = getWeeklyAssignment(module.id, role.id, slotIdx);
                                 const personName = getPersonName(assignment?.personId, true);
 
                                 return (
@@ -911,8 +922,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                             <React.Fragment key={role.id}>
                               {Array.from({ length: role.requiredCount }).map((_, slotIdx) => {
                                 if (isWeekly && mergeWeeklyInMatrix) {
-                                  const firstDayStr = format(weekDays[0], 'yyyy-MM-dd');
-                                  const assignment = getAssignment(firstDayStr, module.id, role.id, slotIdx);
+                                  const assignment = getWeeklyAssignment(module.id, role.id, slotIdx);
                                   const name = getPersonName(assignment?.personId, true);
 
                                   return (

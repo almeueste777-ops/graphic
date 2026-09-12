@@ -15,7 +15,7 @@ interface EditEntryModalProps {
   persons: Person[];
   absences: Absence[];
   allDayAssignments: ScheduleAssignment[];
-  onSave: (newPersonId: string | null, notes?: string) => void;
+  onSave: (newPersonId: string | null, notes?: string, applyToWholeWeek?: boolean) => void;
   onClose: () => void;
 }
 
@@ -35,6 +35,9 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
     currentAssignment?.personId || null
   );
   const [notes, setNotes] = useState<string>(currentAssignment?.notes || '');
+  const [applyToWholeWeek, setApplyToWholeWeek] = useState<boolean>(
+    module.rotationCycle === 'weekly'
+  );
 
   const parsedDate = parseISO(date);
   const formattedDate = format(parsedDate, 'EEEE, d MMMM yyyy', { locale: ro });
@@ -202,6 +205,31 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
             </details>
           )}
 
+          {/* Weekly scope toggle */}
+          {module.rotationCycle === 'weekly' && (
+            <div 
+              onClick={() => setApplyToWholeWeek(!applyToWholeWeek)}
+              className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between cursor-pointer hover:bg-amber-500/15 transition-all"
+            >
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={applyToWholeWeek}
+                  onChange={e => setApplyToWholeWeek(e.target.checked)}
+                  className="rounded bg-black/40 border-amber-500/40 text-amber-400 focus:ring-amber-400 w-4 h-4 cursor-pointer"
+                />
+                <div>
+                  <span className="text-xs font-semibold text-amber-200 block">
+                    Aplică pentru toată săptămâna (Sâmbătă – Vineri)
+                  </span>
+                  <span className="text-[10px] text-white/50 block mt-0.5">
+                    Această ascultare are rânduială săptămânală. Se va actualiza automat pe toată foaia A4 și în toate modulele.
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Notes input */}
           <div className="pt-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5 block">
@@ -226,7 +254,7 @@ export const EditEntryModal: React.FC<EditEntryModalProps> = ({
             Anulează
           </button>
           <button
-            onClick={() => onSave(selectedPersonId, notes)}
+            onClick={() => onSave(selectedPersonId, notes, applyToWholeWeek)}
             className="apple-gold-button px-5 py-2.5 rounded-xl text-xs font-semibold shadow-md"
           >
             Salvează Modificarea

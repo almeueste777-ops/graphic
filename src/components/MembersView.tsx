@@ -42,6 +42,7 @@ interface MembersViewProps {
   setPersons: (updater: Person[] | ((prev: Person[]) => Person[])) => void;
   modules: Module[];
   schedule: ScheduleAssignment[];
+  setSchedule?: (updater: ScheduleAssignment[] | ((prev: ScheduleAssignment[]) => ScheduleAssignment[])) => void;
 }
 
 export const MembersView: React.FC<MembersViewProps> = ({
@@ -49,6 +50,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
   setPersons,
   modules,
   schedule,
+  setSchedule,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRank, setSelectedRank] = useState<string>('all');
@@ -105,6 +107,9 @@ export const MembersView: React.FC<MembersViewProps> = ({
       : formRankSelect;
 
     if (editingPerson) {
+      if (setSchedule && !formActive) {
+        setSchedule(prev => prev.filter(a => a.personId !== editingPerson.id));
+      }
       setPersons(prev =>
         prev.map(p =>
           p.id === editingPerson.id
@@ -141,6 +146,9 @@ export const MembersView: React.FC<MembersViewProps> = ({
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Sigur doriți să îl eliminați pe ${name} din evidența obștii?`)) {
       setPersons(prev => prev.filter(p => p.id !== id));
+      if (setSchedule) {
+        setSchedule(prev => prev.filter(a => a.personId !== id));
+      }
     }
   };
 

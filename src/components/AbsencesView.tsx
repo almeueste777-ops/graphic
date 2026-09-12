@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import type { Person, Module, Absence, AbsenceReason, SubstitutionRule } from '../types';
-import { format, parseISO } from 'date-fns';
+import type { Person, Module, Absence, AbsenceReason, SubstitutionRule, ScheduleAssignment, MonasterySettings } from '../types';
+import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
+import { generateSchedule } from '../services/scheduler';
 import { 
   CalendarOff, 
   Repeat, 
@@ -13,7 +14,9 @@ import {
   Calendar,
   Sparkles,
   ShieldCheck,
-  Clock
+  Clock,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
@@ -33,6 +36,10 @@ interface AbsencesViewProps {
   setAbsences: (updater: Absence[] | ((prev: Absence[]) => Absence[])) => void;
   rules: SubstitutionRule[];
   setRules: (updater: SubstitutionRule[] | ((prev: SubstitutionRule[]) => SubstitutionRule[])) => void;
+  schedule?: ScheduleAssignment[];
+  setSchedule?: (updater: ScheduleAssignment[] | ((prev: ScheduleAssignment[]) => ScheduleAssignment[])) => void;
+  settings?: MonasterySettings;
+  currentDate?: Date;
 }
 
 export const AbsencesView: React.FC<AbsencesViewProps> = ({
@@ -42,6 +49,10 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
   setAbsences,
   rules,
   setRules,
+  schedule,
+  setSchedule,
+  settings,
+  currentDate,
 }) => {
   // Absence Modal State
   const [isAbsenceModalOpen, setIsAbsenceModalOpen] = useState(false);
@@ -71,6 +82,8 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
     setIsAbsenceModalOpen(true);
   };
 
+    const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
   const handleSaveAbsence = (e: React.FormEvent) => {
     e.preventDefault();
     if (!absPersonId) return;
@@ -85,12 +98,86 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
       details: absDetails.trim() || undefined,
     };
 
-    setAbsences(prev => [...prev, newAbsence]);
+    const updated = [...absences, newAbsence];
+    setAbsences(updated);
+
+    // Cross-module correlation: instantly recalculate schedule
+    if (setSchedule && schedule && settings) {
+      const weekStartsOn = settings.weekStartDay ?? 6;
+      const curDate = currentDate || new Date(2026, 8, 12);
+      const weekStart = startOfWeek(curDate, { weekStartsOn });
+      const weekEnd = endOfWeek(curDate, { weekStartsOn });
+
+      const result = generateSchedule({
+        startDate: weekStart,
+        endDate: weekEnd,
+        persons,
+        modules,
+        absences: updated,
+        substitutionRules: rules,
+        existingAssignments: schedule,
+        avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+      });
+
+      setSchedule(result.assignments);
+      const personObj = persons.find(p => p.id === absPersonId);
+      setSyncFeedback(`Învoirea a fost salvată! Programul a fost recalculat automat cu înlocuitor pentru ${personObj?.name || 'părintele'}.`);
+      setTimeout(() => setSyncFeedback(null), 6000);
+    }
+
     setIsAbsenceModalOpen(false);
   };
 
   const handleDeleteAbsence = (id: string) => {
-    setAbsences(prev => prev.filter(a => a.id !== id));
+    const updated = absences.filter(a => a.id !== id);
+    setAbsences(updated);
+
+    // Cross-module correlation: instantly recalculate schedule
+    if (setSchedule && schedule && settings) {
+      const weekStartsOn = settings.weekStartDay ?? 6;
+      const curDate = currentDate || new Date(2026, 8, 12);
+      const weekStart = startOfWeek(curDate, { weekStartsOn });
+      const weekEnd = endOfWeek(curDate, { weekStartsOn });
+
+      const result = generateSchedule({
+        startDate: weekStart,
+        endDate: weekEnd,
+        persons,
+        modules,
+        absences: updated,
+        substitutionRules: rules,
+        existingAssignments: schedule,
+        avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+      });
+
+      setSchedule(result.assignments);
+      setSyncFeedback('Învoirea a fost ștearsă! Programul a fost restabilit și recalculat.');
+      setTimeout(() => setSyncFeedback(null), 6000);
+    }
+  };
+
+  const handleManualSyncSchedule = () => {
+    if (setSchedule && schedule && settings) {
+      const weekStartsOn = settings.weekStartDay ?? 6;
+      const curDate = currentDate || new Date(2026, 8, 12);
+      const weekStart = startOfWeek(curDate, { weekStartsOn });
+      const weekEnd = endOfWeek(curDate, { weekStartsOn });
+
+      const result = generateSchedule({
+        startDate: weekStart,
+        endDate: weekEnd,
+        persons,
+        modules,
+        absences,
+        substitutionRules: rules,
+        existingAssignments: schedule,
+        avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+      });
+
+      setSchedule(result.assignments);
+      setSyncFeedback(`Sincronizare completă! Graficul a fost recalculat cu toate cele ${absences.length} învoiri.`);
+      setTimeout(() => setSyncFeedback(null), 6000);
+    }
   };
 
   const openAddRule = () => {
@@ -155,14 +242,35 @@ export const AbsencesView: React.FC<AbsencesViewProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={openAddAbsence}
-            className="apple-button flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-semibold shadow-[0_4px_16px_rgba(225,29,72,0.3)]"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Adaugă Învoire</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {setSchedule && (
+              <button
+                onClick={handleManualSyncSchedule}
+                className="apple-button flex items-center space-x-2 px-3.5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white text-xs font-semibold active:scale-95 transition-all"
+                title="Recalculează imediat graficul cu toate învoirile active"
+              >
+                <RefreshCw className="w-4 h-4 text-amber-400" />
+                <span>Recalculează Graficul</span>
+              </button>
+            )}
+
+            <button
+              onClick={openAddAbsence}
+              className="apple-button flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-semibold shadow-[0_4px_16px_rgba(225,29,72,0.3)] active:scale-95 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Adaugă Învoire</span>
+            </button>
+          </div>
         </div>
+
+        {/* Feedback alert */}
+        {syncFeedback && (
+          <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center space-x-2.5 animate-in fade-in duration-200 shadow-lg">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span>{syncFeedback}</span>
+          </div>
+        )}
 
         {absences.length === 0 ? (
           <div className="apple-glass rounded-3xl p-10 text-center border border-white/5 border-dashed">

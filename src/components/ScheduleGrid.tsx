@@ -197,31 +197,35 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   };
 
   // Save edit slot
-  const handleSaveSlot = (newPersonId: string | null, notes?: string) => {
+  const handleSaveSlot = (newPersonId: string | null, notes?: string, applyToWholeWeek?: boolean) => {
     if (!selectedSlot) return;
     const { date, module, role, slotIndex, assignment } = selectedSlot;
 
+    const targetDates = applyToWholeWeek
+      ? weekDays.map(d => format(d, 'yyyy-MM-dd'))
+      : [date];
+
     setSchedule(prev => {
       const filtered = prev.filter(
-        a => !(a.date === date && a.moduleId === module.id && a.roleId === role.id && a.slotIndex === slotIndex)
+        a => !(targetDates.includes(a.date) && a.moduleId === module.id && a.roleId === role.id && a.slotIndex === slotIndex)
       );
 
       if (newPersonId === null && !notes) {
         return filtered;
       }
 
-      const updated: ScheduleAssignment = {
-        id: assignment ? assignment.id : `${date}_${module.id}_${role.id}_${slotIndex}`,
-        date,
+      const updatedEntries: ScheduleAssignment[] = targetDates.map(d => ({
+        id: (targetDates.length === 1 && assignment) ? assignment.id : `${d}_${module.id}_${role.id}_${slotIndex}`,
+        date: d,
         moduleId: module.id,
         roleId: role.id,
         slotIndex,
         personId: newPersonId,
         status: 'manual',
         notes,
-      };
+      }));
 
-      return [...filtered, updated];
+      return [...filtered, ...updatedEntries];
     });
 
     setSelectedSlot(null);

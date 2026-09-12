@@ -723,6 +723,8 @@ export function generateSchedule({
             primaryCandidate = activePersons.find(p => p.id === 'p_grichentie' || p.id === 'p_glichentie') || null;
           } else if (role.id === 'paracliser_principal') {
             primaryCandidate = activePersons.find(p => p.id === 'p_arghir') || null;
+          } else if (role.id === 'sofer_garda' || module.id === 'soferie') {
+            primaryCandidate = activePersons.find(p => p.id === 'p_spiridon') || null;
           }
 
           if (!primaryCandidate) {

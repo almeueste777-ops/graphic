@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import type { Person, Module, Absence, SubstitutionRule, ScheduleAssignment, MonasterySettings } from '../types';
-import { parseISO } from 'date-fns';
+import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { generateSchedule } from '../services/scheduler';
 
-const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v5';
-const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v5';
-const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v5';
-const STORAGE_KEY_RULES = 'graphic_monastery_rules_v5';
-const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v5';
-const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v5';
+const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v6';
+const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v6';
+const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v6';
+const STORAGE_KEY_RULES = 'graphic_monastery_rules_v6';
+const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v6';
+const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v6';
 
 export const DEFAULT_MODULES: Module[] = [
   {
@@ -74,8 +74,8 @@ export const DEFAULT_MODULES: Module[] = [
     name: 'Șoferie',
     iconName: 'Car',
     color: '#1d4ed8', // Albastru
-    rotationCycle: 'daily',
-    description: 'Deplasări, aprovizionare, aeroport, urgențe mănăstirești',
+    rotationCycle: 'weekly',
+    description: 'Deplasări, aprovizionare, aeroport, urgențe mănăstirești (rând pe toată săptămâna)',
     roles: [
       { id: 'sofer_garda', name: 'Șofer de serviciu', requiredCount: 1 }
     ]
@@ -344,32 +344,56 @@ function notify() {
 export function useMonasteryData() {
   const [persons, setPersonsState] = useState<Person[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_PERSONS);
-    return saved ? JSON.parse(saved) : DEFAULT_PERSONS;
+    if (saved) return JSON.parse(saved);
+    const savedV5 = localStorage.getItem('graphic_monastery_persons_v5');
+    if (savedV5) return JSON.parse(savedV5);
+    return DEFAULT_PERSONS;
   });
 
   const [modules, setModulesState] = useState<Module[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_MODULES);
-    return saved ? JSON.parse(saved) : DEFAULT_MODULES;
+    if (saved) {
+      const parsed: Module[] = JSON.parse(saved);
+      return parsed.map(m => m.id === 'soferie' ? { ...m, rotationCycle: 'weekly' } : m);
+    }
+    const savedV5 = localStorage.getItem('graphic_monastery_modules_v5');
+    if (savedV5) {
+      const parsed: Module[] = JSON.parse(savedV5);
+      return parsed.map(m => m.id === 'soferie' ? { ...m, rotationCycle: 'weekly' } : m);
+    }
+    return DEFAULT_MODULES;
   });
 
   const [absences, setAbsencesState] = useState<Absence[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_ABSENCES);
-    return saved ? JSON.parse(saved) : DEFAULT_ABSENCES;
+    if (saved) return JSON.parse(saved);
+    const savedV5 = localStorage.getItem('graphic_monastery_absences_v5');
+    if (savedV5) return JSON.parse(savedV5);
+    return DEFAULT_ABSENCES;
   });
 
   const [rules, setRulesState] = useState<SubstitutionRule[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_RULES);
-    return saved ? JSON.parse(saved) : DEFAULT_RULES;
+    if (saved) return JSON.parse(saved);
+    const savedV5 = localStorage.getItem('graphic_monastery_rules_v5');
+    if (savedV5) return JSON.parse(savedV5);
+    return DEFAULT_RULES;
   });
 
   const [schedule, setScheduleState] = useState<ScheduleAssignment[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SCHEDULE);
-    return saved ? JSON.parse(saved) : DEFAULT_SCHEDULE;
+    if (saved) return JSON.parse(saved);
+    const savedV5 = localStorage.getItem('graphic_monastery_schedule_v5');
+    if (savedV5) return JSON.parse(savedV5);
+    return DEFAULT_SCHEDULE;
   });
 
   const [settings, setSettingsState] = useState<MonasterySettings>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if (saved) return JSON.parse(saved);
+    const savedV5 = localStorage.getItem('graphic_monastery_settings_v5');
+    if (savedV5) return JSON.parse(savedV5);
+    return DEFAULT_SETTINGS;
   });
 
   // Sync listener
@@ -383,7 +407,10 @@ export function useMonasteryData() {
       const set = localStorage.getItem(STORAGE_KEY_SETTINGS);
 
       if (p) setPersonsState(JSON.parse(p));
-      if (m) setModulesState(JSON.parse(m));
+      if (m) {
+        const parsed: Module[] = JSON.parse(m);
+        setModulesState(parsed.map(mod => mod.id === 'soferie' ? { ...mod, rotationCycle: 'weekly' } : mod));
+      }
       if (a) setAbsencesState(JSON.parse(a));
       if (r) setRulesState(JSON.parse(r));
       if (s) setScheduleState(JSON.parse(s));
@@ -462,6 +489,33 @@ export function useMonasteryData() {
       notify();
       return updated;
     });
+  };
+
+  // Recalculate schedule helper for cross-module synchronization
+  const recalculateSchedule = (
+    targetDate: Date = new Date(2026, 8, 12),
+    customAbsences?: Absence[],
+    customPersons?: Person[],
+    customModules?: Module[],
+    customRules?: SubstitutionRule[]
+  ) => {
+    const weekStartsOn = settings.weekStartDay ?? 6;
+    const weekStart = startOfWeek(targetDate, { weekStartsOn });
+    const weekEnd = endOfWeek(targetDate, { weekStartsOn });
+
+    const result = generateSchedule({
+      startDate: weekStart,
+      endDate: weekEnd,
+      persons: customPersons || persons,
+      modules: customModules || modules,
+      absences: customAbsences || absences,
+      substitutionRules: customRules || rules,
+      existingAssignments: schedule,
+      avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+    });
+
+    setSchedule(result.assignments);
+    return result;
   };
 
   // Delete any module cleanly and update skills & rules
@@ -552,6 +606,7 @@ export function useMonasteryData() {
     deleteModule,
     moveModule,
     resetToDefaults,
+    recalculateSchedule,
     exportAllDataJson,
     importAllDataJson,
   };
