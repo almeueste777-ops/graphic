@@ -38,12 +38,20 @@ import {
 import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
 
 type PrintLayoutMode = 'modular' | 'split' | 'matrix' | 'cards';
+type PageOrientation = 'landscape' | 'portrait';
+type NameFormatMode = 'traditional' | 'canonical' | 'short_rank';
 type FontTheme = 'merriweather' | 'eb_garamond' | 'lora' | 'playfair' | 'inter';
 type PrintFontSizeMode = 'compact' | 'normal' | 'large' | 'extra_large';
 type FontWeightMode = 'bold' | 'black' | 'normal';
 type OrnamentStyle = 'voievodal' | 'classic' | 'minimal';
 type OrnamentColorMode = 'ruby' | 'black' | 'gold';
 type PrintInkMode = 'laser_bw' | 'color';
+
+export const cleanMonasticName = (rawName: string): string => {
+  return rawName
+    .replace(/^(Părintele|Parintele|Fratele|Maica|Sora|Arhimandrit|Arhim\.|Arhim|Protosinghel|Protos\.|Protos|Ieromonah|Ierom\.|Ierom|Ierodiacon|Ierod\.|Ierod|Arhidiacon|Arhid\.|Arhid|Preot|Diacon|Diac\.|Diac|Monahul|Monah|Pr\.|Pr|Fr\.)\s*/gi, '')
+    .trim();
+};
 
 interface PrintableViewProps {
   currentDate: Date;
@@ -67,6 +75,12 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
   // Layout & View State - Default to 'modular' (Large Byzantine Boxes)
   const [layoutMode, setLayoutMode] = useState<PrintLayoutMode>('modular');
   
+  // Page Orientation - Landscape (Vedere) or Portrait (Vertical A4)
+  const [pageOrientation, setPageOrientation] = useState<PageOrientation>('landscape');
+
+  // Name Formatting Mode - Traditional (Pr. / Fr.), Canonical (Protosinghel / Ieromonah), or Short (Ierom.)
+  const [nameFormatMode, setNameFormatMode] = useState<NameFormatMode>('traditional');
+  
   // High-Contrast Laser vs Color Profile (Default to 'laser_bw' for crisp physical printing)
   const [printInkMode, setPrintInkMode] = useState<PrintInkMode>('laser_bw');
   const [showPrintGuide, setShowPrintGuide] = useState<boolean>(true);
@@ -86,6 +100,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
   const [mergeWeeklyInMatrix, setMergeWeeklyInMatrix] = useState<boolean>(true);
   const [showAnnouncements, setShowAnnouncements] = useState<boolean>(true);
   const [showSignatures, setShowSignatures] = useState<boolean>(true);
+  const [showOtherModules, setShowOtherModules] = useState<boolean>(false);
 
   // Active toolbar panel (Apple style expandable controls)
   const [activeToolbarTab, setActiveToolbarTab] = useState<'typography' | 'ornaments' | 'options' | null>(null);
@@ -101,12 +116,43 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
 
   const weekRangeFormatted = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
 
-  const getPersonName = (personId: string | null | undefined, fullForm: boolean = false) => {
+  const getPersonName = (personId: string | null | undefined, modeOrFull?: NameFormatMode | boolean) => {
     if (!personId) return '—';
     const person = persons.find(p => p.id === personId);
     if (!person) return '—';
-    const cleanName = person.name.replace(/^(Părintele|Fratele|Maica|Sora|Ierom\.|Arhim\.)\s*/gi, '').trim();
-    const formatted = fullForm ? `${person.rank} ${cleanName}` : `${person.rank} ${cleanName}`;
+    const cleanName = cleanMonasticName(person.name);
+    const activeMode: NameFormatMode = typeof modeOrFull === 'string' ? modeOrFull : nameFormatMode;
+
+    let formatted = '';
+    if (activeMode === 'traditional') {
+      // Tradițional Monahal (Pr. / Fr. / Diac.)
+      if (person.rank === 'Frate' || person.name.startsWith('Fr.') || person.rank === 'Monah') {
+        formatted = `Fr. ${cleanName}`;
+      } else if (person.rank === 'Diacon') {
+        formatted = `Diac. ${cleanName}`;
+      } else {
+        formatted = `Pr. ${cleanName}`;
+      }
+    } else if (activeMode === 'canonical') {
+      // Canonic Eclezial (Ieromonah Pantelimon, Protosinghel Mina, Ierodiacon Modest, Frate Arghir, Preot Iliescu)
+      let rank = person.rank;
+      if (!rank) {
+        rank = (person.name.startsWith('Fr.') || person.name.toLowerCase().includes('frate')) ? 'Frate' : 'Ieromonah';
+      }
+      formatted = `${rank} ${cleanName}`;
+    } else {
+      // Scurt Liturgic (Protos. Mina, Ierom. Pantelimon, Ierod. Modest, Pr. Iliescu, Fr. Arghir)
+      let shortRank = 'Pr.';
+      if (person.rank === 'Protosinghel') shortRank = 'Protos.';
+      else if (person.rank === 'Ieromonah') shortRank = 'Ierom.';
+      else if (person.rank === 'Ierodiacon') shortRank = 'Ierod.';
+      else if (person.rank === 'Arhimandrit') shortRank = 'Arhim.';
+      else if (person.rank === 'Diacon') shortRank = 'Diac.';
+      else if (person.rank === 'Frate' || person.rank === 'Monah') shortRank = 'Fr.';
+      else if (person.rank === 'Preot') shortRank = 'Pr.';
+      formatted = `${shortRank} ${cleanName}`;
+    }
+
     return isUppercase ? formatted.toUpperCase() : formatted;
   };
 
@@ -389,6 +435,70 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                 title="Profil color cu nuanțe de rubiniu bisericesc, auriu și accente liturgice"
               >
                 <span>🎨 Color Liturgic</span>
+              </button>
+            </div>
+
+            {/* Page Orientation Switcher (Landscape vs Portrait) */}
+            <div className="flex items-center space-x-1 bg-black/40 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setPageOrientation('landscape')}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  pageOrientation === 'landscape'
+                    ? 'bg-amber-400/25 border border-amber-400/50 text-amber-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Format Vedere (Landscape) - 4 coloane orizontale pentru avizier (Recomandat)"
+              >
+                <span>🖼️ Vedere (Landscape)</span>
+              </button>
+              <button
+                onClick={() => setPageOrientation('portrait')}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  pageOrientation === 'portrait'
+                    ? 'bg-amber-400/25 border border-amber-400/50 text-amber-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Format Portret (A4 Vertical) - 2x2 casete mari una sub alta pe 1 pagină A4"
+              >
+                <span>📄 Portret (Vertical)</span>
+              </button>
+            </div>
+
+            {/* Name Formatting Mode Switcher */}
+            <div className="flex items-center space-x-1 bg-black/40 p-1 rounded-xl border border-white/10">
+              <span className="text-white/40 text-[10px] pl-1 font-semibold uppercase hidden sm:inline">Nume:</span>
+              <button
+                onClick={() => setNameFormatMode('traditional')}
+                className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  nameFormatMode === 'traditional'
+                    ? 'bg-amber-400/25 border border-amber-400/50 text-amber-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Tradițional monahal: Pr. Avacum, Pr. Modest, Fr. Arghir"
+              >
+                <span>Pr. / Fr.</span>
+              </button>
+              <button
+                onClick={() => setNameFormatMode('canonical')}
+                className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  nameFormatMode === 'canonical'
+                    ? 'bg-amber-400/25 border border-amber-400/50 text-amber-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Rang canonic complet: Protosinghel Avacum, Ieromonah Pantelimon, Ierodiacon Modest, Frate Arghir"
+              >
+                <span>Canonic</span>
+              </button>
+              <button
+                onClick={() => setNameFormatMode('short_rank')}
+                className={`px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  nameFormatMode === 'short_rank'
+                    ? 'bg-amber-400/25 border border-amber-400/50 text-amber-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Prescurtat liturgic: Protos. Mina, Ierom. Pantelimon, Ierod. Modest"
+              >
+                <span>Prescurtat</span>
               </button>
             </div>
 
@@ -702,6 +812,21 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                 </div>
               </label>
 
+              {otherModules.length > 0 && (
+                <label className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-start space-x-3 cursor-pointer hover:bg-white/[0.06] transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={showOtherModules}
+                    onChange={e => setShowOtherModules(e.target.checked)}
+                    className="mt-0.5 rounded bg-stone-900 border-white/20 text-amber-500 focus:ring-amber-400 w-4 h-4"
+                  />
+                  <div>
+                    <span className="font-semibold text-white block">Afișează Alte Ascultări</span>
+                    <span className="text-[11px] text-white/50 block mt-0.5">Module suplimentare create manual ({otherModules.length} găsite).</span>
+                  </div>
+                </label>
+              )}
+
               {layoutMode === 'matrix' && (
                 <label className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-start space-x-3 cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <input
@@ -746,8 +871,8 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
               </div>
               <div className="space-y-1">
                 <div className="font-bold text-amber-200 text-xs flex items-center space-x-2">
-                  <span>💡 Ghid pentru tipărire impecabilă pe 1 singură foaie A4:</span>
-                  <span className="text-[9.5px] font-semibold text-amber-300 bg-amber-400/20 px-1.5 py-0.2 rounded border border-amber-400/30">Setări Recomandate</span>
+                  <span>💡 Ghid pentru tipărire impecabilă pe 1 singură foaie A4 (LaserJet & Inkjet):</span>
+                  <span className="text-[9.5px] font-semibold text-amber-300 bg-amber-400/20 px-1.5 py-0.2 rounded border border-amber-400/30">Garantat 1 pagină</span>
                 </div>
                 <p className="text-[11px] text-white/80 leading-relaxed">
                   Când apăsați <strong className="text-amber-200">Tipărește A4 / PDF</strong> (sau tastați <kbd className="px-1 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">Ctrl + P</kbd>), asigurați-vă că aveți aceste setări în fereastra imprimantei:
@@ -755,7 +880,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px] text-white/90 font-medium">
                   <div className="flex items-center space-x-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
                     <span className="text-amber-400 font-black">1.</span>
-                    <span><strong>Orientare:</strong> Vedere (Landscape)</span>
+                    <span><strong>Orientare:</strong> {pageOrientation === 'landscape' ? 'Vedere (Landscape)' : 'Portret (Vertical)'}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
                     <span className="text-amber-400 font-black">2.</span>
@@ -779,8 +904,16 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
         )}
       </div>
 
-      {/* ================= PRINTABLE SHEET AREA (OPTIMIZED FOR A4 LANDSCAPE) ================= */}
-      <div className={`print-sheet-landscape bg-[#ffffff] text-[#0c0a09] p-4 sm:p-6 rounded-2xl shadow-2xl border ${contrastClasses} ${fontThemeClasses[fontTheme].body} print:p-0 print:border-none print:shadow-none print:rounded-none relative ${printInkMode === 'laser_bw' ? 'laser-bw-print' : ''}`}>
+      {/* Dynamic @page style for browser print engine based on chosen orientation */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @page {
+          size: ${pageOrientation === 'landscape' ? 'landscape' : 'portrait'};
+          margin: 4mm 5mm 4mm 5mm;
+        }
+      `}} />
+
+      {/* ================= PRINTABLE SHEET AREA (OPTIMIZED FOR A4 LANDSCAPE OR PORTRAIT) ================= */}
+      <div className={`print-sheet-${pageOrientation} bg-[#ffffff] text-[#0c0a09] p-4 sm:p-6 rounded-2xl shadow-2xl border ${contrastClasses} ${fontThemeClasses[fontTheme].body} print:p-0 print:border-none print:shadow-none print:rounded-none relative ${printInkMode === 'laser_bw' ? 'laser-bw-print' : ''}`}>
         
         {/* Outer Frame with Byzantine Ornaments */}
         <div className={`p-3 sm:p-4 relative min-h-[500px] flex flex-col justify-between print-frame-contain ${
@@ -841,8 +974,12 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
             {/* ================= LAYOUT 0: DREPTUNGHIURI MONAHALE (RECOMANDAT A4) ================= */}
             {layoutMode === 'modular' && (
               <div className="mt-2.5 space-y-2.5">
-                {/* 4 DREPTUNGHIURI PRINCIPALE LÂNGĂ LALTĂ (ALTAR & PARACLISERIE, PREDICA, STAT ÎN BISERICĂ, ȘOFERIE) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-2.5 print:gap-1.5 mt-2 print:mt-1">
+                {/* 4 DREPTUNGHIURI PRINCIPALE (ALTAR & PARACLISERIE, PREDICA, STAT ÎN BISERICĂ, ȘOFERIE) */}
+                <div className={`grid gap-2.5 print:gap-1.5 mt-2 print:mt-1 ${
+                  pageOrientation === 'landscape'
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4'
+                    : 'grid-cols-1 md:grid-cols-2 print:grid-cols-2'
+                }`}>
                   
                   {/* DREPTUNGHIUL 1: ALTARUL & PARACLISERIA (cu STRANA) */}
                   <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs print:border-[1.5px] print:shadow-none">
@@ -875,7 +1012,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               <span className="text-[8.5px] print:text-[7.5px] text-stone-600 font-sans">Toată săpt.</span>
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
-                              {getPersonName(altarPreotAssignment?.personId, true)}
+                              {getPersonName(altarPreotAssignment?.personId)}
                             </div>
                             {altarPreotAssignment?.notes && (
                               <div className="text-[8.5px] print:text-[7px] text-stone-600 italic mt-0.5">{altarPreotAssignment.notes}</div>
@@ -891,7 +1028,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               <span className="text-[8.5px] print:text-[7.5px] text-stone-600 font-sans">Sf. Liturghie</span>
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
-                              {getPersonName(altarDiaconAssignment?.personId, true)}
+                              {altarDiaconAssignment?.personId ? getPersonName(altarDiaconAssignment.personId) : 'Pr. Ciprian / Pr. Modest'}
                             </div>
                           </div>
 
@@ -905,8 +1042,8 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
                               {altarProtosAssignment?.personId 
-                                ? getPersonName(altarProtosAssignment.personId, true) 
-                                : getPersonName(persons.find(p => p.id === 'p_iliescu')?.id, true)}
+                                ? getPersonName(altarProtosAssignment.personId) 
+                                : getPersonName(persons.find(p => p.id === 'p_iliescu')?.id) || 'Pr. Iliescu'}
                             </div>
                           </div>
                         </div>
@@ -926,7 +1063,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               <span className="text-[8.5px] print:text-[7.5px] text-stone-600 font-sans">Toată săpt.</span>
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
-                              {getPersonName(paracliserAssignment?.personId, true)}
+                              {getPersonName(paracliserAssignment?.personId)}
                             </div>
                             <div className="text-[8px] print:text-[7px] text-stone-600 italic mt-0.5">
                               Toaca, clopotele, cădelnița & Altar
@@ -946,7 +1083,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               <span>Protopsalt (Strana 1):</span>
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} leading-snug print:text-[11px] print:leading-tight`}>
-                              {getPersonName(stranaPsaltAssignment?.personId, true)}
+                              {getPersonName(stranaPsaltAssignment?.personId)}
                             </div>
                           </div>
 
@@ -955,7 +1092,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               <span>Ajutor Permanent / Cititor:</span>
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} leading-snug print:text-[11px] print:leading-tight`}>
-                              {getPersonName(stranaAjutorAssignment?.personId, true)}
+                              {getPersonName(stranaAjutorAssignment?.personId)}
                             </div>
                           </div>
                         </div>
@@ -991,8 +1128,8 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                         {/* 1. DUMINICĂ */}
                         {weekLiturgicalDays.filter(d => d.isSunday).map(d => {
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
-                          const name = getPersonName(assign?.personId, true);
-                          const fallbackName = getPersonName(altarPreotAssignment?.personId, true);
+                          const name = getPersonName(assign?.personId);
+                          const fallbackName = getPersonName(altarPreotAssignment?.personId);
                           return (
                             <div key={d.dateStr} className={`p-2 print:p-1 rounded-xs space-y-0.5 ${
                               printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-red-50/70 border-2 border-red-300'
@@ -1019,7 +1156,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                         {/* 2. SÂMBĂTĂ */}
                         {weekLiturgicalDays.filter(d => d.isSaturday).map(d => {
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
-                          const name = getPersonName(assign?.personId, true);
+                          const name = getPersonName(assign?.personId);
                           const iliescu = persons.find(p => p.id === 'p_iliescu');
                           return (
                             <div key={d.dateStr} className={`p-2 print:p-1 rounded-xs space-y-0.5 ${
@@ -1034,7 +1171,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                                 <span className="text-[9.5px] print:text-[7.5px] font-bold text-stone-800 font-mono">{d.dateFormatted}</span>
                               </div>
                               <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug text-sm sm:text-base print:text-[11.5px] print:leading-tight`}>
-                                {name !== '—' ? name : iliescu ? getPersonName(iliescu.id, true) : 'Pr. Iliescu / Diacon de rând'}
+                                {name !== '—' ? name : iliescu ? getPersonName(iliescu.id) : 'Pr. Iliescu / Diacon de rând'}
                               </div>
                               <div className="text-[9px] print:text-[7px] text-stone-600 italic">
                                 2 sâmbete Pr. Iliescu, 2 sâmbete diacon prin rotație
@@ -1046,7 +1183,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                         {/* 3. PRAZNICE ÎMPĂRĂTEȘTI / SĂRBĂTORI CU CRUCE ROȘIE ÎN CURSUL SĂPTĂMÂNII */}
                         {weekLiturgicalDays.filter(d => !d.isSunday && !d.isSaturday && d.litInfo.isRedCross).map(d => {
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
-                          const name = getPersonName(assign?.personId, true);
+                          const name = getPersonName(assign?.personId);
                           return (
                             <div key={d.dateStr} className={`p-2 print:p-1 rounded-xs space-y-0.5 ${
                               printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-amber-50 border-2 border-amber-400'
@@ -1113,7 +1250,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
 
                         {weekLiturgicalDays.map(item => {
                           const assign = bisericaModule ? getAssignment(item.dateStr, bisericaModule.id, bisericaModule.roles[0]?.id, 0) : null;
-                          const personName = getPersonName(assign?.personId, true);
+                          const personName = getPersonName(assign?.personId);
                           const isWeekend = item.isSunday || item.isSaturday;
 
                           return (
@@ -1191,7 +1328,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                             <span className="text-[8.5px] print:text-[7.5px] text-blue-700 font-bold font-sans">Toată Săpt.</span>
                           </div>
                           <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug text-sm sm:text-base print:text-[11.5px] print:leading-tight`}>
-                            {getPersonName(soferAssignment?.personId, true)}
+                            {getPersonName(soferAssignment?.personId)}
                           </div>
                           {soferAssignment?.notes && (
                             <div className="text-[8.5px] print:text-[7px] text-stone-600 italic mt-0.5">{soferAssignment.notes}</div>
@@ -1244,9 +1381,9 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
 
                 </div>
 
-                {/* ROW 2: ALTE ASCULTĂRI (DACĂ EXISTĂ) */}
-                {otherModules.length > 0 && (
-                  <div className="border-2 border-stone-900 bg-white p-2 shadow-xs">
+                {/* ROW 2: ALTE ASCULTĂRI (NUMAI DACĂ ESTE ACTIVAT EXPLICIT ÎN OPȚIUNI) */}
+                {showOtherModules && otherModules.length > 0 && (
+                  <div className="border-2 border-stone-900 bg-white p-2 shadow-xs mt-2">
                     <div className="font-bold text-xs uppercase tracking-wider text-stone-900 pb-1 border-b border-stone-300 flex items-center space-x-1.5">
                       <span className="text-amber-700">❖</span>
                       <span className={fontThemeClasses[fontTheme].header}>ALTE ASCULTĂRI MĂNĂSTIREȘTI</span>
@@ -1263,7 +1400,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                               <span className="text-[9px] text-stone-500">{mod.roles[0]?.name || 'Responsabil'}</span>
                             </div>
                             <div className={`${fontSizes.name} ${weightClass} text-stone-950 font-bold`}>
-                              {getPersonName(assignment?.personId, true)}
+                              {getPersonName(assignment?.personId)}
                             </div>
                           </div>
                         );
@@ -1305,7 +1442,7 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                             <div key={role.id} className="space-y-1">
                               {Array.from({ length: role.requiredCount }).map((_, slotIdx) => {
                                 const assignment = getWeeklyAssignment(module.id, role.id, slotIdx);
-                                const personName = getPersonName(assignment?.personId, true);
+                                const personName = getPersonName(assignment?.personId);
 
                                 return (
                                   <div

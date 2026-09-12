@@ -8,8 +8,26 @@ import {
 } from './scheduler';
 import { getOrthodoxEaster, getDayLiturgicalInfo } from './orthodoxCalendar';
 import { DEFAULT_PERSONS, DEFAULT_MODULES, DEFAULT_RULES } from '../store/monasteryStore';
+import { cleanMonasticName } from '../components/PrintableView';
 import type { Absence } from '../types';
 import { parseISO, format } from 'date-fns';
+
+describe('Clean Monastic Names & Typography Engine', () => {
+  it('strips all honorific prefixes properly to avoid duplicate titles', () => {
+    expect(cleanMonasticName('Pr. Avacum')).toBe('Avacum');
+    expect(cleanMonasticName('Pr. Modest')).toBe('Modest');
+    expect(cleanMonasticName('Pr. Iliescu')).toBe('Iliescu');
+    expect(cleanMonasticName('Fr. Arghir')).toBe('Arghir');
+    expect(cleanMonasticName('Fr. Ioan')).toBe('Ioan');
+    expect(cleanMonasticName('Protos. Mina')).toBe('Mina');
+    expect(cleanMonasticName('Ierom. Pantelimon')).toBe('Pantelimon');
+    expect(cleanMonasticName('Protosinghel Pamvo Dima')).toBe('Pamvo Dima');
+    expect(cleanMonasticName('Ierodiacon Ciprian')).toBe('Ciprian');
+    expect(cleanMonasticName('Monah Grichentie')).toBe('Grichentie');
+    expect(cleanMonasticName('Părintele Sebastian')).toBe('Sebastian');
+    expect(cleanMonasticName('Fratele Arghir')).toBe('Arghir');
+  });
+});
 
 describe('Orthodox Liturgical Calendar & Paschalion', () => {
   it('computes exact Orthodox Easter dates according to Julian + 13 days', () => {
