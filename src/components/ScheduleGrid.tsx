@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import type { Person, Module, ScheduleAssignment, Absence, SubstitutionRule, MonasterySettings } from '../types';
-import { generateSchedule, getMonasticWeekIndex, getCommunityWeeklyDuties } from '../services/scheduler';
+import { 
+  generateSchedule, 
+  generateCycleSchedule, 
+  getCycleStartDate, 
+  getMonasticWeekIndex, 
+  getCommunityWeeklyDuties,
+  getPriestByDuty,
+  getPriestMonthlyDuty
+} from '../services/scheduler';
 import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
 import { EditEntryModal } from './EditEntryModal';
 import { QuickAbsenceModal } from './QuickAbsenceModal';
@@ -34,7 +42,10 @@ import {
   Table,
   CalendarDays,
   Edit3,
-  Flame
+  Flame,
+  ShieldCheck,
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
@@ -79,8 +90,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   const [isMonthlyModalOpen, setIsMonthlyModalOpen] = useState(false);
   const [generationAlerts, setGenerationAlerts] = useState<string[] | null>(null);
 
-  // Mobile & Tablet: Switch between Day-by-Day view and 7-Day Table
-  const [viewMode, setViewMode] = useState<'week' | 'day'>(() => {
+  // Mobile & Tablet: Switch between Day-by-Day view, 7-Day Table, and 4-Week Cycle
+  const [viewMode, setViewMode] = useState<'week' | 'day' | 'cycle'>(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       return 'day';
     }
@@ -97,6 +108,41 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   // 4-Week Monastic Rotation State
   const monasticWeekIndex = getMonasticWeekIndex(weekStart);
   const communityDuties = getCommunityWeeklyDuties(weekStart, persons);
+
+  // 4-Week Cycle Dates & Scrubber Structure
+  const cycleStartDate = getCycleStartDate(weekStart, weekStartsOn);
+  const cycleWeeks = [0, 1, 2, 3].map(i => {
+    const wStart = addWeeks(cycleStartDate, i);
+    const wEnd = endOfWeek(wStart, { weekStartsOn });
+    const weekIdx = i + 1;
+    const altarPriestId = getPriestByDuty('altar', weekIdx);
+    const altarPriest = persons.find(p => p.id === altarPriestId);
+    const stranaPriestId = getPriestByDuty('strana', weekIdx);
+    const stranaPriest = persons.find(p => p.id === stranaPriestId);
+    const ascultariPriestId = getPriestByDuty('ascultari', weekIdx);
+    const ascultariPriest = persons.find(p => p.id === ascultariPriestId);
+    const liberPriestId = getPriestByDuty('liber', weekIdx);
+    const liberPriest = persons.find(p => p.id === liberPriestId);
+
+    const wStartStr = format(wStart, 'yyyy-MM-dd');
+    const isCurrentWeek = wStartStr === format(weekStart, 'yyyy-MM-dd');
+
+    return {
+      weekIdx,
+      wStart,
+      wEnd,
+      altarPriestId,
+      altarPriest,
+      stranaPriestId,
+      stranaPriest,
+      ascultariPriestId,
+      ascultariPriest,
+      liberPriestId,
+      liberPriest,
+      isCurrentWeek,
+      dateRangeLabel: `${format(wStart, 'd MMM', { locale: ro })} – ${format(wEnd, 'd MMM', { locale: ro })}`,
+    };
+  });
 
   const weekRangeTitle = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
   const weekStartStr = format(weekStart, 'yyyy-MM-dd');
@@ -133,7 +179,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     return dayAssignments.length > 1;
   };
 
-  // Trigger automatic generation
+  // Trigger automatic generation for viewed week
   const handleAutoGenerate = () => {
     const result = generateSchedule({
       startDate: weekStart,
@@ -152,6 +198,26 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     } else {
       setGenerationAlerts([]);
     }
+  };
+
+  // Trigger complete 4-week monastic cycle generation
+  const handleGenerateCycle = () => {
+    const result = generateCycleSchedule({
+      startDate: cycleStartDate,
+      persons,
+      modules,
+      absences,
+      substitutionRules: rules,
+      existingAssignments: schedule,
+      avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+    });
+
+    setSchedule(result.assignments);
+    setGenerationAlerts([
+      `Ciclul canonic de 4 săptămâni (${result.cycleStartDateStr} – ${result.cycleEndDateStr}) a fost generat complet!`,
+      `Toți cei 4 ieromonahi (Pr. Pantelimon, Pr. Avacum, Pr. Sebastian, Pr. Mina) au primit garantat: 1 săpt. Altar, 1 săpt. Strană, 1 săpt. Ascultări și 1 săpt. Liberă pe lună.`,
+      ...result.warnings,
+    ]);
   };
 
   // Quick absence handler: adds absence and recalculates schedule immediately
@@ -300,11 +366,11 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             </div>
           </div>
 
-          {/* View Mode Switcher: Day vs 7-Day Table */}
-          <div className="flex items-center p-1 rounded-full bg-white/[0.06] border border-white/[0.08] w-full sm:w-auto justify-center">
+          {/* View Mode Switcher: Day vs 7-Day Table vs 4-Week Cycle */}
+          <div className="flex items-center p-1 rounded-full bg-white/[0.06] border border-white/[0.08] w-full sm:w-auto justify-center overflow-x-auto no-scrollbar">
             <button
               onClick={() => setViewMode('day')}
-              className={`flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+              className={`flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 whitespace-nowrap ${
                 viewMode === 'day'
                   ? 'bg-amber-400 text-stone-950 shadow-sm font-bold'
                   : 'text-white/60 hover:text-white'
@@ -315,7 +381,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             </button>
             <button
               onClick={() => setViewMode('week')}
-              className={`flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+              className={`flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 whitespace-nowrap ${
                 viewMode === 'week'
                   ? 'bg-amber-400 text-stone-950 shadow-sm font-bold'
                   : 'text-white/60 hover:text-white'
@@ -323,6 +389,17 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             >
               <Table className="w-3.5 h-3.5" />
               <span>Tabel 7 Zile</span>
+            </button>
+            <button
+              onClick={() => setViewMode('cycle')}
+              className={`flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 whitespace-nowrap ${
+                viewMode === 'cycle'
+                  ? 'bg-amber-400 text-stone-950 shadow-sm font-bold'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Repeat className="w-3.5 h-3.5" />
+              <span>Ciclu 4 Săpt.</span>
             </button>
           </div>
         </div>
@@ -340,10 +417,20 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
           <button
             onClick={handleAutoGenerate}
-            className="apple-gold-button flex-1 sm:flex-none flex items-center justify-center space-x-2 px-5 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-all min-h-[38px]"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-semibold active:scale-95 transition-all min-h-[38px]"
+            title="Generează rânduiala pentru săptămâna curentă"
           >
-            <Sparkles className="w-3.5 h-3.5 fill-black text-black shrink-0" />
-            <span>Generează</span>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Generează Săpt.</span>
+          </button>
+
+          <button
+            onClick={handleGenerateCycle}
+            className="apple-gold-button flex-1 sm:flex-none flex items-center justify-center space-x-2 px-5 py-2 rounded-full text-xs font-bold shadow-md active:scale-95 transition-all min-h-[38px]"
+            title="Generează automat întregul ciclu de 4 săptămâni (toată luna) conform canonului monastic"
+          >
+            <Repeat className="w-3.5 h-3.5 text-black shrink-0" />
+            <span>Generează Ciclul (4 Săpt.)</span>
           </button>
 
           <button
@@ -362,6 +449,50 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
+        </div>
+      </div>
+
+      {/* 4-Week Interactive Cycle Scrubber Bar */}
+      <div className="apple-glass rounded-2xl p-2.5 sm:p-3 border border-white/[0.08] shadow-md bg-stone-900/60">
+        <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex items-center space-x-2 shrink-0 pl-1 pr-2.5 border-r border-white/[0.08] text-white/50 text-[11px] font-semibold uppercase tracking-wider hidden sm:flex">
+            <Repeat className="w-3.5 h-3.5 text-amber-400" />
+            <span>Ciclu 4 Săpt:</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+            {cycleWeeks.map(w => {
+              const isSelected = w.isCurrentWeek;
+              return (
+                <button
+                  key={w.weekIdx}
+                  onClick={() => setCurrentDate(w.wStart)}
+                  className={`flex-1 min-w-[135px] sm:min-w-[160px] p-2 sm:p-2.5 rounded-2xl text-left transition-all duration-200 active:scale-95 border ${
+                    isSelected
+                      ? 'bg-amber-400/20 border-amber-400/60 text-white shadow-[0_0_15px_rgba(251,191,36,0.18)] ring-1 ring-amber-400/50'
+                      : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.06] text-white/70 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      isSelected ? 'text-amber-300 font-extrabold' : 'text-white/50'
+                    }`}>
+                      Săptămâna {w.weekIdx}
+                    </span>
+                    {isSelected && (
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    )}
+                  </div>
+                  <div className="text-xs font-bold text-white truncate">
+                    {w.altarPriest?.name || 'Preot de rând'}
+                  </div>
+                  <div className="text-[10px] text-white/40 mt-0.5 font-sans truncate">
+                    {w.dateRangeLabel}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -1040,6 +1171,334 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW MODE 3: 4-WEEK FULL CANONICAL MONASTIC CYCLE DASHBOARD */}
+      {viewMode === 'cycle' && (
+        <div className="space-y-5 animate-fade-in">
+          {/* Header Card */}
+          <div className="apple-glass rounded-3xl p-5 sm:p-6 border border-white/[0.08] shadow-2xl bg-gradient-to-r from-stone-900/95 via-stone-900/70 to-stone-900/95">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shadow-md shrink-0">
+                  <Repeat className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">
+                      Ciclul Canonic Complet pe 4 Săptămâni (Tablou Lunar)
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-stone-950 shadow-xs">
+                      28 de Zile
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/60 mt-1">
+                    Mănăstirea Bogdănești • Repartizare 100% echitabilă: 1 săpt. Altar, 1 săpt. Strană, 1 săpt. Ascultări, 1 săpt. Liberă
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 w-full lg:w-auto justify-end flex-wrap">
+                <button
+                  onClick={handleGenerateCycle}
+                  className="apple-gold-button flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md active:scale-95 transition-all flex-1 sm:flex-none"
+                >
+                  <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
+                  <span>Generează / Recalculează Ciclul</span>
+                </button>
+                <button
+                  onClick={onNavigateToPrint}
+                  className="flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-semibold active:scale-95 transition-all"
+                  title="Afișaj Avizier A4"
+                >
+                  <Printer className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>Tipărește A4</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 4-Week Comprehensive Overview Table */}
+          <div className="apple-glass rounded-3xl overflow-hidden shadow-2xl border border-white/[0.08]">
+            <div className="p-4 sm:p-5 border-b border-white/[0.06] flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <CalendarDays className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                  Sinteza Rânduielilor pe Cele 4 Săptămâni ale Ciclului
+                </h3>
+              </div>
+              <span className="text-[11px] text-white/40 hidden sm:inline">
+                Atingeți „Deschide” pentru a edita sau vizualiza o săptămână în detaliu
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[900px] text-xs">
+                <thead>
+                  <tr className="bg-white/[0.03] border-b border-white/[0.06] text-white/50 text-[10px] uppercase font-bold tracking-wider">
+                    <th className="p-4 w-44">Săptămâna & Perioada</th>
+                    <th className="p-3.5 text-amber-300">🟡 Altar (Preot de rând)</th>
+                    <th className="p-3.5 text-sky-300">🔵 Diacon de rând</th>
+                    <th className="p-3.5 text-indigo-300">🎵 La Strană</th>
+                    <th className="p-3.5 text-emerald-300">🟢 În Biserică / Ascultări</th>
+                    <th className="p-3.5 text-purple-300">🟣 Săpt. Liberă</th>
+                    <th className="p-3.5 text-center w-28">Navigare</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.05]">
+                  {cycleWeeks.map((w) => {
+                    const isSelected = w.isCurrentWeek;
+                    const deaconName = w.weekIdx % 2 === 1 ? 'Pr. Petru' : 'Pr. Ciprian / Pr. Modest';
+
+                    return (
+                      <tr
+                        key={w.weekIdx}
+                        className={`transition-colors ${
+                          isSelected 
+                            ? 'bg-amber-500/10 border-l-4 border-amber-400 font-semibold' 
+                            : 'hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {/* Week info */}
+                        <td className="p-4">
+                          <div className="flex flex-col">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-white font-bold text-sm">
+                                Săptămâna {w.weekIdx}
+                              </span>
+                              {isSelected && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] bg-amber-400/25 text-amber-300 font-extrabold uppercase tracking-wider border border-amber-400/40">
+                                  Vizualizată
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-white/50 font-sans mt-0.5">
+                              {w.dateRangeLabel}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Altar */}
+                        <td className="p-3.5">
+                          <div className="flex items-center space-x-2">
+                            <span 
+                              className="w-2.5 h-2.5 rounded-full shrink-0" 
+                              style={{ backgroundColor: w.altarPriest?.colorTag || '#fbbf24' }} 
+                            />
+                            <div>
+                              <div className="font-bold text-amber-200">
+                                {w.altarPriest?.name || 'Nespecificat'}
+                              </div>
+                              <span className="text-[10px] text-amber-400/60 font-medium">
+                                Predică Duminică
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Diacon */}
+                        <td className="p-3.5">
+                          <div className="font-medium text-sky-200">
+                            {deaconName}
+                          </div>
+                          <span className="text-[10px] text-sky-400/60 font-medium">
+                            {w.weekIdx % 2 === 1 ? 'Săptămână de rând' : 'Rotație diaconească'}
+                          </span>
+                        </td>
+
+                        {/* Strană */}
+                        <td className="p-3.5">
+                          <div className="font-medium text-indigo-200">
+                            {w.stranaPriest?.name || 'Nespecificat'}
+                          </div>
+                          <span className="text-[10px] text-white/40">
+                            cu Pr. Grichentie & Fr. Ioan
+                          </span>
+                        </td>
+
+                        {/* Ascultări */}
+                        <td className="p-3.5">
+                          <div className="font-medium text-emerald-200">
+                            {w.ascultariPriest?.name || 'Nespecificat'}
+                          </div>
+                          <span className="text-[10px] text-white/40">
+                            Primire pelerini / biserică
+                          </span>
+                        </td>
+
+                        {/* Liber */}
+                        <td className="p-3.5">
+                          <div className="font-medium text-purple-200">
+                            {w.liberPriest?.name || 'Nespecificat'}
+                          </div>
+                          <span className="text-[10px] text-purple-400/60">
+                            Chilie, rugăciune, odihnă
+                          </span>
+                        </td>
+
+                        {/* Switch button */}
+                        <td className="p-3.5 text-center">
+                          <button
+                            onClick={() => {
+                              setCurrentDate(w.wStart);
+                              setViewMode('week');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] border border-white/[0.08] text-white text-xs font-semibold active:scale-95 transition-all inline-flex items-center space-x-1"
+                          >
+                            <span>Deschide</span>
+                            <ArrowRight className="w-3 h-3 text-amber-400" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Canonical Fair Share Equity Matrix (100% Repartizare Echitabilă) */}
+          <div className="apple-glass rounded-3xl p-5 sm:p-6 border border-white/[0.08] shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+              <div className="flex items-center space-x-2.5">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold text-white tracking-tight">
+                  Matricea de Echitate Canonică a Celor 4 Ieromonahi
+                </h3>
+              </div>
+              <div className="flex items-center space-x-1 text-emerald-400 text-xs font-semibold">
+                <Check className="w-3.5 h-3.5" />
+                <span>Toți cei 4 ieromonahi au 100% repartizare echilibrată pe lună</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { id: 'p_pantelimon', name: 'Pr. Pantelimon', rank: 'Ieromonah (Eclesiarh)' },
+                { id: 'p_avacum', name: 'Pr. Avacum', rank: 'Protosinghel' },
+                { id: 'p_sebastian', name: 'Pr. Sebastian', rank: 'Ieromonah' },
+                { id: 'p_mina', name: 'Protos. Mina', rank: 'Protosinghel (Econom)' },
+              ].map(hieromonk => {
+                const personObj = persons.find(p => p.id === hieromonk.id);
+                const duties = [1, 2, 3, 4].map(w => ({
+                  week: w,
+                  duty: getPriestMonthlyDuty(hieromonk.id, w),
+                }));
+
+                const dutyLabels: Record<string, { label: string; bg: string; text: string }> = {
+                  altar: { label: 'Altar', bg: 'bg-amber-500/20 border-amber-500/30', text: 'text-amber-300' },
+                  strana: { label: 'Strană', bg: 'bg-sky-500/20 border-sky-500/30', text: 'text-sky-300' },
+                  ascultari: { label: 'Ascultări', bg: 'bg-emerald-500/20 border-emerald-500/30', text: 'text-emerald-300' },
+                  liber: { label: 'Liber', bg: 'bg-purple-500/20 border-purple-500/30', text: 'text-purple-300' },
+                };
+
+                return (
+                  <div
+                    key={hieromonk.id}
+                    className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center space-x-2.5 mb-3">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-sm"
+                          style={{ backgroundColor: personObj?.colorTag || '#d97706' }}
+                        >
+                          {hieromonk.name.slice(4, 6).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-sm text-white truncate">
+                            {hieromonk.name}
+                          </h4>
+                          <p className="text-[10px] text-white/50 truncate">
+                            {hieromonk.rank}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 my-3 text-xs">
+                        {duties.map(d => {
+                          const config = dutyLabels[d.duty] || dutyLabels.ascultari;
+                          return (
+                            <div
+                              key={d.week}
+                              className="flex items-center justify-between p-2 rounded-xl bg-black/20 border border-white/[0.04]"
+                            >
+                              <span className="text-[11px] font-medium text-white/70">
+                                Săptămâna {d.week}:
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${config.bg} ${config.text}`}>
+                                {config.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-emerald-400 font-semibold">
+                      <span>4 din 4 categorii</span>
+                      <span className="flex items-center space-x-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>100% Echitabil</span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Daily Church Obedience & Preaching Rhythm Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="apple-glass rounded-3xl p-5 border border-white/[0.08] shadow-xl space-y-3">
+              <div className="flex items-center space-x-2 text-amber-300 font-bold text-sm">
+                <Flame className="w-4 h-4" />
+                <span>Rânduiala Zilnică în Biserică (Pelerini & Pomelnice)</span>
+              </div>
+              <p className="text-xs text-white/60">
+                În fiecare săptămână a lunii, statul de rând în biserică se desfășoară după canonul neschimbat:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {[
+                  { day: 'Sâmbătă', person: 'Pr. Iliescu', note: 'Weekend Protos & Spovedanie' },
+                  { day: 'Duminică', person: 'Pr. Pantelimon', note: 'Eclesiarh & Liturghie' },
+                  { day: 'Luni', person: 'Pr. Avacum', note: 'Stat în Biserică' },
+                  { day: 'Marți', person: 'Pr. Ciprian', note: 'Stat în Biserică' },
+                  { day: 'Miercuri', person: 'Pr. Avacum', note: 'Stat în Biserică' },
+                  { day: 'Joi', person: 'Pr. Ciprian', note: 'Stat în Biserică' },
+                  { day: 'Vineri', person: 'Fr. Arghir', note: 'Paracliser de rând' },
+                ].map(item => (
+                  <div key={item.day} className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex flex-col">
+                    <span className="text-[10px] uppercase font-bold text-amber-400/90">{item.day}</span>
+                    <span className="text-xs font-bold text-white mt-0.5">{item.person}</span>
+                    <span className="text-[10px] text-white/40">{item.note}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="apple-glass rounded-3xl p-5 border border-white/[0.08] shadow-xl space-y-3">
+              <div className="flex items-center space-x-2 text-sky-300 font-bold text-sm">
+                <CalendarIcon className="w-4 h-4" />
+                <span>Rânduiala Predicii pe Ciclul de 4 Săptămâni</span>
+              </div>
+              <p className="text-xs text-white/60">
+                Predica și cuvântul de învățătură se rânduiesc conform tipicului liturgic:
+              </p>
+              <ul className="space-y-2 text-xs text-white/80">
+                <li className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <strong className="text-amber-300">Duminică:</strong> Preotul de rând al săptămânii respective (S1: Pr. Pantelimon, S2: Pr. Avacum, S3: Pr. Sebastian, S4: Pr. Mina).
+                </li>
+                <li className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <strong className="text-sky-300">Sâmbătă:</strong> 2 sâmbete pe lună (S1 & S3) predică <i>Pr. Iliescu</i>; celelalte 2 sâmbete (S2 & S4) predică un <i>Diacon</i> alternativ.
+                </li>
+                <li className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <strong className="text-emerald-300">Praznice Mari:</strong> Rotație canonică cu substituție automată dacă părintele rânduit este învoit.
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       )}

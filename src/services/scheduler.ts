@@ -1,5 +1,5 @@
 import type { Person, Module, Absence, SubstitutionRule, ScheduleAssignment } from '../types';
-import { format, parseISO, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
+import { format, parseISO, startOfDay, endOfDay, eachDayOfInterval, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
 import { getDayLiturgicalInfo } from './orthodoxCalendar';
 
 export interface GenerateScheduleParams {
@@ -11,11 +11,50 @@ export interface GenerateScheduleParams {
   substitutionRules: SubstitutionRule[];
   existingAssignments: ScheduleAssignment[];
   avoidDoubleBooking: boolean;
+  weekIndexOverride?: number;
 }
 
 export interface GenerationResult {
   assignments: ScheduleAssignment[];
   warnings: string[];
+}
+
+export interface GenerateCycleScheduleParams {
+  startDate?: Date;
+  referenceDate?: Date;
+  persons: Person[];
+  modules: Module[];
+  absences: Absence[];
+  substitutionRules: SubstitutionRule[];
+  existingAssignments: ScheduleAssignment[];
+  avoidDoubleBooking?: boolean;
+  weeksCount?: number;
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+}
+
+export interface CycleWeekSummary {
+  weekIndex: number;
+  startDate: Date;
+  endDate: Date;
+  startDateStr: string;
+  endDateStr: string;
+  altarPriestId: string | null;
+  deaconId: string | null;
+  stranaPriestId: string | null;
+  ascultariPriestId: string | null;
+  liberPriestId: string | null;
+  protosSaturdayId: string | null;
+  paracliserId: string | null;
+  soferId: string | null;
+  assignmentsCount: number;
+}
+
+export interface CycleGenerationSummary extends GenerationResult {
+  cycleStartDate: Date;
+  cycleEndDate: Date;
+  cycleStartDateStr: string;
+  cycleEndDateStr: string;
+  weeks: CycleWeekSummary[];
 }
 
 /**
@@ -65,6 +104,15 @@ export interface PersonWeeklyDutyStatus {
 export function getMonasticWeekIndex(date: Date): number {
   const day = date.getDate();
   return ((Math.floor((day - 1) / 7)) % 4) + 1;
+}
+
+/**
+ * Calculates the starting date of the 4-week monastic cycle that contains the given date.
+ */
+export function getCycleStartDate(date: Date, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 6): Date {
+  const currentWeekStart = startOfWeek(date, { weekStartsOn });
+  const weekIdx = getMonasticWeekIndex(currentWeekStart);
+  return subWeeks(currentWeekStart, weekIdx - 1);
 }
 
 /**
@@ -234,9 +282,9 @@ export function getCommunityWeeklyDuties(startDate: Date, persons: Person[]): Pe
 }
 
 /**
- * Main Auto-Scheduler Engine with Monastery and Liturgical Typikon Rules
+ * Single-Week Auto-Scheduler Engine with Monastery and Liturgical Typikon Rules
  */
-export function generateSchedule({
+export function generateSingleWeekSchedule({
   startDate,
   endDate,
   persons,
@@ -245,6 +293,7 @@ export function generateSchedule({
   substitutionRules,
   existingAssignments,
   avoidDoubleBooking = true,
+  weekIndexOverride,
 }: GenerateScheduleParams): GenerationResult {
   const warnings: string[] = [];
   const days = eachDayOfInterval({ start: startDate, end: endDate });
@@ -291,8 +340,8 @@ export function generateSchedule({
     return priority(a) - priority(b);
   });
 
-  // Calculate week of month index based on start date
-  const weekOfMonth = Math.floor((startDate.getDate() - 1) / 7) + 1;
+  // Calculate week of month index based on start date or override
+  const weekOfMonth = weekIndexOverride ?? (Math.floor((startDate.getDate() - 1) / 7) + 1);
   const isPetruServingWeek = weekOfMonth % 2 === 1; // Weeks 1 & 3 for Pr. Petru (una da, una nu)
 
   // Track assigned altar priest of the week for Sunday preaching
@@ -688,6 +737,7 @@ export function generateSchedule({
 
           // Pick the best candidate available for the whole week or substitute when absent
           let primaryCandidate: Person | null = null;
+          let substitutedWeeklyFromId: string | undefined;
 
           if (role.id === 'altar_preot') {
             if (altarPriestOfTheWeekId) {
@@ -702,6 +752,7 @@ export function generateSchedule({
                   altarPriestOfTheWeekId = designatedPriest.id;
                 } else if (designatedPriest && isPersonAbsent(designatedPriest.id, startDate, absences)) {
                   // Designated priest is absent! Substitute from rules
+                  substitutedWeeklyFromId = designatedPriest.id;
                   const rule = substitutionRules.find(r => r.targetPersonId === designatedPriest.id && (r.moduleId === 'altar' || r.moduleId === 'any'));
                   if (rule) {
                     for (const sId of rule.substituteIds) {
@@ -773,8 +824,8 @@ export function generateSchedule({
             if (!dailyBookings.has(dateStr)) dailyBookings.set(dateStr, new Set());
 
             let assignedId: string | null = null;
-            let status: 'auto' | 'substituted' = 'auto';
-            let substitutedFromId: string | undefined;
+            let status: 'auto' | 'substituted' = substitutedWeeklyFromId ? 'substituted' : 'auto';
+            let substitutedFromId: string | undefined = substitutedWeeklyFromId;
 
             if (primaryCandidate) {
               const absence = isPersonAbsent(primaryCandidate.id, day, absences);
@@ -917,5 +968,129 @@ export function generateSchedule({
   return {
     assignments: newAssignments,
     warnings,
+  };
+}
+
+/**
+ * Main Auto-Scheduler Engine. Automatically chunks multi-week intervals to prevent
+ * locking one week's duty into the entire month.
+ */
+export function generateSchedule(params: GenerateScheduleParams): GenerationResult {
+  const days = eachDayOfInterval({ start: params.startDate, end: params.endDate });
+  if (days.length <= 7) {
+    return generateSingleWeekSchedule(params);
+  }
+
+  // Multi-week interval: chunk week by week
+  let currentAssignments = [...params.existingAssignments];
+  const allWarnings: string[] = [];
+
+  for (let i = 0; i < days.length; i += 7) {
+    const chunkStart = days[i];
+    const chunkEnd = days[Math.min(i + 6, days.length - 1)];
+    const weekIndex = getMonasticWeekIndex(chunkStart);
+
+    const chunkResult = generateSingleWeekSchedule({
+      ...params,
+      startDate: chunkStart,
+      endDate: chunkEnd,
+      existingAssignments: currentAssignments,
+      weekIndexOverride: weekIndex,
+    });
+
+    currentAssignments = chunkResult.assignments;
+    allWarnings.push(...chunkResult.warnings);
+  }
+
+  return {
+    assignments: currentAssignments,
+    warnings: allWarnings,
+  };
+}
+
+/**
+ * Generates the complete 4-week monastic cycle (or multi-week month) guaranteeing
+ * canonical fair share: 1 week Altar, 1 week Strană, 1 week Ascultări, 1 week Liber.
+ */
+export function generateCycleSchedule({
+  startDate,
+  referenceDate,
+  persons,
+  modules,
+  absences,
+  substitutionRules,
+  existingAssignments,
+  avoidDoubleBooking = true,
+  weeksCount = 4,
+  weekStartsOn = 6,
+}: GenerateCycleScheduleParams): CycleGenerationSummary {
+  const ref = startDate || referenceDate || new Date();
+  const cycleStartDate = startDate ? startOfWeek(startDate, { weekStartsOn }) : getCycleStartDate(ref, weekStartsOn);
+
+  let currentAssignments = [...existingAssignments];
+  const allWarnings: string[] = [];
+  const weeksSummary: CycleWeekSummary[] = [];
+
+  for (let i = 0; i < weeksCount; i++) {
+    const weekIndex = i + 1;
+    const wStart = addWeeks(cycleStartDate, i);
+    const wEnd = endOfWeek(wStart, { weekStartsOn });
+    const wStartStr = format(wStart, 'yyyy-MM-dd');
+    const wEndStr = format(wEnd, 'yyyy-MM-dd');
+
+    const weekResult = generateSingleWeekSchedule({
+      startDate: wStart,
+      endDate: wEnd,
+      persons,
+      modules,
+      absences,
+      substitutionRules,
+      existingAssignments: currentAssignments,
+      avoidDoubleBooking,
+      weekIndexOverride: weekIndex,
+    });
+
+    currentAssignments = weekResult.assignments;
+    allWarnings.push(...weekResult.warnings);
+
+    // Extract summary of who does what this week
+    const weekAssignments = currentAssignments.filter(a => a.date >= wStartStr && a.date <= wEndStr);
+    const altarPreot = weekAssignments.find(a => a.roleId === 'altar_preot')?.personId || getPriestByDuty('altar', weekIndex);
+    const deacon = weekAssignments.find(a => a.roleId === 'altar_diacon')?.personId || null;
+    const stranaPriest = getPriestByDuty('strana', weekIndex);
+    const ascultariPriest = getPriestByDuty('ascultari', weekIndex);
+    const liberPriest = getPriestByDuty('liber', weekIndex);
+    const protosSat = weekAssignments.find(a => a.roleId === 'altar_protos_sambata')?.personId || 'p_iliescu';
+    const paracliser = weekAssignments.find(a => a.roleId === 'paracliser_principal')?.personId || 'p_arghir';
+    const sofer = weekAssignments.find(a => a.roleId === 'sofer_garda')?.personId || 'p_spiridon';
+
+    weeksSummary.push({
+      weekIndex,
+      startDate: wStart,
+      endDate: wEnd,
+      startDateStr: wStartStr,
+      endDateStr: wEndStr,
+      altarPriestId: altarPreot,
+      deaconId: deacon,
+      stranaPriestId: stranaPriest,
+      ascultariPriestId: ascultariPriest,
+      liberPriestId: liberPriest,
+      protosSaturdayId: protosSat,
+      paracliserId: paracliser,
+      soferId: sofer,
+      assignmentsCount: weekAssignments.length,
+    });
+  }
+
+  const cycleEndDate = endOfWeek(addWeeks(cycleStartDate, weeksCount - 1), { weekStartsOn });
+
+  return {
+    assignments: currentAssignments,
+    warnings: allWarnings,
+    cycleStartDate,
+    cycleEndDate,
+    cycleStartDateStr: format(cycleStartDate, 'yyyy-MM-dd'),
+    cycleEndDateStr: format(cycleEndDate, 'yyyy-MM-dd'),
+    weeks: weeksSummary,
   };
 }

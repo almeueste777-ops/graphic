@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { 
   generateSchedule, 
+  generateCycleSchedule,
+  getCycleStartDate,
   isPersonAvailableOnDate,
   getPriestMonthlyDuty,
   getMonasticWeekIndex,
@@ -604,5 +606,149 @@ describe('Monastery Scheduler Engine & Custom Community Rules', () => {
     // Monday: Pr. Avacum
     const monBiserica = biserica.find(a => a.date === '2026-09-14');
     expect(monBiserica?.personId).toBe('p_avacum');
+  });
+
+  describe('Automated 4-Week Canonical Monastic Cycle Engine', () => {
+    it('accurately resolves cycle start date from any week of the month', () => {
+      // In Sept 2026, week 1 starts Saturday Sept 5
+      const week1Date = parseISO('2026-09-08'); // Tuesday Week 1
+      const week2Date = parseISO('2026-09-14'); // Monday Week 2
+      const week3Date = parseISO('2026-09-20'); // Sunday Week 3
+      const week4Date = parseISO('2026-09-28'); // Monday Week 4
+
+      expect(format(getCycleStartDate(week1Date), 'yyyy-MM-dd')).toBe('2026-09-05');
+      expect(format(getCycleStartDate(week2Date), 'yyyy-MM-dd')).toBe('2026-09-05');
+      expect(format(getCycleStartDate(week3Date), 'yyyy-MM-dd')).toBe('2026-09-05');
+      expect(format(getCycleStartDate(week4Date), 'yyyy-MM-dd')).toBe('2026-09-05');
+    });
+
+    it('generates a full 28-day cycle with exact canonical hieromonk rotation', () => {
+      const cycleStart = parseISO('2026-09-05'); // Saturday Week 1
+      const result = generateCycleSchedule({
+        startDate: cycleStart,
+        persons: DEFAULT_PERSONS,
+        modules: DEFAULT_MODULES,
+        absences: [],
+        substitutionRules: DEFAULT_RULES,
+        existingAssignments: [],
+        avoidDoubleBooking: false,
+      });
+
+      // Exactly 4 weeks generated
+      expect(result.weeks.length).toBe(4);
+      expect(result.cycleStartDateStr).toBe('2026-09-05');
+      expect(result.cycleEndDateStr).toBe('2026-10-02');
+
+      // Check Altar Priests across the 4 weeks
+      expect(result.weeks[0].altarPriestId).toBe('p_pantelimon'); // Săpt. 1
+      expect(result.weeks[1].altarPriestId).toBe('p_avacum');      // Săpt. 2
+      expect(result.weeks[2].altarPriestId).toBe('p_sebastian');   // Săpt. 3
+      expect(result.weeks[3].altarPriestId).toBe('p_mina');        // Săpt. 4
+
+      // Check Fair Share: each of the 4 hieromonks has exactly 7 days of Altar (1 week)
+      const priests = ['p_pantelimon', 'p_avacum', 'p_sebastian', 'p_mina'];
+      const altarAssignments = result.assignments.filter(a => a.roleId === 'altar_preot');
+      
+      priests.forEach(priestId => {
+        const priestAltarDays = altarAssignments.filter(a => a.personId === priestId);
+        expect(priestAltarDays.length).toBe(7);
+      });
+
+      // Check Sunday preaching: assigned priest of the week preaches on Sunday
+      // Week 1 Sunday: 2026-09-06 -> Pr. Pantelimon
+      const sun1Preach = result.assignments.find(a => a.date === '2026-09-06' && a.moduleId === 'predica');
+      expect(sun1Preach?.personId).toBe('p_pantelimon');
+
+      // Week 2 Sunday: 2026-09-13 -> Pr. Avacum
+      const sun2Preach = result.assignments.find(a => a.date === '2026-09-13' && a.moduleId === 'predica');
+      expect(sun2Preach?.personId).toBe('p_avacum');
+
+      // Week 3 Sunday: 2026-09-20 -> Pr. Sebastian
+      const sun3Preach = result.assignments.find(a => a.date === '2026-09-20' && a.moduleId === 'predica');
+      expect(sun3Preach?.personId).toBe('p_sebastian');
+
+      // Week 4 Sunday: 2026-09-27 -> Pr. Mina
+      const sun4Preach = result.assignments.find(a => a.date === '2026-09-27' && a.moduleId === 'predica');
+      expect(sun4Preach?.personId).toBe('p_mina');
+    });
+
+    it('handles 14-day absence with automatic substitution across the 4-week cycle', () => {
+      const cycleStart = parseISO('2026-09-05');
+      
+      // Pr. Sebastian is absent for 14 days (Sept 12 to Sept 25, covering Weeks 2 and 3)
+      const absences: Absence[] = [
+        {
+          id: 'abs_seb_14zile',
+          personId: 'p_sebastian',
+          startDate: '2026-09-12',
+          endDate: '2026-09-25',
+          reason: 'Misiune mănăstirească',
+        }
+      ];
+
+      const result = generateCycleSchedule({
+        startDate: cycleStart,
+        persons: DEFAULT_PERSONS,
+        modules: DEFAULT_MODULES,
+        absences,
+        substitutionRules: DEFAULT_RULES,
+        existingAssignments: [],
+        avoidDoubleBooking: false,
+      });
+
+      // In Week 2 (Sept 12-18), Sebastian is absent, but Avacum is at Altar, so Avacum remains
+      const w2Altar = result.assignments.filter(a => a.date >= '2026-09-12' && a.date <= '2026-09-18' && a.roleId === 'altar_preot');
+      expect(w2Altar[0].personId).toBe('p_avacum');
+
+      // In Week 3 (Sept 19-25), Sebastian was scheduled for Altar!
+      // Since he is absent, a substitute priest (Avacum or Mina) must be assigned with status: substituted
+      const w3Altar = result.assignments.filter(a => a.date >= '2026-09-19' && a.date <= '2026-09-25' && a.roleId === 'altar_preot');
+      expect(w3Altar.length).toBe(7);
+      w3Altar.forEach(a => {
+        expect(a.status).toBe('substituted');
+        expect(a.substitutedFromId).toBe('p_sebastian');
+        expect(['p_avacum', 'p_mina', 'p_pantelimon']).toContain(a.personId);
+      });
+
+      // Sebastian should have 0 assignments during his absence
+      const sebDuringAbsence = result.assignments.filter(a => a.date >= '2026-09-12' && a.date <= '2026-09-25' && a.personId === 'p_sebastian');
+      expect(sebDuringAbsence.length).toBe(0);
+    });
+
+    it('generateSchedule automatically chunks multi-week intervals preventing static locking', () => {
+      // 28 days interval passed to standard generateSchedule
+      const startDate = parseISO('2026-09-05');
+      const endDate = parseISO('2026-10-02');
+
+      const result = generateSchedule({
+        startDate,
+        endDate,
+        persons: DEFAULT_PERSONS,
+        modules: DEFAULT_MODULES.filter(m => m.id === 'altar'),
+        absences: [],
+        substitutionRules: DEFAULT_RULES,
+        existingAssignments: [],
+        avoidDoubleBooking: false,
+      });
+
+      const altarAssignments = result.assignments.filter(a => a.roleId === 'altar_preot');
+      expect(altarAssignments.length).toBe(28);
+
+      // Week 1 altar priest (Sept 5) -> Pantelimon
+      const w1 = altarAssignments.find(a => a.date === '2026-09-05');
+      expect(w1?.personId).toBe('p_pantelimon');
+
+      // Week 2 altar priest (Sept 12) -> Avacum
+      const w2 = altarAssignments.find(a => a.date === '2026-09-12');
+      expect(w2?.personId).toBe('p_avacum');
+
+      // Week 3 altar priest (Sept 19) -> Sebastian
+      const w3 = altarAssignments.find(a => a.date === '2026-09-19');
+      expect(w3?.personId).toBe('p_sebastian');
+
+      // Week 4 altar priest (Sept 26) -> Mina
+      const w4 = altarAssignments.find(a => a.date === '2026-09-26');
+      expect(w4?.personId).toBe('p_mina');
+    });
   });
 });

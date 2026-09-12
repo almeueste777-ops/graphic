@@ -27,7 +27,8 @@ import {
   Car,
   Scroll,
   Eye,
-  Calendar
+  Calendar,
+  Repeat
 } from 'lucide-react';
 import { 
   ByzantineCross, 
@@ -36,8 +37,9 @@ import {
   ByzantineDivider 
 } from './Ornament';
 import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
+import { getCycleStartDate, getPriestByDuty } from '../services/scheduler';
 
-type PrintLayoutMode = 'modular' | 'split' | 'matrix' | 'cards';
+type PrintLayoutMode = 'modular' | 'split' | 'matrix' | 'cards' | 'monthly';
 type PageOrientation = 'landscape' | 'portrait';
 type NameFormatMode = 'traditional' | 'canonical' | 'short_rank';
 type FontTheme = 'merriweather' | 'eb_garamond' | 'lora' | 'playfair' | 'inter';
@@ -115,6 +117,41 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const weekRangeFormatted = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
+
+  // 4-Week Monastic Cycle Data for Monthly A4 Printout
+  const cycleStartDate = getCycleStartDate(weekStart, weekStartsOn);
+  const cycleWeeks = [0, 1, 2, 3].map(i => {
+    const wStart = addWeeks(cycleStartDate, i);
+    const wEnd = endOfWeek(wStart, { weekStartsOn });
+    const weekIdx = i + 1;
+    const wStartStr = format(wStart, 'yyyy-MM-dd');
+    const wEndStr = format(wEnd, 'yyyy-MM-dd');
+    const weekAssignments = schedule.filter(a => a.date >= wStartStr && a.date <= wEndStr);
+
+    const altarPreotId = weekAssignments.find(a => a.roleId === 'altar_preot')?.personId || getPriestByDuty('altar', weekIdx);
+    const deaconId = weekAssignments.find(a => a.roleId === 'altar_diacon')?.personId;
+    const stranaPriestId = getPriestByDuty('strana', weekIdx);
+    const ascultariPriestId = getPriestByDuty('ascultari', weekIdx);
+    const liberPriestId = getPriestByDuty('liber', weekIdx);
+    const paracliserId = weekAssignments.find(a => a.roleId === 'paracliser_principal')?.personId || 'p_arghir';
+    const soferId = weekAssignments.find(a => a.roleId === 'sofer_garda')?.personId || 'p_spiridon';
+
+    return {
+      weekIdx,
+      wStart,
+      wEnd,
+      wStartStr,
+      wEndStr,
+      altarPreotId,
+      deaconId,
+      stranaPriestId,
+      ascultariPriestId,
+      liberPriestId,
+      paracliserId,
+      soferId,
+      dateRangeLabel: `${format(wStart, 'd MMMM', { locale: ro })} – ${format(wEnd, 'd MMMM yyyy', { locale: ro })}`,
+    };
+  });
 
   const getPersonName = (personId: string | null | undefined, modeOrFull?: NameFormatMode | boolean) => {
     if (!personId) return '—';
@@ -396,6 +433,18 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
               <CalendarDays className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">Tablou pe Zile</span>
               <span className="sm:hidden">Tablou</span>
+            </button>
+
+            <button
+              onClick={() => setLayoutMode('monthly')}
+              className={`apple-segmented-item flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 min-h-[34px] ${
+                layoutMode === 'monthly' ? 'active' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Repeat className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">Tablou Lunar (4 Săpt.)</span>
+              <span className="sm:hidden">Lunar (4 Săpt.)</span>
+              <span className="hidden md:inline text-[10px] px-1 rounded bg-amber-400/20 text-amber-300 ml-1">Complet</span>
             </button>
           </div>
 
@@ -1803,6 +1852,178 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* ================= LAYOUT 4: TABLOU LUNAR (CICLU CANONIC 4 SĂPTĂMÂNI PE 1 PAGINĂ A4) ================= */}
+            {layoutMode === 'monthly' && (
+              <div className="mt-2 print:mt-1 space-y-2 print:space-y-1">
+                {/* Title Subheader */}
+                <div 
+                  className="text-white print-inv-text px-3 py-1 print:py-0.5 text-center font-bold text-xs print:text-[10px] uppercase tracking-wider flex items-center justify-between border-2 border-stone-900"
+                  style={{ backgroundColor: printInkMode === 'laser_bw' ? '#000000' : activeOrnamentColor }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Church className="w-3.5 h-3.5 text-amber-200" />
+                    <span className={fontThemeClasses[fontTheme].header}>
+                      RÂNDUIALA CANONICĂ A SLUJIRII ȘI ASCULTĂRILOR PE 4 SĂPTĂMÂNI
+                    </span>
+                  </div>
+                  <span className="text-[9.5px] print:text-[8px] font-sans font-normal opacity-90 normal-case bg-white/20 px-2 py-0.5 rounded">
+                    Ciclu complet • 28 de zile
+                  </span>
+                </div>
+
+                {/* 4-Week Monthly Table */}
+                <div className="border-2 border-stone-900 bg-white overflow-hidden shadow-xs print:border-[1.5px]">
+                  <table className="w-full text-left border-collapse text-xs print:text-[9.5px]">
+                    <thead>
+                      <tr 
+                        className="text-white text-[10px] print:text-[8px] font-bold uppercase tracking-wider border-b-2 border-stone-900"
+                        style={{ backgroundColor: printInkMode === 'laser_bw' ? '#262626' : '#4a0e14' }}
+                      >
+                        <th className="p-2 print:p-1 w-32 border-r border-stone-600">Săptămâna</th>
+                        <th className="p-2 print:p-1 border-r border-stone-600">Sf. Altar (Preot de rând)</th>
+                        <th className="p-2 print:p-1 border-r border-stone-600">Diacon Slujitor</th>
+                        <th className="p-2 print:p-1 border-r border-stone-600">La Strană</th>
+                        <th className="p-2 print:p-1 border-r border-stone-600">În Biserică / Ascultări</th>
+                        <th className="p-2 print:p-1 border-r border-stone-600">Săpt. Liberă</th>
+                        <th className="p-2 print:p-1">Paracliser & Șofer</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y-2 divide-stone-300 print:divide-y print:divide-black">
+                      {cycleWeeks.map(w => {
+                        const deaconName = w.deaconId 
+                          ? getPersonName(w.deaconId) 
+                          : (w.weekIdx % 2 === 1 ? 'Pr. Petru' : 'Pr. Ciprian / Pr. Modest');
+                        const isCurrent = w.wStartStr === format(weekStart, 'yyyy-MM-dd');
+
+                        return (
+                          <tr
+                            key={w.weekIdx}
+                            className={`${isCurrent ? 'bg-amber-50/60 print:bg-stone-50' : 'bg-white'}`}
+                          >
+                            {/* Week & Date */}
+                            <td className="p-2 print:p-1 border-r-2 border-stone-900 font-sans">
+                              <div className="font-bold text-stone-950 text-xs print:text-[10px]">
+                                Săptămâna {w.weekIdx}
+                              </div>
+                              <div className="text-[9px] print:text-[7.5px] text-stone-600 font-medium">
+                                {format(w.wStart, 'd MMM', { locale: ro })} – {format(w.wEnd, 'd MMM', { locale: ro })}
+                              </div>
+                            </td>
+
+                            {/* Altar */}
+                            <td className="p-2 print:p-1 border-r border-stone-300 print:border-black font-sans">
+                              <div className={`font-bold text-xs print:text-[10.5px] ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'}`}>
+                                {getPersonName(w.altarPreotId)}
+                              </div>
+                              <div className="text-[8.5px] print:text-[7px] text-stone-600 italic">
+                                Slujește toată săpt. & predică duminică
+                              </div>
+                            </td>
+
+                            {/* Diacon */}
+                            <td className="p-2 print:p-1 border-r border-stone-300 print:border-black font-sans">
+                              <div className={`font-semibold text-xs print:text-[10px] ${printInkMode === 'laser_bw' ? 'text-black' : 'text-stone-900'}`}>
+                                {deaconName}
+                              </div>
+                              <div className="text-[8.5px] print:text-[7px] text-stone-500">
+                                {w.weekIdx % 2 === 1 ? 'Diacon de rând & șofer' : 'Rotație diaconească'}
+                              </div>
+                            </td>
+
+                            {/* Strană */}
+                            <td className="p-2 print:p-1 border-r border-stone-300 print:border-black font-sans">
+                              <div className={`font-bold text-xs print:text-[10px] ${printInkMode === 'laser_bw' ? 'text-black' : 'text-stone-900'}`}>
+                                {getPersonName(w.stranaPriestId)}
+                              </div>
+                              <div className="text-[8.5px] print:text-[7px] text-stone-600">
+                                cu Pr. Grichentie & Fr. Ioan
+                              </div>
+                            </td>
+
+                            {/* În Biserică / Ascultări */}
+                            <td className="p-2 print:p-1 border-r border-stone-300 print:border-black font-sans">
+                              <div className={`font-bold text-xs print:text-[10px] ${printInkMode === 'laser_bw' ? 'text-black' : 'text-stone-900'}`}>
+                                {getPersonName(w.ascultariPriestId)}
+                              </div>
+                              <div className="text-[8.5px] print:text-[7px] text-stone-600">
+                                De rând în biserică / pelerini
+                              </div>
+                            </td>
+
+                            {/* Liberă */}
+                            <td className="p-2 print:p-1 border-r border-stone-300 print:border-black font-sans">
+                              <div className={`font-bold text-xs print:text-[10px] ${printInkMode === 'laser_bw' ? 'text-black' : 'text-stone-900'}`}>
+                                {getPersonName(w.liberPriestId)}
+                              </div>
+                              <div className="text-[8.5px] print:text-[7px] text-stone-500 italic">
+                                Chilie, rugăciune, odihnă
+                              </div>
+                            </td>
+
+                            {/* Paracliser & Șofer */}
+                            <td className="p-2 print:p-1 font-sans">
+                              <div className="text-[10.5px] print:text-[9px] font-bold text-stone-950">
+                                {getPersonName(w.paracliserId)} <span className="text-[8.5px] text-stone-600 font-normal">(Paracl.)</span>
+                              </div>
+                              <div className="text-[10.5px] print:text-[9px] font-bold text-stone-950">
+                                {getPersonName(w.soferId)} <span className="text-[8.5px] text-stone-600 font-normal">(Șofer)</span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Secondary Reference Boxes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 print:gap-1.5 pt-1">
+                  {/* Daily Church Obedience */}
+                  <div className="border border-stone-900 bg-stone-50 p-2 print:p-1 rounded-xs">
+                    <div className="text-[9.5px] print:text-[8px] font-bold uppercase tracking-wide text-stone-900 pb-0.5 border-b border-stone-300 print:border-black flex items-center justify-between">
+                      <span className="flex items-center space-x-1">
+                        <Church className="w-3 h-3 text-amber-800" />
+                        <span>Stat de Rând în Biserică (Primire Pelerini & Pomelnice):</span>
+                      </span>
+                      <span className="text-[8px] text-stone-500 font-normal">Zilnic</span>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 mt-1 text-center font-sans">
+                      {[
+                        { day: 'Sâm', priest: 'Pr. Iliescu' },
+                        { day: 'Dum', priest: 'Pr. Pantelimon' },
+                        { day: 'Lun', priest: 'Pr. Avacum' },
+                        { day: 'Mar', priest: 'Pr. Ciprian' },
+                        { day: 'Mie', priest: 'Pr. Avacum' },
+                        { day: 'Joi', priest: 'Pr. Ciprian' },
+                        { day: 'Vin', priest: 'Fr. Arghir' },
+                      ].map(item => (
+                        <div key={item.day} className="bg-white border border-stone-200 print:border-black p-0.5 rounded-xs">
+                          <span className="text-[8px] print:text-[7px] font-bold text-stone-500 block uppercase">{item.day}</span>
+                          <span className="text-[9px] print:text-[7.5px] font-bold text-stone-950 block">{item.priest}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Preaching & Weekend Typikon */}
+                  <div className="border border-stone-900 bg-stone-50 p-2 print:p-1 rounded-xs flex flex-col justify-between">
+                    <div className="text-[9.5px] print:text-[8px] font-bold uppercase tracking-wide text-stone-900 pb-0.5 border-b border-stone-300 print:border-black flex items-center justify-between">
+                      <span className="flex items-center space-x-1">
+                        <BookOpen className="w-3 h-3 text-amber-800" />
+                        <span>Rânduiala Predicii & Protos Weekend:</span>
+                      </span>
+                      <span className="text-[8px] text-stone-500 font-normal">Canon</span>
+                    </div>
+                    <div className="text-[9.5px] print:text-[8px] font-sans space-y-0.5 mt-1 text-stone-800 leading-tight">
+                      <div>• <strong className="text-stone-950">Duminică:</strong> Preotul slujitor de rând al săptămânii predică la Sf. Liturghie.</div>
+                      <div>• <strong className="text-stone-950">Sâmbătă Protos:</strong> Pr. Iliescu protos și proscomidie în fiecare sâmbătă.</div>
+                      <div>• <strong className="text-stone-950">Sâmbătă Predică:</strong> 2 sâmbete Pr. Iliescu, 2 sâmbete un Diacon alternativ.</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
