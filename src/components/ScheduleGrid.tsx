@@ -22,7 +22,8 @@ import {
   AlertCircle, 
   Plus, 
   Repeat, 
-  Info 
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
@@ -62,8 +63,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   const [generationAlerts, setGenerationAlerts] = useState<string[] | null>(null);
 
   // Week calculation (Monday to Sunday)
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: settings.weekStartDay ?? 1 });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: settings.weekStartDay ?? 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const weekRangeTitle = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
@@ -150,13 +151,13 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Week Navigator & Actions Toolbar */}
-      <div className="bg-stone-900/90 border border-stone-800 rounded-xl p-4 shadow-md backdrop-blur-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Week Navigator & Actions Toolbar with Glassmorphism */}
+      <div className="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Date Selector Navigation */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
-            className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors"
+            className="p-2.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 hover:border-amber-500/40 text-stone-300 hover:text-white transition-all shadow-sm"
             title="Săptămâna anterioară"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -164,24 +165,24 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
           <button
             onClick={() => setCurrentDate(new Date())}
-            className="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs font-semibold text-amber-300 uppercase tracking-wider transition-colors"
+            className="px-3.5 py-1.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-xs font-bold text-amber-300 uppercase tracking-widest transition-all shadow-xs"
           >
             Astăzi
           </button>
 
           <div className="text-center sm:text-left">
-            <h2 className="text-lg sm:text-xl font-serif font-bold text-amber-100 flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-amber-500 inline-block" />
+            <h2 className="text-lg sm:text-xl font-cinzel font-bold tracking-wide text-amber-100 flex items-center space-x-2">
+              <Calendar className="w-5 h-5 text-amber-400 inline-block" />
               <span>{weekRangeTitle}</span>
             </h2>
-            <p className="text-xs text-stone-400">
-              Rândul slujbelor și ascultărilor monahale
+            <p className="text-xs text-stone-400 font-sans mt-0.5">
+              Rânduiala liturgică și a ascultărilor obștii
             </p>
           </div>
 
           <button
             onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
-            className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors"
+            className="p-2.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 hover:border-amber-500/40 text-stone-300 hover:text-white transition-all shadow-sm"
             title="Săptămâna viitoare"
           >
             <ChevronRight className="w-5 h-5" />
@@ -189,27 +190,27 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-2 w-full md:w-auto justify-end">
+        <div className="flex items-center space-x-2.5 w-full md:w-auto justify-end">
           <button
             onClick={handleAutoGenerate}
-            className="flex-1 md:flex-none flex items-center justify-center space-x-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-md transition-all active:scale-95"
+            className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-stone-950 text-xs sm:text-sm font-bold shadow-[0_4px_16px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_22px_rgba(212,175,55,0.5)] transition-all active:scale-95"
           >
-            <Sparkles className="w-4 h-4 text-amber-200" />
+            <Sparkles className="w-4 h-4 fill-stone-950 text-stone-950" />
             <span>Generează Grafic</span>
           </button>
 
           <button
             onClick={onNavigateToPrint}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white text-sm font-medium transition-colors"
+            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-stone-900/80 hover:bg-stone-800 border border-stone-800 hover:border-rose-500/40 text-stone-200 hover:text-white text-xs sm:text-sm font-medium transition-all shadow-sm"
             title="Format de tipărit A4 pentru avizier"
           >
             <Printer className="w-4 h-4 text-rose-400" />
-            <span className="hidden sm:inline">Tipărește</span>
+            <span className="hidden sm:inline">Tipărește A4</span>
           </button>
 
           <button
             onClick={handleClearWeek}
-            className="p-2 rounded-lg bg-stone-800/80 hover:bg-red-950/60 hover:text-red-400 text-stone-400 transition-colors"
+            className="p-2.5 rounded-xl bg-stone-900/60 hover:bg-rose-950/60 border border-stone-800/80 hover:border-rose-800/50 hover:text-rose-300 text-stone-400 transition-colors"
             title="Curăță programările din această săptămână"
           >
             <Trash2 className="w-4 h-4" />
@@ -217,15 +218,15 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         </div>
       </div>
 
-      {/* Generation Alerts / Notes */}
+      {/* Generation Alerts / Success Banner */}
       {generationAlerts && (
-        <div className={`p-4 rounded-xl border text-sm transition-all ${
+        <div className={`p-4 rounded-2xl border backdrop-blur-md text-sm transition-all shadow-lg ${
           generationAlerts.length > 0 
-            ? 'bg-amber-950/40 border-amber-800/60 text-amber-200' 
-            : 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200'
+            ? 'bg-amber-950/40 border-amber-500/40 text-amber-200' 
+            : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
         }`}>
           <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-2 font-semibold">
+            <div className="flex items-center space-x-2.5 font-semibold">
               {generationAlerts.length > 0 ? (
                 <>
                   <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
@@ -233,8 +234,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                  <span>Grafic generat cu succes! Toate ascultările au fost acoperite fără conflicte.</span>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <span>Grafic completat cu succes! Toate ascultările au fost rânduite echitabil.</span>
                 </>
               )}
             </div>
@@ -246,7 +247,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             </button>
           </div>
           {generationAlerts.length > 0 && (
-            <ul className="mt-2 pl-7 list-disc space-y-1 text-xs text-amber-300/90 max-h-36 overflow-y-auto">
+            <ul className="mt-2.5 pl-7 list-disc space-y-1 text-xs text-amber-300/90 max-h-36 overflow-y-auto">
               {generationAlerts.map((w, idx) => (
                 <li key={idx}>{w}</li>
               ))}
@@ -256,14 +257,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
       )}
 
       {/* The Schedule Matrix */}
-      <div className="bg-stone-900 border border-stone-800 rounded-xl shadow-xl overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse min-w-[850px]">
             {/* Table Header: Days of the week */}
             <thead>
-              <tr className="bg-stone-950/80 border-b border-stone-800 text-stone-300">
-                <th className="p-3 text-left font-serif font-bold text-sm w-48 text-stone-400">
-                  Ascultare / Modul
+              <tr className="bg-black/60 border-b border-stone-800/80 text-stone-300">
+                <th className="p-3.5 text-left font-cinzel font-bold text-xs uppercase tracking-wider w-48 text-stone-400">
+                  Ascultare / Post
                 </th>
                 {weekDays.map(day => {
                   const dayIsToday = isToday(day);
@@ -271,18 +272,18 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   return (
                     <th
                       key={day.toISOString()}
-                      className={`p-2.5 text-center border-l border-stone-800/60 ${
-                        dayIsToday ? 'bg-amber-950/30' : ''
+                      className={`p-3 text-center border-l border-stone-800/60 transition-colors ${
+                        dayIsToday ? 'bg-amber-950/25 border-t-2 border-t-amber-400' : ''
                       }`}
                     >
                       <div className="flex flex-col items-center">
-                        <span className={`text-xs uppercase tracking-wider font-semibold ${
-                          isSunday ? 'text-red-400' : 'text-stone-400'
+                        <span className={`text-[11px] uppercase tracking-wider font-semibold ${
+                          isSunday ? 'text-red-400 font-bold' : 'text-stone-400'
                         }`}>
                           {format(day, 'EEEE', { locale: ro })}
                         </span>
-                        <span className={`text-base font-bold mt-0.5 ${
-                          dayIsToday ? 'text-amber-400 underline underline-offset-4' : 'text-stone-200'
+                        <span className={`text-sm font-cinzel font-extrabold mt-0.5 ${
+                          dayIsToday ? 'gold-text-gradient drop-shadow-sm' : 'text-stone-200'
                         }`}>
                           {format(day, 'd MMM', { locale: ro })}
                         </span>
@@ -294,138 +295,153 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             </thead>
 
             {/* Table Body: Modules and Roles */}
-            <tbody className="divide-y divide-stone-800/70">
-              {modules.map(module => (
-                <React.Fragment key={module.id}>
-                  {/* Module Header Bar Row */}
-                  <tr className="bg-stone-950/40">
-                    <td colSpan={8} className="px-4 py-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2.5">
-                          <span 
-                            className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
-                            style={{ backgroundColor: `${module.color}25`, color: module.color }}
-                          >
-                            {renderModuleIcon(module.iconName, { className: 'w-4 h-4' })}
-                          </span>
-                          <span className="font-serif font-bold text-stone-200 tracking-wide">
-                            {module.name}
-                          </span>
-                          <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-stone-800 text-stone-400 border border-stone-700">
-                            {module.rotationCycle === 'weekly' ? 'Rotație Săptămânală' : 'Rotație Zilnică'}
-                          </span>
+            <tbody className="divide-y divide-stone-800/60">
+              {modules.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-12 text-center text-stone-400">
+                    <p className="text-base font-cinzel">Nu există nicio ascultare definită.</p>
+                    <p className="text-xs text-stone-500 mt-1">Mergeți în secțiunea „Ascultări” pentru a crea modulele dorite.</p>
+                  </td>
+                </tr>
+              ) : (
+                modules.map(module => (
+                  <React.Fragment key={module.id}>
+                    {/* Module Subheader Row */}
+                    <tr className="bg-gradient-to-r from-stone-950/90 via-stone-900/60 to-stone-950/90">
+                      <td colSpan={8} className="px-4 py-2 border-y border-stone-800/60">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <span 
+                              className="w-7 h-7 rounded-lg flex items-center justify-center shadow-inner"
+                              style={{ 
+                                backgroundColor: `${module.color}25`, 
+                                color: module.color,
+                                boxShadow: `0 0 10px ${module.color}30`
+                              }}
+                            >
+                              {renderModuleIcon(module.iconName, { className: 'w-4 h-4' })}
+                            </span>
+                            <span className="font-cinzel font-bold text-stone-100 text-sm tracking-wider">
+                              {module.name}
+                            </span>
+                            <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-stone-800/80 text-stone-300 border border-stone-700/80">
+                              {module.rotationCycle === 'weekly' ? 'Săptămână de rând' : 'Rotație zilnică'}
+                            </span>
+                          </div>
+                          {module.description && (
+                            <span className="text-[11px] text-stone-400 italic hidden md:inline">
+                              {module.description}
+                            </span>
+                          )}
                         </div>
-                        {module.description && (
-                          <span className="text-xs text-stone-500 hidden md:inline">
-                            {module.description}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
 
-                  {/* Roles for this module */}
-                  {module.roles.map(role => (
-                    <React.Fragment key={role.id}>
-                      {Array.from({ length: role.requiredCount }).map((_, slotIdx) => (
-                        <tr key={`${role.id}_${slotIdx}`} className="hover:bg-stone-800/20 transition-colors">
-                          {/* Role label column */}
-                          <td className="p-3 text-xs text-stone-300 font-medium pl-6 border-r border-stone-800/60 bg-stone-900/40">
-                            <div className="flex flex-col">
-                              <span>{role.name}</span>
-                              {role.requiredCount > 1 && (
-                                <span className="text-[10px] text-stone-500">Post #{slotIdx + 1}</span>
-                              )}
-                            </div>
-                          </td>
+                    {/* Roles for this module */}
+                    {module.roles.map(role => (
+                      <React.Fragment key={role.id}>
+                        {Array.from({ length: role.requiredCount }).map((_, slotIdx) => (
+                          <tr key={`${role.id}_${slotIdx}`} className="hover:bg-stone-800/20 transition-colors">
+                            {/* Role label column */}
+                            <td className="p-3 text-xs text-stone-300 font-medium pl-6 border-r border-stone-800/60 bg-stone-950/30">
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-stone-200">{role.name}</span>
+                                {role.requiredCount > 1 && (
+                                  <span className="text-[10px] text-stone-500 font-mono">Post #{slotIdx + 1}</span>
+                                )}
+                              </div>
+                            </td>
 
-                          {/* 7 Days columns */}
-                          {weekDays.map(day => {
-                            const dateStr = format(day, 'yyyy-MM-dd');
-                            const assignment = getAssignment(dateStr, module.id, role.id, slotIdx);
-                            const person = getPerson(assignment?.personId);
-                            const doubleBooked = person ? isDoubleBooked(dateStr, person.id) : false;
-                            const isCurrentDay = isToday(day);
+                            {/* 7 Days columns */}
+                            {weekDays.map(day => {
+                              const dateStr = format(day, 'yyyy-MM-dd');
+                              const assignment = getAssignment(dateStr, module.id, role.id, slotIdx);
+                              const person = getPerson(assignment?.personId);
+                              const doubleBooked = person ? isDoubleBooked(dateStr, person.id) : false;
+                              const isCurrentDay = isToday(day);
 
-                            return (
-                              <td
-                                key={dateStr}
-                                onClick={() =>
-                                  setSelectedSlot({
-                                    date: dateStr,
-                                    module,
-                                    role,
-                                    slotIndex: slotIdx,
-                                    assignment,
-                                  })
-                                }
-                                className={`p-1.5 border-l border-stone-800/60 align-top cursor-pointer group transition-colors ${
-                                  isCurrentDay ? 'bg-amber-950/10' : ''
-                                } hover:bg-stone-800/50`}
-                              >
-                                {person ? (
-                                  <div 
-                                    className="p-2 rounded-lg border text-left relative overflow-hidden transition-all group-hover:border-amber-500/50 group-hover:shadow-md"
-                                    style={{
-                                      backgroundColor: `${person.colorTag}15`,
-                                      borderColor: `${person.colorTag}40`,
-                                    }}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span 
-                                        className="w-2 h-2 rounded-full flex-shrink-0"
-                                        style={{ backgroundColor: person.colorTag }}
-                                      />
-                                      {assignment?.status === 'substituted' && (
+                              return (
+                                <td
+                                  key={dateStr}
+                                  onClick={() =>
+                                    setSelectedSlot({
+                                      date: dateStr,
+                                      module,
+                                      role,
+                                      slotIndex: slotIdx,
+                                      assignment,
+                                    })
+                                  }
+                                  className={`p-1.5 border-l border-stone-800/60 align-top cursor-pointer group transition-all ${
+                                    isCurrentDay ? 'bg-amber-950/15' : ''
+                                  } hover:bg-stone-800/40`}
+                                >
+                                  {person ? (
+                                    <div 
+                                      className="p-2.5 rounded-xl border text-left relative overflow-hidden transition-all duration-200 group-hover:scale-[1.02] shadow-sm"
+                                      style={{
+                                        backgroundColor: `${person.colorTag}18`,
+                                        borderColor: `${person.colorTag}45`,
+                                        boxShadow: `0 4px 14px ${person.colorTag}15`
+                                      }}
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
                                         <span 
-                                          title="Înlocuitor automat"
-                                          className="text-[10px] px-1 py-0.2 bg-violet-950 text-violet-300 rounded border border-violet-700 flex items-center space-x-0.5"
-                                        >
-                                          <Repeat className="w-2.5 h-2.5" />
-                                          <span>Înlocuit</span>
-                                        </span>
-                                      )}
-                                      {doubleBooked && (
-                                        <span 
-                                          title="Atenție: dublă ascultare în această zi!"
-                                          className="text-[10px] p-0.5 bg-rose-950 text-rose-300 rounded"
-                                        >
-                                          <AlertCircle className="w-3 h-3" />
-                                        </span>
-                                      )}
-                                    </div>
+                                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                          style={{ 
+                                            backgroundColor: person.colorTag,
+                                            boxShadow: `0 0 6px ${person.colorTag}`
+                                          }}
+                                        />
+                                        {assignment?.status === 'substituted' && (
+                                          <span 
+                                            title="Înlocuitor desemnat"
+                                            className="text-[9px] font-bold px-1.5 py-0.5 bg-violet-950 text-violet-300 rounded border border-violet-700/80 flex items-center space-x-0.5"
+                                          >
+                                            <Repeat className="w-2.5 h-2.5" />
+                                            <span>Înlocuit</span>
+                                          </span>
+                                        )}
+                                        {doubleBooked && (
+                                          <span 
+                                            title="Atenție: dublă ascultare în această zi!"
+                                            className="text-[9px] p-0.5 bg-rose-950 text-rose-300 rounded animate-pulse"
+                                          >
+                                            <AlertCircle className="w-3.5 h-3.5" />
+                                          </span>
+                                        )}
+                                      </div>
 
-                                    <div className="mt-1">
-                                      <p className="text-xs font-semibold text-stone-100 truncate">
+                                      <p className="text-xs font-bold text-stone-100 truncate tracking-tight">
                                         {person.name}
                                       </p>
-                                      <p className="text-[10px] text-stone-400 truncate">
+                                      <p className="text-[10px] text-stone-400 truncate mt-0.5">
                                         {person.rank}
                                       </p>
-                                    </div>
 
-                                    {assignment?.notes && (
-                                      <p className="text-[10px] text-amber-300/80 mt-1 truncate flex items-center space-x-0.5">
-                                        <Info className="w-2.5 h-2.5 flex-shrink-0" />
-                                        <span>{assignment.notes}</span>
-                                      </p>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="h-14 rounded-lg border border-dashed border-stone-800/80 flex flex-col items-center justify-center text-stone-500 group-hover:border-stone-600 group-hover:text-stone-300 transition-colors">
-                                    <Plus className="w-3.5 h-3.5" />
-                                    <span className="text-[10px] mt-0.5">Liber</span>
-                                  </div>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </React.Fragment>
-              ))}
+                                      {assignment?.notes && (
+                                        <p className="text-[10px] text-amber-300/90 mt-1 truncate flex items-center space-x-1">
+                                          <Info className="w-2.5 h-2.5 flex-shrink-0 text-amber-400" />
+                                          <span>{assignment.notes}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="h-16 rounded-xl border border-dashed border-stone-800/80 flex flex-col items-center justify-center text-stone-500 group-hover:border-amber-500/40 group-hover:text-amber-300 transition-colors bg-stone-950/20">
+                                      <Plus className="w-3.5 h-3.5" />
+                                      <span className="text-[10px] mt-0.5 font-medium">Liber</span>
+                                    </div>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </React.Fragment>
+                ))
+              )}
             </tbody>
           </table>
         </div>

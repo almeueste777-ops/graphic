@@ -3,12 +3,78 @@
 @layer base {
   :root {
     --monastery-red: #8b1d24;
-    --monastery-burgundy: #581116;
-    --monastery-gold: #b38210;
+    --monastery-burgundy: #541116;
+    --monastery-gold: #d4af37;
+    --monastery-gold-light: #fef08a;
   }
 }
 
-/* Custom styles for printing the schedule sheet */
+/* Monastic decorative typography */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-cinzel-decorative {
+  font-family: 'Cinzel Decorative', serif;
+}
+
+.font-cormorant {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Glassmorphism & Gold Luxury Effects */
+.glass-panel {
+  background: rgba(22, 19, 18, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card {
+  background: rgba(28, 25, 23, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(41, 37, 36, 0.8);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Metallic Gold Gradients */
+.gold-text-gradient {
+  background: linear-gradient(135deg, #fff7d6 0%, #d4af37 50%, #aa820a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.burgundy-gradient {
+  background: linear-gradient(135deg, #78141c 0%, #4a0c11 100%);
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px -3px rgba(212, 175, 55, 0.35);
+}
+
+.gold-glow-subtle {
+  box-shadow: 0 0 12px -2px rgba(212, 175, 55, 0.18);
+}
+
+/* Ambient Monastery Background Motif */
+.monastery-bg {
+  background-color: #0c0a09;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(120, 20, 28, 0.18) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(212, 175, 55, 0.12) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(120, 20, 28, 0.14) 0px, transparent 50%);
+}
+
+/* Printable Sheet: Authentic Ecclesiastical Heritage Style */
 @media print {
   body {
     background-color: white !important;
@@ -23,31 +89,33 @@
     display: block !important;
   }
 
-  .page-break {
-    page-break-after: always;
-  }
-
   @page {
     size: A4 landscape;
-    margin: 8mm 8mm 8mm 8mm;
+    margin: 6mm 6mm 6mm 6mm;
   }
 }
 
-/* Scrollbar polish */
+.ecclesiastical-border {
+  border: 3px double #1c1917;
+  outline: 1px solid #78141c;
+  outline-offset: -5px;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(12, 10, 9, 0.8);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(150, 150, 150, 0.3);
+  background: rgba(212, 175, 55, 0.25);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0.5);
+  background: rgba(212, 175, 55, 0.45);
 }

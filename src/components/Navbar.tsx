@@ -8,9 +8,9 @@ import {
   Sparkles, 
   Database, 
   Sun, 
-  Moon,
-  Cross
+  Moon
 } from 'lucide-react';
+import { ByzantineCross } from './Ornament';
 
 interface NavbarProps {
   currentTab: 'schedule' | 'members' | 'modules' | 'absences' | 'print';
@@ -32,31 +32,45 @@ export const Navbar: React.FC<NavbarProps> = ({
   toggleDarkMode,
 }) => {
   return (
-    <header className="no-print bg-stone-900 text-stone-100 border-b border-stone-800 sticky top-0 z-30 shadow-md">
+    <header className="no-print sticky top-0 z-30 backdrop-blur-md bg-[#120f0e]/85 border-b border-amber-500/20 shadow-[0_4px_25px_rgba(0,0,0,0.5)] transition-all">
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Monastery Title */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentTab('schedule')}>
-            <div className="w-10 h-10 rounded-lg bg-red-900 border border-amber-500/40 flex items-center justify-center shadow-inner">
-              <Cross className="w-6 h-6 text-amber-300" />
+          <div 
+            className="flex items-center space-x-3 cursor-pointer group" 
+            onClick={() => setCurrentTab('schedule')}
+          >
+            {/* Illuminated Monastery Crest */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-amber-600/40 via-red-600/30 to-amber-600/40 rounded-xl blur-xs opacity-75 group-hover:opacity-100 transition duration-300" />
+              <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-[#78141c] to-[#40090d] border border-amber-400/50 flex items-center justify-center shadow-inner">
+                <ByzantineCross className="w-6 h-6 text-amber-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+              </div>
             </div>
+
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-serif font-bold text-xl tracking-wider text-amber-100">GRAPHIC</span>
-                <span className="text-xs px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-700/50 font-medium">PWA</span>
+                <span className="font-cinzel font-black text-xl tracking-widest gold-text-gradient drop-shadow-sm">
+                  GRAPHIC
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-950/70 text-amber-300 border border-amber-500/30">
+                  Monahal
+                </span>
               </div>
-              <p className="text-xs text-stone-400 font-sans truncate max-w-[200px] sm:max-w-xs">{monasteryName}</p>
+              <p className="text-[11px] text-stone-400 font-sans truncate max-w-[180px] sm:max-w-xs group-hover:text-amber-200/80 transition-colors">
+                {monasteryName}
+              </p>
             </div>
           </div>
 
-          {/* Desktop Nav Tabs */}
-          <nav className="hidden md:flex items-center space-x-1">
+          {/* Desktop Nav Tabs with Glassmorphic Pills */}
+          <nav className="hidden md:flex items-center space-x-1.5 p-1 rounded-xl bg-black/40 border border-stone-800/80 backdrop-blur-md">
             <button
               onClick={() => setCurrentTab('schedule')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
                 currentTab === 'schedule'
-                  ? 'bg-stone-800 text-amber-300 border border-stone-700'
-                  : 'text-stone-300 hover:text-white hover:bg-stone-800/60'
+                  ? 'bg-gradient-to-r from-amber-950/80 to-stone-900 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40'
               }`}
             >
               <CalendarDays className="w-4 h-4 text-amber-400" />
@@ -65,10 +79,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('members')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
                 currentTab === 'members'
-                  ? 'bg-stone-800 text-amber-300 border border-stone-700'
-                  : 'text-stone-300 hover:text-white hover:bg-stone-800/60'
+                  ? 'bg-gradient-to-r from-amber-950/80 to-stone-900 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40'
               }`}
             >
               <Users className="w-4 h-4 text-emerald-400" />
@@ -77,10 +91,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('modules')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
                 currentTab === 'modules'
-                  ? 'bg-stone-800 text-amber-300 border border-stone-700'
-                  : 'text-stone-300 hover:text-white hover:bg-stone-800/60'
+                  ? 'bg-gradient-to-r from-amber-950/80 to-stone-900 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40'
               }`}
             >
               <Layers className="w-4 h-4 text-sky-400" />
@@ -89,10 +103,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('absences')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
                 currentTab === 'absences'
-                  ? 'bg-stone-800 text-amber-300 border border-stone-700'
-                  : 'text-stone-300 hover:text-white hover:bg-stone-800/60'
+                  ? 'bg-gradient-to-r from-amber-950/80 to-stone-900 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40'
               }`}
             >
               <UserCheck className="w-4 h-4 text-violet-400" />
@@ -101,10 +115,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('print')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
                 currentTab === 'print'
-                  ? 'bg-stone-800 text-amber-300 border border-stone-700'
-                  : 'text-stone-300 hover:text-white hover:bg-stone-800/60'
+                  ? 'bg-gradient-to-r from-amber-950/80 to-stone-900 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(212,175,55,0.15)]'
+                  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/40'
               }`}
             >
               <Printer className="w-4 h-4 text-rose-400" />
@@ -113,20 +127,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2.5">
             <button
               onClick={onGenerateClick}
               title="Generează automat graficul pentru săptămâna selectată"
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white text-xs sm:text-sm font-medium shadow-sm transition-all active:scale-95"
+              className="relative group overflow-hidden flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 text-stone-950 font-bold text-xs sm:text-sm shadow-[0_2px_15px_rgba(212,175,55,0.35)] hover:shadow-[0_4px_20px_rgba(212,175,55,0.5)] transition-all active:scale-95"
             >
-              <Sparkles className="w-4 h-4 text-amber-200" />
+              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Sparkles className="w-4 h-4 text-stone-950 fill-amber-900" />
               <span className="hidden sm:inline">Generează</span>
             </button>
 
             <button
               onClick={onBackupClick}
               title="Setări, Backup & Restaurare date"
-              className="p-2 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors"
+              className="p-2 rounded-lg bg-stone-900/80 hover:bg-stone-800 border border-stone-800 text-stone-300 hover:text-amber-300 transition-colors shadow-sm"
             >
               <Database className="w-4 h-4" />
             </button>
@@ -134,19 +149,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={toggleDarkMode}
               title={darkMode ? 'Comută pe Mod Luminos' : 'Comută pe Mod Întunecat'}
-              className="p-2 rounded-lg text-stone-300 hover:text-amber-300 hover:bg-stone-800 transition-colors"
+              className="p-2 rounded-lg bg-stone-900/80 hover:bg-stone-800 border border-stone-800 text-stone-300 hover:text-amber-300 transition-colors shadow-sm"
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Sub-Navigation Bar */}
-        <div className="flex md:hidden items-center justify-around py-2 border-t border-stone-800 text-xs overflow-x-auto">
+        {/* Mobile Navigation Bar */}
+        <div className="flex md:hidden items-center justify-around py-2 border-t border-stone-800/80 text-xs overflow-x-auto">
           <button
             onClick={() => setCurrentTab('schedule')}
-            className={`flex flex-col items-center py-1 px-2 rounded ${
-              currentTab === 'schedule' ? 'text-amber-400 font-semibold' : 'text-stone-400'
+            className={`flex flex-col items-center py-1 px-2.5 rounded-lg transition-colors ${
+              currentTab === 'schedule' ? 'text-amber-400 font-bold bg-amber-950/40' : 'text-stone-400'
             }`}
           >
             <CalendarDays className="w-4 h-4 mb-0.5" />
@@ -154,8 +169,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => setCurrentTab('members')}
-            className={`flex flex-col items-center py-1 px-2 rounded ${
-              currentTab === 'members' ? 'text-emerald-400 font-semibold' : 'text-stone-400'
+            className={`flex flex-col items-center py-1 px-2.5 rounded-lg transition-colors ${
+              currentTab === 'members' ? 'text-emerald-400 font-bold bg-emerald-950/40' : 'text-stone-400'
             }`}
           >
             <Users className="w-4 h-4 mb-0.5" />
@@ -163,8 +178,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => setCurrentTab('modules')}
-            className={`flex flex-col items-center py-1 px-2 rounded ${
-              currentTab === 'modules' ? 'text-sky-400 font-semibold' : 'text-stone-400'
+            className={`flex flex-col items-center py-1 px-2.5 rounded-lg transition-colors ${
+              currentTab === 'modules' ? 'text-sky-400 font-bold bg-sky-950/40' : 'text-stone-400'
             }`}
           >
             <Layers className="w-4 h-4 mb-0.5" />
@@ -172,8 +187,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => setCurrentTab('absences')}
-            className={`flex flex-col items-center py-1 px-2 rounded ${
-              currentTab === 'absences' ? 'text-violet-400 font-semibold' : 'text-stone-400'
+            className={`flex flex-col items-center py-1 px-2.5 rounded-lg transition-colors ${
+              currentTab === 'absences' ? 'text-violet-400 font-bold bg-violet-950/40' : 'text-stone-400'
             }`}
           >
             <UserCheck className="w-4 h-4 mb-0.5" />
@@ -181,8 +196,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           <button
             onClick={() => setCurrentTab('print')}
-            className={`flex flex-col items-center py-1 px-2 rounded ${
-              currentTab === 'print' ? 'text-rose-400 font-semibold' : 'text-stone-400'
+            className={`flex flex-col items-center py-1 px-2.5 rounded-lg transition-colors ${
+              currentTab === 'print' ? 'text-rose-400 font-bold bg-rose-950/40' : 'text-stone-400'
             }`}
           >
             <Printer className="w-4 h-4 mb-0.5" />
