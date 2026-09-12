@@ -28,6 +28,7 @@ import {
   ByzantineHeadpiece, 
   ByzantineDivider 
 } from './Ornament';
+import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
 
 type PrintLayoutMode = 'split' | 'matrix' | 'cards';
 type FontTheme = 'merriweather' | 'eb_garamond' | 'lora' | 'playfair' | 'inter';
@@ -81,8 +82,9 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
     'Toți părinții și frații sunt rugați să fie prezenți la rânduiala Ceasurilor și a Sfintei Liturghii conform tipicului. Pentru orice schimb de tură binecuvântat, anunțați din timp pe Eclesiarh.'
   );
 
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: settings.weekStartDay ?? 1 });
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: settings.weekStartDay ?? 1 });
+  const weekStartsOn = settings.weekStartDay ?? 6;
+  const weekStart = startOfWeek(currentDate, { weekStartsOn });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const weekRangeFormatted = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
@@ -769,15 +771,25 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                             </th>
                             {weekDays.map(day => {
                               const isSunday = day.getDay() === 0;
+                              const isSaturday = day.getDay() === 6;
+                              const litInfo = getDayLiturgicalInfo(day);
                               return (
                                 <th
                                   key={day.toISOString()}
                                   className={`border border-stone-900 p-1 text-center uppercase ${
-                                    isSunday ? 'bg-red-100 text-red-950 font-black' : 'font-bold'
+                                    litInfo.isRedCross ? 'bg-red-100 text-red-950 font-black' : isSunday ? 'bg-red-50 text-red-900 font-bold' : isSaturday ? 'bg-amber-50/60 text-stone-900 font-bold' : 'font-bold'
                                   }`}
                                 >
-                                  <div className="font-sans text-[10px]">{format(day, 'EEE', { locale: ro })}</div>
+                                  <div className="font-sans text-[10px] flex items-center justify-center space-x-0.5">
+                                    <span>{format(day, 'EEE', { locale: ro })}</span>
+                                    {litInfo.isRedCross && <span className="text-red-700 font-black">✝</span>}
+                                  </div>
                                   <div className={`text-xs font-bold ${fontThemeClasses[fontTheme].header}`}>{format(day, 'd MMM', { locale: ro })}</div>
+                                  {litInfo.isRedCross && (
+                                    <div className="text-[7.5px] font-sans normal-case text-red-800 line-clamp-1 max-w-[65px] mx-auto leading-none mt-0.5" title={litInfo.feastTitle}>
+                                      {litInfo.feastTitle}
+                                    </div>
+                                  )}
                                 </th>
                               );
                             })}
@@ -854,15 +866,25 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                       </th>
                       {weekDays.map(day => {
                         const isSunday = day.getDay() === 0;
+                        const isSaturday = day.getDay() === 6;
+                        const litInfo = getDayLiturgicalInfo(day);
                         return (
                           <th
                             key={day.toISOString()}
                             className={`border border-stone-900 p-1.5 text-center font-bold uppercase ${
-                              isSunday ? 'bg-red-100 text-red-950 font-black' : ''
+                              litInfo.isRedCross ? 'bg-red-100 text-red-950 font-black' : isSunday ? 'bg-red-50 text-red-900 font-bold' : isSaturday ? 'bg-amber-50/60 text-stone-900' : ''
                             }`}
                           >
-                            <div className="font-sans text-[10px] tracking-wide">{format(day, 'EEEE', { locale: ro })}</div>
+                            <div className="font-sans text-[10px] tracking-wide flex items-center justify-center space-x-1">
+                              <span>{format(day, 'EEEE', { locale: ro })}</span>
+                              {litInfo.isRedCross && <span className="text-red-700 font-black">✝</span>}
+                            </div>
                             <div className={`text-xs font-bold ${fontThemeClasses[fontTheme].header}`}>{format(day, 'd MMM', { locale: ro })}</div>
+                            {litInfo.isRedCross && (
+                              <div className="text-[8px] font-sans normal-case text-red-800 line-clamp-1 max-w-[85px] mx-auto leading-tight mt-0.5" title={litInfo.feastTitle}>
+                                {litInfo.feastTitle}
+                              </div>
+                            )}
                           </th>
                         );
                       })}
@@ -971,27 +993,41 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
               <div className="mt-3 grid grid-cols-7 gap-1.5">
                 {weekDays.map(day => {
                   const isSunday = day.getDay() === 0;
+                  const isSaturday = day.getDay() === 6;
+                  const litInfo = getDayLiturgicalInfo(day);
                   const dateStr = format(day, 'yyyy-MM-dd');
 
                   return (
                     <div
                       key={dateStr}
                       className={`border-2 flex flex-col ${
-                        isSunday ? 'border-[#78141c] bg-red-50/20' : 'border-stone-900 bg-white'
+                        litInfo.isRedCross ? 'border-[#78141c] bg-red-50/25' : isSunday ? 'border-[#78141c] bg-red-50/20' : 'border-stone-900 bg-white'
                       }`}
                     >
                       {/* Day Column Header */}
                       <div
                         className={`p-1 text-center border-b-2 ${
-                          isSunday ? 'bg-[#78141c] text-white border-[#78141c]' : 'bg-stone-200 text-stone-900 border-stone-900'
+                          litInfo.isRedCross 
+                            ? 'bg-[#78141c] text-white border-[#78141c]' 
+                            : isSunday 
+                            ? 'bg-[#78141c] text-white border-[#78141c]' 
+                            : isSaturday 
+                            ? 'bg-amber-100 text-stone-900 border-stone-900 font-bold'
+                            : 'bg-stone-200 text-stone-900 border-stone-900'
                         }`}
                       >
-                        <div className="font-sans text-[10px] font-bold uppercase tracking-wider">
-                          {format(day, 'EEEE', { locale: ro })}
+                        <div className="font-sans text-[10px] font-bold uppercase tracking-wider flex items-center justify-center space-x-1">
+                          <span>{format(day, 'EEEE', { locale: ro })}</span>
+                          {litInfo.isRedCross && <span className="text-amber-300 font-black">✝</span>}
                         </div>
                         <div className={`font-black text-xs ${fontThemeClasses[fontTheme].header}`}>
                           {format(day, 'd MMM', { locale: ro })}
                         </div>
+                        {litInfo.isRedCross && (
+                          <div className="text-[7.5px] font-sans normal-case text-amber-200/90 line-clamp-1 leading-none mt-0.5" title={litInfo.feastTitle}>
+                            {litInfo.feastTitle}
+                          </div>
+                        )}
                       </div>
 
                       {/* Daily Duties List */}

@@ -13,8 +13,8 @@ import {
 import { ByzantineCross } from './Ornament';
 
 interface NavbarProps {
-  currentTab: 'schedule' | 'members' | 'modules' | 'absences' | 'print';
-  setCurrentTab: (tab: 'schedule' | 'members' | 'modules' | 'absences' | 'print') => void;
+  currentTab: 'schedule' | 'calendar' | 'members' | 'modules' | 'absences' | 'print';
+  setCurrentTab: (tab: 'schedule' | 'calendar' | 'members' | 'modules' | 'absences' | 'print') => void;
   onGenerateClick: () => void;
   onBackupClick: () => void;
   monasteryName: string;
@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="hidden md:flex items-center p-1 rounded-full bg-white/[0.05] border border-white/[0.08] backdrop-blur-xl">
             <button
               onClick={() => setCurrentTab('schedule')}
-              className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
                 currentTab === 'schedule'
                   ? 'bg-white/15 text-white font-semibold shadow-[0_2px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
@@ -81,8 +81,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              onClick={() => setCurrentTab('calendar')}
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
+                currentTab === 'calendar'
+                  ? 'bg-white/15 text-white font-semibold shadow-[0_2px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <span className={`text-xs font-bold leading-none ${currentTab === 'calendar' ? 'text-rose-400' : 'text-rose-400/70'}`}>✝</span>
+              <span>Calendar</span>
+            </button>
+
+            <button
               onClick={() => setCurrentTab('members')}
-              className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
                 currentTab === 'members'
                   ? 'bg-white/15 text-white font-semibold shadow-[0_2px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
@@ -94,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('modules')}
-              className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
                 currentTab === 'modules'
                   ? 'bg-white/15 text-white font-semibold shadow-[0_2px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
@@ -106,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('absences')}
-              className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
                 currentTab === 'absences'
                   ? 'bg-white/15 text-white font-semibold shadow-[0_2px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
@@ -118,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => setCurrentTab('print')}
-              className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-tight transition-all duration-250 ${
                 currentTab === 'print'
                   ? 'bg-white/15 text-white font-semibold shadow-[0_2px_10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
@@ -167,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="apple-glass rounded-full px-2 py-1.5 flex items-center justify-around shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-white/15">
           <button
             onClick={() => setCurrentTab('schedule')}
-            className={`flex flex-col items-center py-1 px-3 rounded-full transition-all ${
+            className={`flex flex-col items-center py-1 px-2.5 rounded-full transition-all ${
               currentTab === 'schedule' ? 'text-amber-300 bg-white/10 font-semibold' : 'text-white/50'
             }`}
           >
@@ -175,8 +187,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-[10px] mt-0.5">Grafic</span>
           </button>
           <button
+            onClick={() => setCurrentTab('calendar')}
+            className={`flex flex-col items-center py-1 px-2.5 rounded-full transition-all ${
+              currentTab === 'calendar' ? 'text-rose-400 bg-white/10 font-semibold' : 'text-white/50'
+            }`}
+          >
+            <span className="text-sm font-bold leading-none">✝</span>
+            <span className="text-[10px] mt-0.5">Calendar</span>
+          </button>
+          <button
             onClick={() => setCurrentTab('members')}
-            className={`flex flex-col items-center py-1 px-3 rounded-full transition-all ${
+            className={`flex flex-col items-center py-1 px-2.5 rounded-full transition-all ${
               currentTab === 'members' ? 'text-emerald-400 bg-white/10 font-semibold' : 'text-white/50'
             }`}
           >

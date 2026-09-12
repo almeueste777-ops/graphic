@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { Person, Module, Absence, SubstitutionRule, ScheduleAssignment, MonasterySettings } from '../types';
 
-const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v1';
-const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v1';
-const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v1';
-const STORAGE_KEY_RULES = 'graphic_monastery_rules_v1';
-const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v1';
-const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v1';
+const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v2';
+const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v2';
+const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v2';
+const STORAGE_KEY_RULES = 'graphic_monastery_rules_v2';
+const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v2';
+const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v2';
 
 export const DEFAULT_MODULES: Module[] = [
   {
@@ -15,10 +15,22 @@ export const DEFAULT_MODULES: Module[] = [
     iconName: 'Church',
     color: '#8b1d24', // Roșu bizantin
     rotationCycle: 'weekly',
-    description: 'Slujitor de rând la Sfântul Altar (Sf. Liturghie, Vecernie, Utrenie)',
+    description: 'Slujirea la Sfântul Altar (Sf. Liturghie, Vecernie, Utrenie)',
     roles: [
       { id: 'altar_preot', name: 'Preot slujitor de rând', requiredCount: 1 },
-      { id: 'altar_ajutor', name: 'Diacon / Ajutor Altar', requiredCount: 1 }
+      { id: 'altar_diacon', name: 'Diacon slujitor', requiredCount: 1 },
+      { id: 'altar_protos_sambata', name: 'Protos & Proscomidie Sâmbătă', requiredCount: 1 },
+    ]
+  },
+  {
+    id: 'predica',
+    name: 'Predică',
+    iconName: 'Scroll',
+    color: '#b45309', // Auriu / amvon
+    rotationCycle: 'daily',
+    description: 'Cuvânt de învățătură liturgic (Duminici, Praznice, Sâmbete, Sfinți)',
+    roles: [
+      { id: 'predica_cuvant', name: 'Predicator de rând', requiredCount: 1 }
     ]
   },
   {
@@ -30,7 +42,7 @@ export const DEFAULT_MODULES: Module[] = [
     description: 'Cântarea la strană, tipicul bisericesc, citirea Ceasurilor și a Apostolului',
     roles: [
       { id: 'strana_psalt', name: 'Protopsalt (Strana 1)', requiredCount: 1 },
-      { id: 'strana_ajutor', name: 'Ajutor / Cititor (Ceasuri, Apostol)', requiredCount: 1 }
+      { id: 'strana_ajutor', name: 'Ajutor / Cititor (Strana 2)', requiredCount: 1 }
     ]
   },
   {
@@ -54,127 +66,175 @@ export const DEFAULT_MODULES: Module[] = [
     roles: [
       { id: 'sofer_garda', name: 'Șofer de serviciu', requiredCount: 1 }
     ]
-  },
-  {
-    id: 'trapeza',
-    name: 'Trapeză & Bucătărie',
-    iconName: 'Utensils',
-    color: '#047857', // Verde smarald
-    rotationCycle: 'weekly',
-    description: 'Gătirea mesei pentru obște și pelerini, orânduirea trapezei',
-    roles: [
-      { id: 'bucatar_rand', name: 'Bucătar de rând', requiredCount: 1 },
-      { id: 'ajutor_trapeza', name: 'Ajutor trapeză', requiredCount: 1 }
-    ]
   }
 ];
 
 export const DEFAULT_PERSONS: Person[] = [
   {
-    id: 'p1',
-    name: 'Părintele Paisie',
-    rank: 'Arhimandrit',
-    phone: '0740 111 222',
-    skills: ['altar', 'soferie'],
+    id: 'p_pantelimon',
+    name: 'Pr. Pantelimon',
+    rank: 'Ieromonah',
+    skills: ['altar', 'predica'],
     active: true,
     colorTag: '#8b1d24',
-    notes: 'Starețul mănăstirii. De rând la Altar prin rotație cu ieromonahii.',
+    notes: 'Preot slujitor Altar & Predică la sărbători mari.',
   },
   {
-    id: 'p2',
-    name: 'Părintele Sofronie',
+    id: 'p_avacum',
+    name: 'Pr. Avacum',
     rank: 'Ieromonah',
-    phone: '0741 222 333',
-    skills: ['altar', 'strana'],
+    skills: ['altar', 'strana', 'strana_ajutor', 'paracliserie', 'soferie', 'predica'],
     active: true,
-    colorTag: '#b38210',
-    notes: 'Eclesiarh. Cântăreț și slujitor experimentat.',
+    colorTag: '#b45309',
+    notes: 'Slujitor Altar, Strană 1 & 2, Paracliserie, Șoferie, Predică la sărbători mari.',
   },
   {
-    id: 'p3',
-    name: 'Părintele Teofan',
+    id: 'p_mina',
+    name: 'Pr. Mina',
     rank: 'Ieromonah',
-    phone: '0742 333 444',
-    skills: ['altar', 'strana', 'soferie'],
+    skills: ['altar', 'strana', 'predica'],
+    active: true,
+    colorTag: '#047857',
+    notes: 'Preot slujitor Altar, Protopsalt Strană 1, Predică la praznice împărătești & mari.',
+  },
+  {
+    id: 'p_sebastian',
+    name: 'Pr. Sebastian',
+    rank: 'Ieromonah',
+    skills: ['altar', 'predica'],
     active: true,
     colorTag: '#6366f1',
-    notes: 'Are permis categoria B & D.',
+    notes: 'Preot slujitor Altar, Predică la praznice împărătești & mari.',
   },
   {
-    id: 'p4',
-    name: 'Părintele Siluan',
+    id: 'p_iliescu',
+    name: 'Pr. Iliescu',
+    rank: 'Preot',
+    skills: ['altar', 'predica'],
+    active: true,
+    weekendOnly: true,
+    colorTag: '#be185d',
+    notes: 'Doar în weekenduri. Sâmbătă este Protos și face Proscomidia. La predică: 2 sâmbete/lună și praznice.',
+  },
+  {
+    id: 'p_ciprian',
+    name: 'Pr. Ciprian',
     rank: 'Ierodiacon',
-    phone: '0743 444 555',
-    skills: ['altar', 'strana', 'paracliserie'],
+    skills: ['altar', 'strana', 'paracliserie', 'predica'],
     active: true,
-    colorTag: '#10b981',
-    notes: 'Slujire ca diacon la Altar și cititor la Strană.',
+    colorTag: '#0284c7',
+    notes: 'Diacon la Altar, Protopsalt Strană 1, Paracliserie, Predică (sâmbete & sărbători de sfinți).',
   },
   {
-    id: 'p5',
-    name: 'Părintele Arsenie',
+    id: 'p_modest',
+    name: 'Pr. Modest',
+    rank: 'Ierodiacon',
+    skills: ['altar', 'paracliserie', 'soferie', 'predica'],
+    active: true,
+    colorTag: '#7c3aed',
+    notes: 'Diacon la Altar, Șofer, Paracliserie, Predică (sâmbete & sărbători de sfinți).',
+  },
+  {
+    id: 'p_petru',
+    name: 'Pr. Petru',
+    rank: 'Diacon',
+    skills: ['altar', 'soferie', 'predica'],
+    active: true,
+    serviceWeeksPerMonth: 2,
+    colorTag: '#0d9488',
+    notes: 'Diacon de mir. Slujește 2 săptămâni pe lună (una da, una nu). Șofer. Predică.',
+  },
+  {
+    id: 'p_glichentie',
+    name: 'Pr. Glichentie',
     rank: 'Monah',
-    phone: '0744 555 666',
-    skills: ['strana', 'paracliserie', 'soferie'],
+    skills: ['strana'],
     active: true,
-    colorTag: '#f59e0b',
-    notes: 'Cântăreț la strană și paracliser.',
+    colorTag: '#ca8a04',
+    notes: 'Protopsalt de bază la Strană 1.',
   },
   {
-    id: 'p6',
-    name: 'Părintele Ilarion',
+    id: 'p_damaschin',
+    name: 'Pr. Damaschin',
+    rank: 'Ieromonah',
+    skills: ['strana_ajutor'],
+    active: true,
+    colorTag: '#475569',
+    notes: 'Ajutor la Strană (Strana 2 / Cititor Ceasuri, Apostol).',
+  },
+  {
+    id: 'p_arghir',
+    name: 'Pr. Arghir',
     rank: 'Monah',
-    phone: '0745 666 777',
-    skills: ['paracliserie', 'trapeza'],
+    skills: ['paracliserie'],
     active: true,
-    colorTag: '#ec4899',
-    notes: 'Bun rânduitor al bisericii și al bucătăriei.',
+    colorTag: '#ea580c',
+    notes: 'Paracliser de rând.',
   },
   {
-    id: 'p7',
-    name: 'Fratele Ioan',
-    rank: 'Frate',
-    phone: '0746 777 888',
-    skills: ['paracliserie', 'trapeza', 'soferie'],
+    id: 'p_spiridon',
+    name: 'Pr. Spiridon',
+    rank: 'Ieromonah',
+    skills: ['soferie'],
     active: true,
-    colorTag: '#06b6d4',
-    notes: 'Tânăr, energic, disponibil pentru deplasări.',
+    colorTag: '#2563eb',
+    notes: 'Șofer de bază al mănăstirii.',
   },
   {
-    id: 'p8',
-    name: 'Fratele Vasile',
+    id: 'p_ioan',
+    name: 'Fr. Ioan',
     rank: 'Frate',
-    phone: '0747 888 999',
-    skills: ['strana', 'trapeza'],
+    skills: ['strana_ajutor', 'soferie'],
     active: true,
-    colorTag: '#8b5cf6',
-    notes: 'Voce bună la Ceasuri și la strană.',
-  }
+    colorTag: '#16a34a',
+    notes: 'Ajutor Strană (Strana 2) și Șofer.',
+  },
 ];
 
 export const DEFAULT_RULES: SubstitutionRule[] = [
   {
-    id: 'rule_1',
+    id: 'rule_altar_preot',
     moduleId: 'altar',
-    targetPersonId: 'p3', // Părintele Teofan
-    substituteIds: ['p2', 'p1'], // Înlocuitor Părintele Sofronie, apoi Paisie
-    notes: 'Dacă Părintele Teofan este învoit la Altar, slujește Părintele Sofronie.',
+    targetPersonId: 'p_pantelimon',
+    substituteIds: ['p_avacum', 'p_mina', 'p_sebastian'],
+    notes: 'Dacă Pr. Pantelimon este învoit la Altar, slujește Pr. Avacum, apoi Pr. Mina.',
   },
   {
-    id: 'rule_2',
+    id: 'rule_diacon',
+    moduleId: 'altar',
+    targetPersonId: 'p_ciprian',
+    substituteIds: ['p_modest', 'p_petru'],
+    notes: 'Dacă Pr. Ciprian lipsește de la diaconie, intră Pr. Modest sau Pr. Petru.',
+  },
+  {
+    id: 'rule_strana',
+    moduleId: 'strana',
+    targetPersonId: 'p_glichentie',
+    substituteIds: ['p_ciprian', 'p_mina', 'p_avacum'],
+    notes: 'Dacă Pr. Glichentie este învoit, cântă Pr. Ciprian sau Pr. Mina.',
+  },
+  {
+    id: 'rule_paracliserie',
     moduleId: 'paracliserie',
-    targetPersonId: 'p7', // Fratele Ioan
-    substituteIds: ['p6', 'p5'], // Monahul Ilarion, apoi Arsenie
-    notes: 'Dacă Fratele Ioan lipsește de la paracliserie, intră Părintele Ilarion.',
+    targetPersonId: 'p_arghir',
+    substituteIds: ['p_modest', 'p_ciprian', 'p_avacum'],
+    notes: 'Dacă Pr. Arghir este învoit de la paracliserie, preia Pr. Modest.',
+  },
+  {
+    id: 'rule_soferie',
+    moduleId: 'soferie',
+    targetPersonId: 'p_spiridon',
+    substituteIds: ['p_modest', 'p_petru', 'p_avacum', 'p_ioan'],
+    notes: 'Dacă Pr. Spiridon este indisponibil, preia Pr. Modest sau Pr. Petru.',
   }
 ];
 
 export const DEFAULT_SETTINGS: MonasterySettings = {
-  monasteryName: 'Mănăstirea Înălțarea Domnului',
-  abbotName: 'Arhim. Paisie',
-  ecclesiarchName: 'Ierom. Sofronie',
+  monasteryName: 'Sfânta Mănăstire',
+  abbotName: 'Pr. Pantelimon',
+  ecclesiarchName: 'Pr. Ciprian',
   location: 'Schitul din Deal',
-  weekStartDay: 1,
+  weekStartDay: 6, // Sâmbătă seara începe rândul liturgic (practică monahală)
   autoAvoidDoubleBooking: true,
 };
 

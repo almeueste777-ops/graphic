@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Person, Module, ScheduleAssignment, Absence, SubstitutionRule, MonasterySettings } from '../types';
 import { generateSchedule } from '../services/scheduler';
+import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
 import { EditEntryModal } from './EditEntryModal';
 import { 
   format, 
@@ -62,9 +63,10 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
   const [generationAlerts, setGenerationAlerts] = useState<string[] | null>(null);
 
-  // Week calculation (Monday to Sunday)
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: settings.weekStartDay ?? 1 });
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: settings.weekStartDay ?? 1 });
+  // Week calculation (defaults to Saturday = 6 monastic typikon)
+  const weekStartsOn = settings.weekStartDay ?? 6;
+  const weekStart = startOfWeek(currentDate, { weekStartsOn });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const weekRangeTitle = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
@@ -274,30 +276,53 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 {weekDays.map(day => {
                   const dayIsToday = isToday(day);
                   const isSunday = day.getDay() === 0;
+                  const isSaturday = day.getDay() === 6;
+                  const litInfo = getDayLiturgicalInfo(day);
+
                   return (
                     <th
                       key={day.toISOString()}
-                      className={`p-3 text-center border-l border-white/[0.04] transition-colors ${
-                        dayIsToday ? 'bg-white/[0.03]' : ''
+                      className={`p-2.5 text-center border-l border-white/[0.04] transition-colors min-w-[125px] ${
+                        dayIsToday ? 'bg-white/[0.03]' : litInfo.isRedCross ? 'bg-rose-950/10' : ''
                       }`}
                     >
                       <div className="flex flex-col items-center">
-                        <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 ${
-                          isSunday ? 'text-rose-400' : 'text-white/40'
-                        }`}>
-                          {format(day, 'EEE', { locale: ro })}
-                        </span>
+                        <div className="flex items-center space-x-1 mb-1">
+                          <span className={`text-[10px] uppercase font-bold tracking-wider ${
+                            litInfo.isRedCross ? 'text-rose-400 font-extrabold' : isSunday ? 'text-rose-400' : isSaturday ? 'text-amber-300' : 'text-white/40'
+                          }`}>
+                            {format(day, 'EEE', { locale: ro })}
+                          </span>
+                          {isSaturday && (
+                            <span className="text-[8px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-semibold border border-amber-500/30">
+                              Rând
+                            </span>
+                          )}
+                        </div>
                         
                         {/* Apple Date Badge Circle */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all relative ${
                           dayIsToday 
                             ? 'bg-amber-400 text-black font-extrabold shadow-[0_0_12px_rgba(251,191,36,0.6)]' 
+                            : litInfo.isRedCross
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold'
                             : isSunday 
                             ? 'text-rose-400 hover:bg-white/[0.06]' 
                             : 'text-white hover:bg-white/[0.06]'
                         }`}>
                           {format(day, 'd', { locale: ro })}
                         </div>
+
+                        {/* Liturgical Feast Badge */}
+                        {litInfo.isRedCross && (
+                          <div 
+                            className="mt-1 px-1.5 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[9px] font-semibold max-w-[115px] truncate flex items-center space-x-1 cursor-default"
+                            title={litInfo.feastTitle}
+                          >
+                            <span className="text-rose-400 font-black">✝</span>
+                            <span className="truncate">{litInfo.feastTitle}</span>
+                          </div>
+                        )}
                       </div>
                     </th>
                   );

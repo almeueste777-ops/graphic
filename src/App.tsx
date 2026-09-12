@@ -6,6 +6,7 @@ import { MembersView } from './components/MembersView';
 import { ModulesView } from './components/ModulesView';
 import { AbsencesView } from './components/AbsencesView';
 import { PrintableView } from './components/PrintableView';
+import { CalendarLiturgicView } from './components/CalendarLiturgicView';
 import { BackupModal } from './components/BackupModal';
 import { generateSchedule } from './services/scheduler';
 import { startOfWeek, endOfWeek } from 'date-fns';
@@ -31,7 +32,7 @@ export function App() {
     importAllDataJson,
   } = useMonasteryData();
 
-  const [currentTab, setCurrentTab] = useState<'schedule' | 'members' | 'modules' | 'absences' | 'print'>('schedule');
+  const [currentTab, setCurrentTab] = useState<'schedule' | 'calendar' | 'members' | 'modules' | 'absences' | 'print'>('schedule');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('graphic_dark_mode') !== 'false';
@@ -51,8 +52,9 @@ export function App() {
   // Quick auto-generate from header
   const handleQuickGenerate = () => {
     setCurrentTab('schedule');
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekStartsOn = settings.weekStartDay ?? 6;
+    const weekStart = startOfWeek(currentDate, { weekStartsOn });
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn });
 
     const result = generateSchedule({
       startDate: weekStart,
@@ -95,6 +97,20 @@ export function App() {
             setSchedule={setSchedule}
             settings={settings}
             onNavigateToPrint={() => setCurrentTab('print')}
+          />
+        )}
+
+        {currentTab === 'calendar' && (
+          <CalendarLiturgicView
+            currentDate={currentDate}
+            setCurrentDate={setCurrentDate}
+            persons={persons}
+            modules={modules}
+            schedule={schedule}
+            onNavigateToWeek={(targetDate) => {
+              setCurrentDate(targetDate);
+              setCurrentTab('schedule');
+            }}
           />
         )}
 
