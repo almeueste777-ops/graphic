@@ -22,6 +22,8 @@ export function App() {
     setPersons,
     setModules,
     setAbsences,
+    addAbsence,
+    deleteAbsence,
     setRules,
     setSchedule,
     setSettings,
@@ -97,6 +99,8 @@ export function App() {
             setSchedule={setSchedule}
             settings={settings}
             onNavigateToPrint={() => setCurrentTab('print')}
+            addAbsence={addAbsence}
+            deleteAbsence={deleteAbsence}
           />
         )}
 

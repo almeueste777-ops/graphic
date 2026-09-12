@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { Person, Module, Absence, SubstitutionRule, ScheduleAssignment, MonasterySettings } from '../types';
 
-const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v3';
-const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v3';
-const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v3';
-const STORAGE_KEY_RULES = 'graphic_monastery_rules_v3';
-const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v3';
-const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v3';
+const STORAGE_KEY_PERSONS = 'graphic_monastery_persons_v4';
+const STORAGE_KEY_MODULES = 'graphic_monastery_modules_v4';
+const STORAGE_KEY_ABSENCES = 'graphic_monastery_absences_v4';
+const STORAGE_KEY_RULES = 'graphic_monastery_rules_v4';
+const STORAGE_KEY_SCHEDULE = 'graphic_monastery_schedule_v4';
+const STORAGE_KEY_SETTINGS = 'graphic_monastery_settings_v4';
 
 export const DEFAULT_MODULES: Module[] = [
   {
@@ -31,6 +31,17 @@ export const DEFAULT_MODULES: Module[] = [
     description: 'Cuvânt de învățătură liturgic (Duminici, Praznice, Sâmbete, Sfinți)',
     roles: [
       { id: 'predica_cuvant', name: 'Predicator de rând', requiredCount: 1 }
+    ]
+  },
+  {
+    id: 'biserica',
+    name: 'În Biserică',
+    iconName: 'Eye',
+    color: '#059669', // Verde smarald
+    rotationCycle: 'daily',
+    description: 'Prezență și supraveghere în biserică, primirea credincioșilor și a pelerinilor, pomelnice',
+    roles: [
+      { id: 'biserica_rand', name: 'De rând în Biserică', requiredCount: 1 }
     ]
   },
   {
@@ -83,10 +94,10 @@ export const DEFAULT_PERSONS: Person[] = [
     id: 'p_pantelimon',
     name: 'Ierom. Pantelimon',
     rank: 'Ieromonah',
-    skills: ['altar', 'predica'],
+    skills: ['altar', 'predica', 'biserica'],
     active: true,
     colorTag: '#8b1d24',
-    notes: 'Eclesiarhul Mănăstirii Bogdănești. Preot slujitor Altar & Predică.',
+    notes: 'Eclesiarhul Mănăstirii Bogdănești. Preot slujitor Altar, Predică și de rând duminică în biserică.',
   },
   {
     id: 'p_mina',
@@ -101,10 +112,10 @@ export const DEFAULT_PERSONS: Person[] = [
     id: 'p_avacum',
     name: 'Pr. Avacum',
     rank: 'Ieromonah',
-    skills: ['altar', 'strana', 'strana_ajutor', 'paracliserie', 'soferie', 'predica'],
+    skills: ['altar', 'strana', 'strana_ajutor', 'paracliserie', 'soferie', 'predica', 'biserica'],
     active: true,
     colorTag: '#b45309',
-    notes: 'Slujitor Altar, Strană 1 & 2, Paracliserie, Șoferie, Predică la sărbători mari.',
+    notes: 'Slujitor Altar, Strană 1 & 2, Paracliserie, Șoferie, Predică și de rând luni & miercuri în biserică.',
   },
   {
     id: 'p_sebastian',
@@ -119,20 +130,20 @@ export const DEFAULT_PERSONS: Person[] = [
     id: 'p_iliescu',
     name: 'Pr. Iliescu',
     rank: 'Preot',
-    skills: ['altar', 'predica'],
+    skills: ['altar', 'predica', 'biserica'],
     active: true,
     weekendOnly: true,
     colorTag: '#be185d',
-    notes: 'Doar în weekenduri. Sâmbătă este Protos și face Proscomidia. La predică: 2 sâmbete/lună și praznice.',
+    notes: 'Doar în weekenduri. Sâmbătă este Protos, face Proscomidia, stă de rând în biserică. La predică: 2 sâmbete/lună și praznice.',
   },
   {
     id: 'p_ciprian',
     name: 'Pr. Ciprian',
     rank: 'Ierodiacon',
-    skills: ['altar', 'strana', 'paracliserie', 'predica'],
+    skills: ['altar', 'strana', 'paracliserie', 'predica', 'biserica'],
     active: true,
     colorTag: '#0284c7',
-    notes: 'Diacon la Altar, Protopsalt Strană 1, Paracliserie, Predică (sâmbete & sărbători de sfinți).',
+    notes: 'Diacon la Altar, Protopsalt Strană 1, Paracliserie, Predică și de rând marți & joi în biserică.',
   },
   {
     id: 'p_modest',
@@ -154,8 +165,8 @@ export const DEFAULT_PERSONS: Person[] = [
     notes: 'Diacon de mir. Slujește 2 săptămâni pe lună (una da, una nu). Șofer. Predică.',
   },
   {
-    id: 'p_glichentie',
-    name: 'Pr. Glichentie',
+    id: 'p_grichentie',
+    name: 'Pr. Grichentie',
     rank: 'Monah',
     skills: ['strana'],
     active: true,
@@ -182,12 +193,12 @@ export const DEFAULT_PERSONS: Person[] = [
   },
   {
     id: 'p_arghir',
-    name: 'Pr. Arghir',
+    name: 'Fr. Arghir',
     rank: 'Monah',
-    skills: ['paracliserie'],
+    skills: ['paracliserie', 'biserica'],
     active: true,
     colorTag: '#ea580c',
-    notes: 'Paracliser de rând.',
+    notes: 'Paracliser de rând și de rând vineri în biserică.',
   },
   {
     id: 'p_spiridon',
@@ -218,9 +229,9 @@ export const DEFAULT_RULES: SubstitutionRule[] = [
   {
     id: 'rule_strana',
     moduleId: 'strana',
-    targetPersonId: 'p_glichentie',
+    targetPersonId: 'p_grichentie',
     substituteIds: ['p_ciprian', 'p_mina', 'p_avacum'],
-    notes: 'Dacă Pr. Glichentie este învoit, cântă Pr. Ciprian sau Pr. Mina.',
+    notes: 'Dacă Pr. Grichentie este învoit, cântă Pr. Ciprian sau Pr. Mina.',
   },
   {
     id: 'rule_strana_ajutor',
@@ -234,7 +245,7 @@ export const DEFAULT_RULES: SubstitutionRule[] = [
     moduleId: 'paracliserie',
     targetPersonId: 'p_arghir',
     substituteIds: ['p_modest', 'p_ciprian', 'p_avacum'],
-    notes: 'Dacă Pr. Arghir este învoit de la paracliserie, preia Pr. Modest.',
+    notes: 'Dacă Fr. Arghir este învoit de la paracliserie, preia Pr. Modest.',
   },
   {
     id: 'rule_soferie',
@@ -242,6 +253,48 @@ export const DEFAULT_RULES: SubstitutionRule[] = [
     targetPersonId: 'p_spiridon',
     substituteIds: ['p_modest', 'p_petru', 'p_avacum', 'p_ioan'],
     notes: 'Dacă Pr. Spiridon este indisponibil, preia Pr. Modest sau Pr. Petru.',
+  },
+  {
+    id: 'rule_predica_sebastian',
+    moduleId: 'predica',
+    targetPersonId: 'p_sebastian',
+    substituteIds: ['p_avacum', 'p_mina', 'p_pantelimon'],
+    notes: 'Dacă Pr. Sebastian este plecat, predică Pr. Avacum sau Pr. Mina.',
+  },
+  {
+    id: 'rule_biserica_pantelimon',
+    moduleId: 'biserica',
+    targetPersonId: 'p_pantelimon',
+    substituteIds: ['p_avacum', 'p_mina', 'p_ciprian'],
+    notes: 'Duminică în Biserică: dacă Pr. Pantelimon lipsește, preia Pr. Avacum.',
+  },
+  {
+    id: 'rule_biserica_avacum',
+    moduleId: 'biserica',
+    targetPersonId: 'p_avacum',
+    substituteIds: ['p_ciprian', 'p_pantelimon', 'p_modest'],
+    notes: 'Luni/Miercuri în Biserică: dacă Pr. Avacum lipsește, preia Pr. Ciprian.',
+  },
+  {
+    id: 'rule_biserica_ciprian',
+    moduleId: 'biserica',
+    targetPersonId: 'p_ciprian',
+    substituteIds: ['p_avacum', 'p_modest', 'p_arghir'],
+    notes: 'Marți/Joi în Biserică: dacă Pr. Ciprian lipsește, preia Pr. Avacum.',
+  },
+  {
+    id: 'rule_biserica_arghir',
+    moduleId: 'biserica',
+    targetPersonId: 'p_arghir',
+    substituteIds: ['p_modest', 'p_ciprian', 'p_avacum'],
+    notes: 'Vineri în Biserică: dacă Fr. Arghir lipsește, preia Pr. Modest.',
+  },
+  {
+    id: 'rule_biserica_iliescu',
+    moduleId: 'biserica',
+    targetPersonId: 'p_iliescu',
+    substituteIds: ['p_pantelimon', 'p_avacum', 'p_mina'],
+    notes: 'Sâmbătă în Biserică: dacă Pr. Iliescu lipsește, preia Pr. Pantelimon.',
   }
 ];
 
@@ -344,6 +397,19 @@ export function useMonasteryData() {
       notify();
       return updated;
     });
+  };
+
+  const addAbsence = (absenceData: Omit<Absence, 'id'>): Absence => {
+    const newAbsence: Absence = {
+      ...absenceData,
+      id: `abs_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    };
+    setAbsences(prev => [...prev, newAbsence]);
+    return newAbsence;
+  };
+
+  const deleteAbsence = (absenceId: string) => {
+    setAbsences(prev => prev.filter(a => a.id !== absenceId));
   };
 
   const setRules = (newRules: SubstitutionRule[] | ((prev: SubstitutionRule[]) => SubstitutionRule[])) => {
@@ -453,6 +519,8 @@ export function useMonasteryData() {
     setPersons,
     setModules,
     setAbsences,
+    addAbsence,
+    deleteAbsence,
     setRules,
     setSchedule,
     setSettings,

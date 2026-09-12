@@ -65,10 +65,22 @@ export function generateSchedule({
 }: GenerateScheduleParams): GenerationResult {
   const warnings: string[] = [];
   const days = eachDayOfInterval({ start: startDate, end: endDate });
-  const newAssignments: ScheduleAssignment[] = [...existingAssignments.filter(a => {
+  // Track manual assignments from current interval so they are preserved
+  const manualAssignmentsMap = new Map<string, ScheduleAssignment>();
+  existingAssignments.forEach(a => {
     const aDate = parseISO(a.date);
-    return aDate < startDate || aDate > endDate;
-  })];
+    if (aDate >= startDate && aDate <= endDate && a.status === 'manual') {
+      manualAssignmentsMap.set(`${a.date}_${a.moduleId}_${a.roleId}_${a.slotIndex}`, a);
+    }
+  });
+
+  const newAssignments: ScheduleAssignment[] = [
+    ...existingAssignments.filter(a => {
+      const aDate = parseISO(a.date);
+      return aDate < startDate || aDate > endDate;
+    }),
+    ...Array.from(manualAssignmentsMap.values()),
+  ];
 
   const activePersons = persons.filter(p => p.active);
 
@@ -82,14 +94,15 @@ export function generateSchedule({
     dailyBookings.get(a.date)!.add(a.personId);
   });
 
-  // Sort modules: prioritize Altar (priest, deacon), Strană, Paracliserie, Predică, Șoferie, others
+  // Sort modules: prioritize Altar (priest, deacon), Strană, Paracliserie, Predică, Biserică, Șoferie, others
   const sortedModules = [...modules].sort((a, b) => {
     const priority = (m: Module) => {
       if (m.id === 'altar') return 1;
       if (m.id === 'strana') return 2;
       if (m.id === 'paracliserie') return 3;
       if (m.id === 'predica') return 4;
-      if (m.id === 'soferie') return 5;
+      if (m.id === 'biserica') return 5;
+      if (m.id === 'soferie') return 6;
       return 10;
     };
     return priority(a) - priority(b);
@@ -101,6 +114,13 @@ export function generateSchedule({
 
   // Track assigned altar priest of the week for Sunday preaching
   let altarPriestOfTheWeekId: string | null = null;
+  const existingAltarPriest = existingAssignments.find(a => {
+    const aDate = parseISO(a.date);
+    return aDate >= startDate && aDate <= endDate && a.roleId === 'altar_preot' && a.personId;
+  });
+  if (existingAltarPriest && existingAltarPriest.personId) {
+    altarPriestOfTheWeekId = existingAltarPriest.personId;
+  }
 
   for (const module of sortedModules) {
     for (const role of module.roles) {
@@ -114,6 +134,9 @@ export function generateSchedule({
             if (day.getDay() !== 6) return; // Only on Saturday!
 
             const dateStr = format(day, 'yyyy-MM-dd');
+            const assignmentKey = `${dateStr}_${module.id}_${role.id}_${slot}`;
+            if (manualAssignmentsMap.has(assignmentKey)) return;
+
             if (!dailyBookings.has(dateStr)) dailyBookings.set(dateStr, new Set());
 
             // Primary candidate: Pr. Iliescu (or any priest with weekendOnly/altar)
@@ -165,6 +188,9 @@ export function generateSchedule({
         if (module.id === 'predica' || role.id === 'predica_cuvant') {
           days.forEach(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
+            const assignmentKey = `${dateStr}_${module.id}_${role.id}_${slot}`;
+            if (manualAssignmentsMap.has(assignmentKey)) return;
+
             if (!dailyBookings.has(dateStr)) dailyBookings.set(dateStr, new Set());
 
             const litInfo = getDayLiturgicalInfo(day);
@@ -216,21 +242,54 @@ export function generateSchedule({
               }
             }
             // Rule 2.3: Praznice Împărătești în timpul săptămânii
-            // Rotație: Pr. Mina, Pr. Sebastian, Pr. Iliescu
+            // Rotație: Pr. Mina, Pr. Sebastian, Pr. Iliescu (weekend), sau Preotul de rând al săptămânii.
+            // Dacă cel rânduit este plecat (ex: Pr. Sebastian), se aplică regula de înlocuire (Pr. Avacum / Pr. Mina).
             else if (litInfo.rank === 'praznic_imparatesc') {
-              preachReason = `Praznic Împărătesc (${litInfo.feastTitle}) - Rotație Pr. Mina / Pr. Sebastian / Pr. Iliescu`;
-              const praznicCandidates = activePersons.filter(p => 
-                (p.id === 'p_mina' || p.id === 'p_sebastian' || (p.id === 'p_iliescu' && isPersonAvailableOnDate(p, day))) &&
-                !isPersonAbsent(p.id, day, absences)
-              ).sort((a, b) => getAssignmentCount(a.id, newAssignments) - getAssignmentCount(b.id, newAssignments));
+              preachReason = `Praznic Împărătesc (${litInfo.feastTitle}) - Rotație Praznice`;
 
-              if (praznicCandidates.length > 0) {
-                assignedId = praznicCandidates[0].id;
-              } else {
-                // Fallback to any priest
-                const anyPriest = activePersons.filter(p => p.skills.includes('predica') && isPersonAvailableOnDate(p, day) && !isPersonAbsent(p.id, day, absences));
-                if (anyPriest.length > 0) assignedId = anyPriest[0].id;
+              // Candidates in rotation order: Sebastian, Mina, Iliescu (if weekend), or Altar Priest of the week
+              const candidateOrder = ['p_sebastian', 'p_mina'];
+              if (dayOfWeek === 6 || dayOfWeek === 0) candidateOrder.push('p_iliescu');
+              if (altarPriestOfTheWeekId && !candidateOrder.includes(altarPriestOfTheWeekId)) {
+                candidateOrder.push(altarPriestOfTheWeekId);
               }
+
+              let chosenId: string | null = null;
+              for (const cId of candidateOrder) {
+                const cand = activePersons.find(p => p.id === cId);
+                if (!cand) continue;
+
+                if (!isPersonAbsent(cand.id, day, absences) && isPersonAvailableOnDate(cand, day)) {
+                  chosenId = cand.id;
+                  break;
+                } else if (isPersonAbsent(cand.id, day, absences)) {
+                  // Candidate is absent! Find substitute from rules
+                  const rule = substitutionRules.find(r => r.targetPersonId === cand.id && (r.moduleId === 'predica' || r.moduleId === 'any'));
+                  if (rule) {
+                    for (const sId of rule.substituteIds) {
+                      const subCand = activePersons.find(p => p.id === sId);
+                      if (subCand && !isPersonAbsent(subCand.id, day, absences) && isPersonAvailableOnDate(subCand, day)) {
+                        chosenId = subCand.id;
+                        preachReason = `Praznic Împărătesc (${litInfo.feastTitle}) - ${subCand.name} (înlocuitor ${cand.name})`;
+                        break;
+                      }
+                    }
+                  }
+                  if (chosenId) break;
+                }
+              }
+
+              if (!chosenId && altarPriestOfTheWeekId && !isPersonAbsent(altarPriestOfTheWeekId, day, absences)) {
+                chosenId = altarPriestOfTheWeekId;
+                preachReason = `Praznic Împărătesc (${litInfo.feastTitle}) - Preotul de rând (${activePersons.find(p => p.id === altarPriestOfTheWeekId)?.name})`;
+              }
+
+              if (!chosenId) {
+                const fallback = activePersons.filter(p => p.skills.includes('predica') && isPersonAvailableOnDate(p, day) && !isPersonAbsent(p.id, day, absences));
+                if (fallback.length > 0) chosenId = fallback[0].id;
+              }
+
+              assignedId = chosenId;
             }
             // Rule 2.4: Sărbători Mari
             // Rotație: Pr. Pantelimon, Pr. Avacum, Pr. Mina, Pr. Sebastian, Pr. Iliescu
@@ -276,6 +335,111 @@ export function generateSchedule({
         }
 
         // ====================================================================
+        // Special Rule 3: În Biserică (Stat de rând în Biserică / Pelerini)
+        // Rotație stabilită pe zile:
+        // Sâmbătă: Pr. Iliescu
+        // Duminică: Pr. Pantelimon
+        // Luni: Pr. Avacum
+        // Marți: Pr. Ciprian
+        // Miercuri: Pr. Avacum
+        // Joi: Pr. Ciprian
+        // Vineri: Fr. Arghir
+        // ====================================================================
+        if (module.id === 'biserica' || role.id === 'biserica_rand') {
+          const bisericaDefaultMap: Record<number, string> = {
+            0: 'p_pantelimon', // Duminică
+            1: 'p_avacum',     // Luni
+            2: 'p_ciprian',    // Marți
+            3: 'p_avacum',     // Miercuri
+            4: 'p_ciprian',    // Joi
+            5: 'p_arghir',     // Vineri
+            6: 'p_iliescu',    // Sâmbătă
+          };
+
+          days.forEach(day => {
+            const dateStr = format(day, 'yyyy-MM-dd');
+            const assignmentKey = `${dateStr}_${module.id}_${role.id}_${slot}`;
+            if (manualAssignmentsMap.has(assignmentKey)) return;
+
+            const dayOfWeek = day.getDay();
+            const targetPersonId = bisericaDefaultMap[dayOfWeek];
+
+            let assignedId: string | null = null;
+            let status: 'auto' | 'substituted' = 'auto';
+            let substitutedFromId: string | undefined;
+
+            const primaryCandidate = activePersons.find(p => p.id === targetPersonId);
+
+            if (primaryCandidate && !isPersonAbsent(primaryCandidate.id, day, absences)) {
+              assignedId = primaryCandidate.id;
+            } else {
+              // Substitute if absent
+              status = 'substituted';
+              if (primaryCandidate) substitutedFromId = primaryCandidate.id;
+
+              const absence = primaryCandidate ? isPersonAbsent(primaryCandidate.id, day, absences) : null;
+              let subFound: Person | null = null;
+
+              // 1. Preferred substitute specified in absence
+              if (absence?.preferredSubstituteId) {
+                const directSub = activePersons.find(p => p.id === absence.preferredSubstituteId);
+                if (directSub && !isPersonAbsent(directSub.id, day, absences)) {
+                  subFound = directSub;
+                }
+              }
+
+              // 2. Check substitution rules for this person
+              if (!subFound && primaryCandidate) {
+                const rule = substitutionRules.find(r => r.targetPersonId === primaryCandidate.id && (r.moduleId === 'biserica' || r.moduleId === 'any'));
+                if (rule) {
+                  for (const sId of rule.substituteIds) {
+                    const subCand = activePersons.find(p => p.id === sId);
+                    if (subCand && !isPersonAbsent(subCand.id, day, absences)) {
+                      subFound = subCand;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              // 3. Fallback candidates for biserica
+              if (!subFound) {
+                const fallbackCandidates = activePersons.filter(p => 
+                  p.skills.includes('biserica') && 
+                  p.id !== targetPersonId && 
+                  !isPersonAbsent(p.id, day, absences)
+                ).sort((a, b) => getAssignmentCount(a.id, newAssignments) - getAssignmentCount(b.id, newAssignments));
+
+                if (fallbackCandidates.length > 0) {
+                  subFound = fallbackCandidates[0];
+                }
+              }
+
+              if (subFound) {
+                assignedId = subFound.id;
+                warnings.push(`${format(day, 'dd.MM')} - În Biserică: ${primaryCandidate?.name || targetPersonId} este înlocuit de ${subFound.name} (${absence?.reason || 'învoit'}).`);
+              } else {
+                warnings.push(`Atenție: ${format(day, 'dd.MM')} - Nu s-a găsit înlocuitor pentru rândul în Biserică.`);
+              }
+            }
+
+            // Note: Standing duty in church (stat de rând în biserică) is compatible with altar/strana
+            newAssignments.push({
+              id: `${dateStr}_${module.id}_${role.id}_${slot}`,
+              date: dateStr,
+              moduleId: module.id,
+              roleId: role.id,
+              slotIndex: slot,
+              personId: assignedId,
+              status,
+              substitutedFromId,
+              notes: 'De rând în Biserică (Pelerini / Pomelnice)',
+            });
+          });
+          continue;
+        }
+
+        // ====================================================================
         // Weekly Modules (Altar Preot & Diacon, Strană, Paracliserie)
         // ====================================================================
         if (module.rotationCycle === 'weekly') {
@@ -285,7 +449,8 @@ export function generateSchedule({
           // Sub-filtering based on specific monastic roles:
           if (role.id === 'altar_preot') {
             // Weekly priest must NOT be weekendOnly (Pr. Iliescu serves only weekends)
-            qualified = qualified.filter(p => !p.weekendOnly && (p.rank === 'Ieromonah' || p.rank === 'Arhimandrit' || p.rank === 'Protosinghel'));
+            // Regular weekly altar priests: Pantelimon, Avacum, Mina, Sebastian (Starețul serves at Praznice/Hramuri)
+            qualified = qualified.filter(p => !p.weekendOnly && p.id !== 'p_pamvo' && (p.rank === 'Ieromonah' || p.rank === 'Arhimandrit' || p.rank === 'Protosinghel'));
           } else if (role.id === 'altar_diacon') {
             // Diacon candidates: Pr. Ciprian, Pr. Modest, and Pr. Petru (if Petru's active week)
             qualified = qualified.filter(p => {
@@ -295,8 +460,8 @@ export function generateSchedule({
               return p.rank.includes('Diacon') || p.rank.includes('Ierodiacon');
             });
           } else if (role.id === 'strana_psalt') {
-            // Protopsalt 1: Glichentie, Ciprian, Mina, Avacum
-            qualified = qualified.filter(p => ['p_glichentie', 'p_ciprian', 'p_mina', 'p_avacum'].includes(p.id) || p.skills.includes('strana'));
+            // Protopsalt 1: Grichentie, Ciprian, Mina, Avacum
+            qualified = qualified.filter(p => ['p_grichentie', 'p_glichentie', 'p_ciprian', 'p_mina', 'p_avacum'].includes(p.id) || p.skills.includes('strana'));
           } else if (role.id === 'strana_ajutor') {
             // Strana 2 / Cititor: Fr. Ioan este ajutor permanent la Strană!
             const frIoan = activePersons.find(p => p.id === 'p_ioan');
@@ -320,20 +485,35 @@ export function generateSchedule({
             return getAssignmentCount(a.id, newAssignments) - getAssignmentCount(b.id, newAssignments);
           });
 
-          // Permanent role check: Fr. Ioan is permanent helper for strana_ajutor
+          // Permanent role checks
           if (role.id === 'strana_ajutor') {
             const frIoan = qualified.find(p => p.id === 'p_ioan');
             if (frIoan) {
               sortedCandidates = [frIoan, ...sortedCandidates.filter(c => c.id !== 'p_ioan')];
+            }
+          } else if (role.id === 'strana_psalt') {
+            const grichentie = qualified.find(p => p.id === 'p_grichentie' || p.id === 'p_glichentie');
+            if (grichentie) {
+              sortedCandidates = [grichentie, ...sortedCandidates.filter(c => c.id !== grichentie.id)];
+            }
+          } else if (role.id === 'paracliser_principal') {
+            const arghir = qualified.find(p => p.id === 'p_arghir');
+            if (arghir) {
+              sortedCandidates = [arghir, ...sortedCandidates.filter(c => c.id !== 'p_arghir')];
             }
           }
 
           // Pick the best candidate available for the whole week or substitute when absent
           let primaryCandidate: Person | null = null;
 
-          // Fr. Ioan is permanent helper for strana_ajutor
-          if (role.id === 'strana_ajutor') {
+          if (role.id === 'altar_preot' && altarPriestOfTheWeekId) {
+            primaryCandidate = activePersons.find(p => p.id === altarPriestOfTheWeekId) || null;
+          } else if (role.id === 'strana_ajutor') {
             primaryCandidate = activePersons.find(p => p.id === 'p_ioan') || null;
+          } else if (role.id === 'strana_psalt') {
+            primaryCandidate = activePersons.find(p => p.id === 'p_grichentie' || p.id === 'p_glichentie') || null;
+          } else if (role.id === 'paracliser_principal') {
+            primaryCandidate = activePersons.find(p => p.id === 'p_arghir') || null;
           }
 
           if (!primaryCandidate) {
@@ -366,6 +546,10 @@ export function generateSchedule({
           // Now assign each day of the week
           days.forEach(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
+            const assignmentKey = `${dateStr}_${module.id}_${role.id}_${slot}`;
+            if (manualAssignmentsMap.has(assignmentKey)) {
+              return;
+            }
             if (!dailyBookings.has(dateStr)) dailyBookings.set(dateStr, new Set());
 
             let assignedId: string | null = null;
@@ -466,6 +650,9 @@ export function generateSchedule({
           // ====================================================================
           days.forEach(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
+            const assignmentKey = `${dateStr}_${module.id}_${role.id}_${slot}`;
+            if (manualAssignmentsMap.has(assignmentKey)) return;
+
             if (!dailyBookings.has(dateStr)) dailyBookings.set(dateStr, new Set());
 
             const qualified = activePersons.filter(p => p.skills.includes(module.id) && isPersonAvailableOnDate(p, day));

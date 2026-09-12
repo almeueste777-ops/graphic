@@ -266,4 +266,151 @@ describe('Monastery Scheduler Engine & Custom Community Rules', () => {
       expect(['p_avacum', 'p_damaschin']).toContain(a.personId);
     });
   });
+
+  it('correctly implements the exact 7-day rotation for În Biserică', () => {
+    // Week starting Saturday Sept 12, 2026 to Friday Sept 18, 2026
+    const startDate = parseISO('2026-09-12'); // Saturday
+    const endDate = parseISO('2026-09-18');   // Friday
+
+    const result = generateSchedule({
+      startDate,
+      endDate,
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'biserica'),
+      absences: [],
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: false,
+    });
+
+    const bisericaAssignments = result.assignments.filter(a => a.moduleId === 'biserica');
+    expect(bisericaAssignments.length).toBe(7);
+
+    // Saturday: Pr. Iliescu
+    expect(bisericaAssignments.find(a => a.date === '2026-09-12')?.personId).toBe('p_iliescu');
+    // Sunday: Pr. Pantelimon
+    expect(bisericaAssignments.find(a => a.date === '2026-09-13')?.personId).toBe('p_pantelimon');
+    // Monday: Pr. Avacum
+    expect(bisericaAssignments.find(a => a.date === '2026-09-14')?.personId).toBe('p_avacum');
+    // Tuesday: Pr. Ciprian
+    expect(bisericaAssignments.find(a => a.date === '2026-09-15')?.personId).toBe('p_ciprian');
+    // Wednesday: Pr. Avacum
+    expect(bisericaAssignments.find(a => a.date === '2026-09-16')?.personId).toBe('p_avacum');
+    // Thursday: Pr. Ciprian
+    expect(bisericaAssignments.find(a => a.date === '2026-09-17')?.personId).toBe('p_ciprian');
+    // Friday: Fr. Arghir
+    expect(bisericaAssignments.find(a => a.date === '2026-09-18')?.personId).toBe('p_arghir');
+  });
+
+  it('substitutes correctly when someone is absent from În Biserică', () => {
+    // If Pr. Avacum is absent on Monday Sept 14, 2026, Pr. Ciprian substitutes him
+    const absences: Absence[] = [
+      {
+        id: 'abs_avacum_mon',
+        personId: 'p_avacum',
+        startDate: '2026-09-14',
+        endDate: '2026-09-14',
+        reason: 'Învoire / Misiune',
+      }
+    ];
+
+    const result = generateSchedule({
+      startDate: parseISO('2026-09-14'),
+      endDate: parseISO('2026-09-14'),
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES.filter(m => m.id === 'biserica'),
+      absences,
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments: [],
+      avoidDoubleBooking: false,
+    });
+
+    const monBiserica = result.assignments.find(a => a.date === '2026-09-14' && a.moduleId === 'biserica');
+    expect(monBiserica?.status).toBe('substituted');
+    expect(monBiserica?.substitutedFromId).toBe('p_avacum');
+    expect(monBiserica?.personId).toBe('p_ciprian');
+  });
+
+  it('recalculates week 12-18 Septembrie 2026 with Pr. Sebastian absent and Pr. Avacum serving', () => {
+    const startDate = parseISO('2026-09-12');
+    const endDate = parseISO('2026-09-18');
+
+    // Pr. Sebastian este plecat 7 zile
+    const absences: Absence[] = [
+      {
+        id: 'abs_sebastian_7zile',
+        personId: 'p_sebastian',
+        startDate: '2026-09-12',
+        endDate: '2026-09-18',
+        reason: 'Învoire / Misiune',
+        details: 'Plecat 7 zile',
+      }
+    ];
+
+    // Preotul de rând al săptămânii este Pr. Avacum
+    const existingAssignments: any[] = [
+      {
+        id: '2026-09-12_altar_altar_preot_0',
+        date: '2026-09-12',
+        moduleId: 'altar',
+        roleId: 'altar_preot',
+        slotIndex: 0,
+        personId: 'p_avacum',
+        status: 'manual',
+      }
+    ];
+
+    const result = generateSchedule({
+      startDate,
+      endDate,
+      persons: DEFAULT_PERSONS,
+      modules: DEFAULT_MODULES,
+      absences,
+      substitutionRules: DEFAULT_RULES,
+      existingAssignments,
+      avoidDoubleBooking: false,
+    });
+
+    // 1. Preotul de rând slujește la altar: Pr. Avacum
+    const weeklyAltar = result.assignments.filter(a => a.roleId === 'altar_preot');
+    expect(weeklyAltar.length).toBeGreaterThanOrEqual(1);
+
+    // 2. Predică 13 Septembrie (Duminică) -> Pr. Avacum (preotul de rând)
+    const sundayPreach = result.assignments.find(a => a.date === '2026-09-13' && a.moduleId === 'predica');
+    expect(sundayPreach?.personId).toBe('p_avacum');
+
+    // 3. Predică 14 Septembrie (Înălțarea Sf. Cruci - Praznic Împărătesc) -> Pr. Avacum (înlocuitor Sebastian)
+    const inaltarePreach = result.assignments.find(a => a.date === '2026-09-14' && a.moduleId === 'predica');
+    expect(inaltarePreach?.personId).toBe('p_avacum');
+
+    // 4. Paracliser -> Fr. Arghir
+    const paracliserAssignments = result.assignments.filter(a => a.roleId === 'paracliser_principal');
+    expect(paracliserAssignments.length).toBe(7);
+    paracliserAssignments.forEach(a => {
+      expect(a.personId).toBe('p_arghir');
+    });
+
+    // 5. Strană 1 -> Pr. Grichentie, Strană 2 -> Fr. Ioan
+    const strana1Assignments = result.assignments.filter(a => a.roleId === 'strana_psalt');
+    expect(strana1Assignments.length).toBe(7);
+    strana1Assignments.forEach(a => {
+      expect(a.personId).toBe('p_grichentie');
+    });
+
+    const strana2Assignments = result.assignments.filter(a => a.roleId === 'strana_ajutor');
+    expect(strana2Assignments.length).toBe(7);
+    strana2Assignments.forEach(a => {
+      expect(a.personId).toBe('p_ioan');
+    });
+
+    // 6. În Biserică -> exact rotația celor 7 zile
+    const bisericaAssignments = result.assignments.filter(a => a.moduleId === 'biserica');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-12')?.personId).toBe('p_iliescu');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-13')?.personId).toBe('p_pantelimon');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-14')?.personId).toBe('p_avacum');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-15')?.personId).toBe('p_ciprian');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-16')?.personId).toBe('p_avacum');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-17')?.personId).toBe('p_ciprian');
+    expect(bisericaAssignments.find(a => a.date === '2026-09-18')?.personId).toBe('p_arghir');
+  });
 });

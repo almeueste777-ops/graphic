@@ -3,6 +3,7 @@ import type { Person, Module, ScheduleAssignment, Absence, SubstitutionRule, Mon
 import { generateSchedule } from '../services/scheduler';
 import { getDayLiturgicalInfo } from '../services/orthodoxCalendar';
 import { EditEntryModal } from './EditEntryModal';
+import { QuickAbsenceModal } from './QuickAbsenceModal';
 import { 
   format, 
   startOfWeek, 
@@ -24,7 +25,9 @@ import {
   Plus, 
   Repeat, 
   Info,
-  CheckCircle2
+  CheckCircle2,
+  UserMinus,
+  X
 } from 'lucide-react';
 import { renderModuleIcon } from '../utils/iconHelper';
 
@@ -39,6 +42,8 @@ interface ScheduleGridProps {
   setSchedule: (updater: ScheduleAssignment[] | ((prev: ScheduleAssignment[]) => ScheduleAssignment[])) => void;
   settings: MonasterySettings;
   onNavigateToPrint: () => void;
+  addAbsence?: (absence: Omit<Absence, 'id'>) => Absence;
+  deleteAbsence?: (id: string) => void;
 }
 
 export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
@@ -52,6 +57,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   setSchedule,
   settings,
   onNavigateToPrint,
+  addAbsence,
+  deleteAbsence,
 }) => {
   const [selectedSlot, setSelectedSlot] = useState<{
     date: string;
@@ -61,6 +68,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     assignment?: ScheduleAssignment;
   } | null>(null);
 
+  const [isQuickAbsenceOpen, setIsQuickAbsenceOpen] = useState(false);
   const [generationAlerts, setGenerationAlerts] = useState<string[] | null>(null);
 
   // Week calculation (defaults to Saturday = 6 monastic typikon)
@@ -70,6 +78,13 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const weekRangeTitle = `${format(weekStart, 'd MMMM', { locale: ro })} – ${format(weekEnd, 'd MMMM yyyy', { locale: ro })}`;
+  const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+  const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
+
+  // Active absences during this viewed week
+  const activeWeekAbsences = absences.filter(a => {
+    return a.startDate <= weekEndStr && a.endDate >= weekStartStr;
+  });
 
   // Find assignment helper
   const getAssignment = (dateStr: string, moduleId: string, roleId: string, slotIndex: number) => {
@@ -109,6 +124,61 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     } else {
       setGenerationAlerts([]);
     }
+  };
+
+  // Quick absence handler: adds absence and recalculates schedule immediately
+  const handleQuickAbsenceAndRecalculate = (newAbsenceData: Omit<Absence, 'id'>) => {
+    let createdAbsence: Absence;
+    if (addAbsence) {
+      createdAbsence = addAbsence(newAbsenceData);
+    } else {
+      createdAbsence = {
+        ...newAbsenceData,
+        id: `abs_${Date.now()}`,
+      };
+    }
+    const updatedAbsences = [...absences, createdAbsence];
+
+    const result = generateSchedule({
+      startDate: weekStart,
+      endDate: weekEnd,
+      persons,
+      modules,
+      absences: updatedAbsences,
+      substitutionRules: rules,
+      existingAssignments: schedule,
+      avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+    });
+
+    setSchedule(result.assignments);
+    const personObj = persons.find(p => p.id === newAbsenceData.personId);
+    setGenerationAlerts([
+      `Învoire înregistrată: ${personObj?.name || 'Părintele'} este plecat (${newAbsenceData.startDate} – ${newAbsenceData.endDate}). Programul a fost recalculat cu înlocuitori!`,
+      ...result.warnings,
+    ]);
+  };
+
+  // Cancel/remove absence and recalculate week
+  const handleRemoveAbsence = (absenceId: string) => {
+    if (deleteAbsence) {
+      deleteAbsence(absenceId);
+    }
+    const updatedAbsences = absences.filter(a => a.id !== absenceId);
+    const result = generateSchedule({
+      startDate: weekStart,
+      endDate: weekEnd,
+      persons,
+      modules,
+      absences: updatedAbsences,
+      substitutionRules: rules,
+      existingAssignments: schedule,
+      avoidDoubleBooking: settings.autoAvoidDoubleBooking,
+    });
+    setSchedule(result.assignments);
+    setGenerationAlerts([
+      'Învoirea a fost ștearsă. Programul a fost recalculat.',
+      ...result.warnings,
+    ]);
   };
 
   // Clear current week
@@ -197,7 +267,16 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center space-x-2 w-full md:w-auto justify-end">
+        <div className="flex items-center space-x-2 w-full md:w-auto justify-end flex-wrap gap-y-2">
+          <button
+            onClick={() => setIsQuickAbsenceOpen(true)}
+            className="flex items-center space-x-2 px-3.5 py-2 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 text-xs font-semibold shadow-sm active:scale-95 transition-all"
+            title="Înregistrează părinte plecat (X zile) și recalculează"
+          >
+            <UserMinus className="w-3.5 h-3.5 text-amber-400" />
+            <span>Părinte Plecat (X zile)</span>
+          </button>
+
           <button
             onClick={handleAutoGenerate}
             className="apple-gold-button flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-2 rounded-full text-xs font-semibold shadow-md active:scale-95 transition-all"
@@ -224,6 +303,58 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Active Absences in Current Week */}
+      {activeWeekAbsences.length > 0 && (
+        <div className="apple-glass rounded-2xl p-3 sm:p-4 border border-amber-500/25 bg-amber-950/20 shadow-lg animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center space-x-2.5">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+              </span>
+              <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                Părinți plecați în această săptămână ({activeWeekAbsences.length}):
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center">
+              {activeWeekAbsences.map(abs => {
+                const person = persons.find(p => p.id === abs.personId);
+                return (
+                  <div 
+                    key={abs.id} 
+                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-stone-900/80 border border-amber-500/30 text-xs text-white shadow-sm"
+                  >
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full" 
+                      style={{ backgroundColor: person?.colorTag || '#d97706' }} 
+                    />
+                    <span className="font-semibold text-amber-200">
+                      {person?.name || 'Părinte'}
+                    </span>
+                    <span className="text-[10px] text-white/50">
+                      ({abs.startDate.slice(5)} – {abs.endDate.slice(5)})
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">
+                      {abs.reason}
+                    </span>
+                    {deleteAbsence && (
+                      <button
+                        onClick={() => handleRemoveAbsence(abs.id)}
+                        className="w-4 h-4 rounded-full hover:bg-rose-500/20 text-white/40 hover:text-rose-300 flex items-center justify-center transition-all ml-1"
+                        title="Șterge învoirea și re-integrează în program"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Generation Alerts (Apple Toast / Banner style) */}
       {generationAlerts && (
@@ -497,6 +628,15 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
           onClose={() => setSelectedSlot(null)}
         />
       )}
+
+      {/* Quick Absence Modal (Pr. e plecat X zile) */}
+      <QuickAbsenceModal
+        isOpen={isQuickAbsenceOpen}
+        onClose={() => setIsQuickAbsenceOpen(false)}
+        persons={persons}
+        defaultDate={weekStart}
+        onAddAbsenceAndRecalculate={handleQuickAbsenceAndRecalculate}
+      />
     </div>
   );
 };
