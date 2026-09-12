@@ -43,6 +43,7 @@ type PrintFontSizeMode = 'compact' | 'normal' | 'large' | 'extra_large';
 type FontWeightMode = 'bold' | 'black' | 'normal';
 type OrnamentStyle = 'voievodal' | 'classic' | 'minimal';
 type OrnamentColorMode = 'ruby' | 'black' | 'gold';
+type PrintInkMode = 'laser_bw' | 'color';
 
 interface PrintableViewProps {
   currentDate: Date;
@@ -66,6 +67,10 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
   // Layout & View State - Default to 'modular' (Large Byzantine Boxes)
   const [layoutMode, setLayoutMode] = useState<PrintLayoutMode>('modular');
   
+  // High-Contrast Laser vs Color Profile (Default to 'laser_bw' for crisp physical printing)
+  const [printInkMode, setPrintInkMode] = useState<PrintInkMode>('laser_bw');
+  const [showPrintGuide, setShowPrintGuide] = useState<boolean>(true);
+
   // Typography & Legibility Engine
   const [fontTheme, setFontTheme] = useState<FontTheme>('merriweather');
   const [fontSizeMode, setFontSizeMode] = useState<PrintFontSizeMode>('large');
@@ -256,9 +261,9 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
     black: '#111827',
     gold: '#8c6b12',
   };
-  const activeOrnamentColor = ornamentColors[ornamentColor];
+  const activeOrnamentColor = printInkMode === 'laser_bw' ? '#000000' : ornamentColors[ornamentColor];
 
-  const contrastClasses = isHighContrast
+  const contrastClasses = (isHighContrast || printInkMode === 'laser_bw')
     ? 'text-black border-black'
     : 'text-stone-900 border-stone-800';
 
@@ -359,6 +364,34 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
         {/* Sub-toolbar: Font System, Accessibility & Byzantine Ornaments Bar */}
         <div className="apple-glass rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs border border-white/10">
           <div className="flex flex-wrap items-center gap-2">
+            {/* Print Profile Switcher (Laser B&W vs Color) */}
+            <div className="flex items-center space-x-1 bg-black/40 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setPrintInkMode('laser_bw')}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  printInkMode === 'laser_bw'
+                    ? 'bg-amber-400/25 border border-amber-400/50 text-amber-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Recomandat: contrast maxim pe hârtie, negru pur, fără griuri șterse la imprimante laser B&W"
+              >
+                <Printer className="w-3.5 h-3.5 text-amber-400" />
+                <span>Laser Alb-Negru</span>
+                <span className="text-[9px] bg-amber-400/25 text-amber-200 px-1 rounded font-bold">Contrast Maxim</span>
+              </button>
+              <button
+                onClick={() => setPrintInkMode('color')}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  printInkMode === 'color'
+                    ? 'bg-rose-500/25 border border-rose-400/50 text-rose-300 shadow-xs'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Profil color cu nuanțe de rubiniu bisericesc, auriu și accente liturgice"
+              >
+                <span>🎨 Color Liturgic</span>
+              </button>
+            </div>
+
             {/* Font Picker Button */}
             <button
               onClick={() => setActiveToolbarTab(activeToolbarTab === 'typography' ? null : 'typography')}
@@ -703,25 +736,68 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
             />
           </div>
         )}
+
+        {/* PRINT ADVICE BANNER (A4 1 PAGE OPTIMIZATION) */}
+        {showPrintGuide && (
+          <div className="apple-glass rounded-2xl p-3.5 border border-amber-400/30 flex items-start justify-between gap-3 text-xs bg-black/40 animate-in fade-in duration-200">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 rounded-xl bg-amber-400/15 text-amber-400 shrink-0 mt-0.5 border border-amber-400/30">
+                <Printer className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <div className="font-bold text-amber-200 text-xs flex items-center space-x-2">
+                  <span>💡 Ghid pentru tipărire impecabilă pe 1 singură foaie A4:</span>
+                  <span className="text-[9.5px] font-semibold text-amber-300 bg-amber-400/20 px-1.5 py-0.2 rounded border border-amber-400/30">Setări Recomandate</span>
+                </div>
+                <p className="text-[11px] text-white/80 leading-relaxed">
+                  Când apăsați <strong className="text-amber-200">Tipărește A4 / PDF</strong> (sau tastați <kbd className="px-1 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">Ctrl + P</kbd>), asigurați-vă că aveți aceste setări în fereastra imprimantei:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px] text-white/90 font-medium">
+                  <div className="flex items-center space-x-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                    <span className="text-amber-400 font-black">1.</span>
+                    <span><strong>Orientare:</strong> Vedere (Landscape)</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                    <span className="text-amber-400 font-black">2.</span>
+                    <span><strong>Margini:</strong> Minime (sau Fără / None)</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                    <span className="text-amber-400 font-black">3.</span>
+                    <span><strong>Debifați:</strong> Anteturi și subsoluri</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPrintGuide(false)}
+              className="text-white/40 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0 text-xs"
+              title="Închide sfatul"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ================= PRINTABLE SHEET AREA (OPTIMIZED FOR A4 LANDSCAPE) ================= */}
-      <div className={`print-sheet-landscape bg-[#ffffff] text-[#0c0a09] p-4 sm:p-6 rounded-2xl shadow-2xl border ${contrastClasses} ${fontThemeClasses[fontTheme].body} print:p-0 print:border-none print:shadow-none print:rounded-none relative`}>
+      <div className={`print-sheet-landscape bg-[#ffffff] text-[#0c0a09] p-4 sm:p-6 rounded-2xl shadow-2xl border ${contrastClasses} ${fontThemeClasses[fontTheme].body} print:p-0 print:border-none print:shadow-none print:rounded-none relative ${printInkMode === 'laser_bw' ? 'laser-bw-print' : ''}`}>
         
         {/* Outer Frame with Byzantine Ornaments */}
-        <div className={`p-4 relative min-h-[500px] flex flex-col justify-between ${
+        <div className={`p-3 sm:p-4 relative min-h-[500px] flex flex-col justify-between print-frame-contain ${
           ornamentStyle !== 'minimal'
-            ? 'border-[3px] border-[#1f1915] outline outline-1 outline-[#78141c] outline-offset-[-5px]' 
-            : 'border border-stone-800'
+            ? printInkMode === 'laser_bw'
+              ? 'border-[3px] border-black outline outline-1 outline-black outline-offset-[-5px]'
+              : 'border-[3px] border-[#1f1915] outline outline-1 outline-[#78141c] outline-offset-[-5px]' 
+            : 'border-2 border-stone-900'
         }`}>
 
           {/* BYZANTINE CORNERS (VOIEVODAL STYLE) */}
           {ornamentStyle === 'voievodal' && (
             <>
-              <ByzantineCorner position="top-left" color={activeOrnamentColor} className="absolute top-1 left-1 w-9 h-9 sm:w-11 sm:h-11 pointer-events-none" />
-              <ByzantineCorner position="top-right" color={activeOrnamentColor} className="absolute top-1 right-1 w-9 h-9 sm:w-11 sm:h-11 pointer-events-none" />
-              <ByzantineCorner position="bottom-left" color={activeOrnamentColor} className="absolute bottom-1 left-1 w-9 h-9 sm:w-11 sm:h-11 pointer-events-none" />
-              <ByzantineCorner position="bottom-right" color={activeOrnamentColor} className="absolute bottom-1 right-1 w-9 h-9 sm:w-11 sm:h-11 pointer-events-none" />
+              <ByzantineCorner position="top-left" color={activeOrnamentColor} className="absolute top-1 left-1 w-8 h-8 sm:w-10 sm:h-10 print:w-6 print:h-6 pointer-events-none" />
+              <ByzantineCorner position="top-right" color={activeOrnamentColor} className="absolute top-1 right-1 w-8 h-8 sm:w-10 sm:h-10 print:w-6 print:h-6 pointer-events-none" />
+              <ByzantineCorner position="bottom-left" color={activeOrnamentColor} className="absolute bottom-1 left-1 w-8 h-8 sm:w-10 sm:h-10 print:w-6 print:h-6 pointer-events-none" />
+              <ByzantineCorner position="bottom-right" color={activeOrnamentColor} className="absolute bottom-1 right-1 w-8 h-8 sm:w-10 sm:h-10 print:w-6 print:h-6 pointer-events-none" />
             </>
           )}
 
@@ -729,34 +805,34 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
           <div>
             {/* BYZANTINE HEADPIECE / FRONTISPICIU */}
             {ornamentStyle === 'voievodal' && (
-              <div className="flex justify-center -mt-1 mb-1">
-                <ByzantineHeadpiece color={activeOrnamentColor} crossColor={activeOrnamentColor} className="w-80 sm:w-[480px] h-5 sm:h-6" />
+              <div className="flex justify-center -mt-1 mb-1 print:-mt-1.5 print:mb-0.5">
+                <ByzantineHeadpiece color={activeOrnamentColor} crossColor={activeOrnamentColor} className="w-80 sm:w-[480px] h-5 sm:h-6 print:h-3 print:w-64" />
               </div>
             )}
 
             {/* MONASTERY HEADER */}
-            <div className="flex items-center justify-between border-b-2 border-stone-900 pb-2 px-2">
+            <div className="flex items-center justify-between border-b-2 border-stone-900 pb-2 px-2 print:pb-0.5 print:px-1">
               <div className="flex items-center space-x-2.5">
                 {ornamentStyle !== 'minimal' && (
-                  <ByzantineCross className="w-6 h-6 flex-shrink-0" color={activeOrnamentColor} />
+                  <ByzantineCross className="w-5 h-5 sm:w-6 sm:h-6 print:w-4 print:h-4 flex-shrink-0" color={activeOrnamentColor} />
                 )}
                 <div>
-                  <span className={`${fontThemeClasses[fontTheme].header} text-[10px] font-black uppercase tracking-[0.25em] block leading-none`} style={{ color: activeOrnamentColor }}>
+                  <span className={`${fontThemeClasses[fontTheme].header} text-[10px] print:text-[8px] font-black uppercase tracking-[0.25em] block leading-none`} style={{ color: printInkMode === 'laser_bw' ? '#000000' : activeOrnamentColor }}>
                     Biserica Ortodoxă Română
                   </span>
-                  <h1 className={`${fontThemeClasses[fontTheme].header} font-black text-xl sm:text-2xl uppercase tracking-wider text-stone-950 leading-tight mt-0.5`}>
+                  <h1 className={`${fontThemeClasses[fontTheme].header} font-black text-xl sm:text-2xl print:text-base uppercase tracking-wider text-stone-950 leading-tight mt-0.5`}>
                     {settings.monasteryName}
                   </h1>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="inline-block px-3 py-0.5 border border-stone-900 bg-stone-50">
-                  <h2 className={`${fontThemeClasses[fontTheme].header} font-bold text-xs uppercase tracking-widest text-stone-900`}>
+                <div className="inline-block px-3 py-0.5 print:px-2 print:py-0 border border-stone-900 bg-stone-50">
+                  <h2 className={`${fontThemeClasses[fontTheme].header} font-bold text-xs print:text-[10px] uppercase tracking-widest text-stone-900`}>
                     Graficul Slujbelor & Ascultărilor
                   </h2>
                 </div>
-                <p className="text-xs text-stone-800 mt-0.5 font-medium font-sans">
+                <p className="text-xs print:text-[9.5px] text-stone-800 mt-0.5 print:mt-0 font-medium font-sans">
                   Săptămâna: <strong className="font-bold underline text-stone-950">{weekRangeFormatted}</strong>
                 </p>
               </div>
@@ -766,68 +842,68 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
             {layoutMode === 'modular' && (
               <div className="mt-2.5 space-y-2.5">
                 {/* 4 DREPTUNGHIURI PRINCIPALE LÂNGĂ LALTĂ (ALTAR & PARACLISERIE, PREDICA, STAT ÎN BISERICĂ, ȘOFERIE) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-2.5 print:gap-1.5 mt-2 print:mt-1">
                   
                   {/* DREPTUNGHIUL 1: ALTARUL & PARACLISERIA (cu STRANA) */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs print:border-[1.5px] print:shadow-none">
                     <div>
                       <div 
-                        className="text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
-                        style={{ backgroundColor: activeOrnamentColor }}
+                        className="text-white print-inv-text px-2.5 py-1 print:py-0.5 print:px-1.5 text-xs print:text-[10px] font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
+                        style={{ backgroundColor: printInkMode === 'laser_bw' ? '#000000' : activeOrnamentColor }}
                       >
                         <div className="flex items-center space-x-1.5">
                           <Church className="w-3.5 h-3.5 text-amber-200" />
                           <span className={fontThemeClasses[fontTheme].header}>ALTARUL & PARACLISERIA</span>
                         </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
+                        <span className="text-[9px] print:text-[7.5px] font-sans font-normal opacity-90 lowercase bg-white/20 text-white px-1.5 py-0.2 rounded">săptămână</span>
                       </div>
 
-                      <div className="p-2 space-y-1.5">
+                      <div className="p-2 print:p-1 space-y-1.5 print:space-y-0.5">
                         {/* Secțiunea SFÂNTUL ALTAR */}
-                        <div className="border-b border-stone-200 pb-1.5 space-y-1">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-[#78141c] flex items-center space-x-1">
+                        <div className="border-b border-stone-200 print:border-black pb-1.5 print:pb-1 space-y-1 print:space-y-0.5">
+                          <div className={`text-[10px] print:text-[8px] font-black uppercase tracking-wider flex items-center space-x-1 ${printInkMode === 'laser_bw' ? 'text-black' : 'text-[#78141c]'}`}>
                             <span>❖</span>
                             <span>SFÂNTUL ALTAR:</span>
                           </div>
 
                           {/* Preot de rând */}
-                          <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
+                          <div className={`p-1.5 print:p-1 rounded-xs ${printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-stone-50 border border-stone-300'}`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-[9.5px] uppercase font-bold text-stone-700 tracking-wider">
+                              <span className="text-[9.5px] print:text-[8px] uppercase font-bold text-stone-800 tracking-wider">
                                 Preot Slujitor de Rând:
                               </span>
-                              <span className="text-[8.5px] text-stone-500 font-sans">Toată săpt.</span>
+                              <span className="text-[8.5px] print:text-[7.5px] text-stone-600 font-sans">Toată săpt.</span>
                             </div>
-                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                            <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
                               {getPersonName(altarPreotAssignment?.personId, true)}
                             </div>
                             {altarPreotAssignment?.notes && (
-                              <div className="text-[8.5px] text-stone-600 italic mt-0.5">{altarPreotAssignment.notes}</div>
+                              <div className="text-[8.5px] print:text-[7px] text-stone-600 italic mt-0.5">{altarPreotAssignment.notes}</div>
                             )}
                           </div>
 
                           {/* Diacon slujitor */}
-                          <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
+                          <div className={`p-1.5 print:p-1 rounded-xs ${printInkMode === 'laser_bw' ? 'bg-stone-50 border border-stone-800 print:border-black' : 'bg-stone-50 border border-stone-300'}`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-[9.5px] uppercase font-bold text-stone-700 tracking-wider">
+                              <span className="text-[9.5px] print:text-[8px] uppercase font-bold text-stone-800 tracking-wider">
                                 Diacon Slujitor:
                               </span>
-                              <span className="text-[8.5px] text-stone-500 font-sans">Sf. Liturghie</span>
+                              <span className="text-[8.5px] print:text-[7.5px] text-stone-600 font-sans">Sf. Liturghie</span>
                             </div>
-                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                            <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
                               {getPersonName(altarDiaconAssignment?.personId, true)}
                             </div>
                           </div>
 
                           {/* Sâmbătă Protos */}
-                          <div className="bg-amber-50/40 border border-amber-300/80 p-1.5 rounded-xs">
+                          <div className={`p-1.5 print:p-1 rounded-xs ${printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-amber-50/40 border border-amber-300/80'}`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-[9.5px] uppercase font-bold text-amber-950 tracking-wider">
+                              <span className={`text-[9.5px] print:text-[8px] uppercase font-bold tracking-wider ${printInkMode === 'laser_bw' ? 'text-black' : 'text-amber-950'}`}>
                                 Sâmbătă Protos & Proscomidie:
                               </span>
-                              <span className="text-[8.5px] text-amber-900 font-sans font-semibold">Weekend</span>
+                              <span className={`text-[8.5px] print:text-[7.5px] font-sans font-semibold ${printInkMode === 'laser_bw' ? 'text-black' : 'text-amber-900'}`}>Weekend</span>
                             </div>
-                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                            <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
                               {altarProtosAssignment?.personId 
                                 ? getPersonName(altarProtosAssignment.personId, true) 
                                 : getPersonName(persons.find(p => p.id === 'p_iliescu')?.id, true)}
@@ -836,49 +912,49 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                         </div>
 
                         {/* Secțiunea PARACLISERIE */}
-                        <div className="border-b border-stone-200 pb-1.5 space-y-1">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-[#c2410c] flex items-center space-x-1">
+                        <div className="border-b border-stone-200 print:border-black pb-1.5 print:pb-1 space-y-1 print:space-y-0.5">
+                          <div className={`text-[10px] print:text-[8px] font-black uppercase tracking-wider flex items-center space-x-1 ${printInkMode === 'laser_bw' ? 'text-black' : 'text-[#c2410c]'}`}>
                             <Bell className="w-3 h-3 text-[#c2410c]" />
                             <span>PARACLISERIE:</span>
                           </div>
 
-                          <div className="bg-stone-50 border border-stone-300 p-1.5 rounded-xs">
+                          <div className={`p-1.5 print:p-1 rounded-xs ${printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-stone-50 border border-stone-300'}`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-[9.5px] uppercase font-bold text-stone-700 tracking-wider">
+                              <span className="text-[9.5px] print:text-[8px] uppercase font-bold text-stone-800 tracking-wider">
                                 Paracliser de Rând:
                               </span>
-                              <span className="text-[8.5px] text-stone-500 font-sans">Toată săpt.</span>
+                              <span className="text-[8.5px] print:text-[7.5px] text-stone-600 font-sans">Toată săpt.</span>
                             </div>
-                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-0.5 leading-snug`}>
+                            <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug print:text-[11.5px] print:leading-tight`}>
                               {getPersonName(paracliserAssignment?.personId, true)}
                             </div>
-                            <div className="text-[8.5px] text-stone-600 italic mt-0.5">
-                              Toaca, clopotele, cădelnița & ordinea în Altar
+                            <div className="text-[8px] print:text-[7px] text-stone-600 italic mt-0.5">
+                              Toaca, clopotele, cădelnița & Altar
                             </div>
                           </div>
                         </div>
 
                         {/* Secțiunea CÂNTARE LA STRANĂ */}
-                        <div className="space-y-1 pt-0.5">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-[#8c6b12] flex items-center space-x-1">
+                        <div className="space-y-1 print:space-y-0.5 pt-0.5">
+                          <div className={`text-[10px] print:text-[8px] font-black uppercase tracking-wider flex items-center space-x-1 ${printInkMode === 'laser_bw' ? 'text-black' : 'text-[#8c6b12]'}`}>
                             <BookOpen className="w-3 h-3 text-[#8c6b12]" />
                             <span>CÂNTARE LA STRANĂ:</span>
                           </div>
 
-                          <div className="bg-stone-50 border border-stone-300 p-1 rounded-xs">
-                            <div className="flex items-center justify-between text-[9px] text-stone-600 font-bold uppercase">
+                          <div className={`p-1 print:p-0.5 rounded-xs ${printInkMode === 'laser_bw' ? 'bg-stone-50 border border-stone-800 print:border-black' : 'bg-stone-50 border border-stone-300'}`}>
+                            <div className="flex items-center justify-between text-[9px] print:text-[7.5px] text-stone-700 font-bold uppercase">
                               <span>Protopsalt (Strana 1):</span>
                             </div>
-                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 leading-snug`}>
+                            <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} leading-snug print:text-[11px] print:leading-tight`}>
                               {getPersonName(stranaPsaltAssignment?.personId, true)}
                             </div>
                           </div>
 
-                          <div className="bg-stone-50 border border-stone-300 p-1 rounded-xs">
-                            <div className="flex items-center justify-between text-[9px] text-stone-600 font-bold uppercase">
+                          <div className={`p-1 print:p-0.5 rounded-xs ${printInkMode === 'laser_bw' ? 'bg-stone-50 border border-stone-800 print:border-black' : 'bg-stone-50 border border-stone-300'}`}>
+                            <div className="flex items-center justify-between text-[9px] print:text-[7.5px] text-stone-700 font-bold uppercase">
                               <span>Ajutor Permanent / Cititor:</span>
                             </div>
-                            <div className={`${fontSizes.name} ${weightClass} text-stone-950 leading-snug`}>
+                            <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} leading-snug print:text-[11px] print:leading-tight`}>
                               {getPersonName(stranaAjutorAssignment?.personId, true)}
                             </div>
                           </div>
@@ -886,24 +962,29 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
+                    <div className="px-2 py-1 print:py-0.5 print:px-1 bg-stone-100/70 border-t border-stone-300 print:border-black text-[9px] print:text-[7.5px] text-stone-600 font-sans italic text-center">
                       Slujbele celor 7 Laude bisericești și Sfânta Liturghie
                     </div>
                   </div>
 
                   {/* DREPTUNGHIUL 2: DOAR ZILELE ÎN CARE SE PREDICĂ ȘI CINE O FACE */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs print:border-[1.5px] print:shadow-none">
                     <div>
-                      <div className="bg-[#b45309] text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900">
+                      <div 
+                        className="text-white print-inv-text px-2.5 py-1 print:py-0.5 print:px-1.5 text-xs print:text-[10px] font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
+                        style={{ backgroundColor: printInkMode === 'laser_bw' ? '#000000' : '#b45309' }}
+                      >
                         <div className="flex items-center space-x-1.5">
                           <Scroll className="w-3.5 h-3.5 text-amber-200" />
                           <span className={fontThemeClasses[fontTheme].header}>CINE PREDICĂ PE ZILE</span>
                         </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">amvon</span>
+                        <span className="text-[9px] print:text-[7.5px] font-sans font-normal opacity-90 lowercase bg-white/20 text-white px-1.5 py-0.2 rounded">amvon</span>
                       </div>
 
-                      <div className="p-2 space-y-2">
-                        <div className="text-[10px] font-bold text-amber-950 uppercase tracking-wider bg-amber-50 p-1 border border-amber-200 text-center rounded-xs">
+                      <div className="p-2 print:p-1 space-y-1.5 print:space-y-0.5">
+                        <div className={`text-[10px] print:text-[8px] font-black uppercase tracking-wider p-1 print:p-0.5 border text-center rounded-xs ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-100 border-stone-800 text-stone-950' : 'bg-amber-50 border-amber-200 text-amber-950'
+                        }`}>
                           Doar zilele cu predică la Liturghie
                         </div>
 
@@ -913,19 +994,23 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                           const name = getPersonName(assign?.personId, true);
                           const fallbackName = getPersonName(altarPreotAssignment?.personId, true);
                           return (
-                            <div key={d.dateStr} className="p-2 bg-red-50/70 border-2 border-red-300 rounded-xs space-y-0.5">
+                            <div key={d.dateStr} className={`p-2 print:p-1 rounded-xs space-y-0.5 ${
+                              printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-red-50/70 border-2 border-red-300'
+                            }`}>
                               <div className="flex items-center justify-between">
-                                <span className="text-[10.5px] font-black uppercase tracking-wider text-red-900 flex items-center space-x-1">
-                                  <span className="text-red-600 text-xs">✝</span>
+                                <span className={`text-[10.5px] print:text-[8px] font-black uppercase tracking-wider flex items-center space-x-1 ${
+                                  printInkMode === 'laser_bw' ? 'text-black' : 'text-red-900'
+                                }`}>
+                                  <span className="text-red-600 text-xs print:text-[10px]">✝</span>
                                   <span>Duminică (Sf. Liturghie):</span>
                                 </span>
-                                <span className="text-[9.5px] font-bold text-red-800 font-mono">{d.dateFormatted}</span>
+                                <span className="text-[9.5px] print:text-[7.5px] font-bold text-stone-800 font-mono">{d.dateFormatted}</span>
                               </div>
-                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
+                              <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug text-sm sm:text-base print:text-[11.5px] print:leading-tight`}>
                                 {name !== '—' ? name : `${fallbackName} (Preot de rând)`}
                               </div>
-                              <div className="text-[9px] text-stone-600 italic">
-                                Preotul de rând predică doar duminica la Sfânta Liturghie
+                              <div className="text-[9px] print:text-[7px] text-stone-600 italic">
+                                Preotul de rând predică duminica la Sfânta Liturghie
                               </div>
                             </div>
                           );
@@ -937,17 +1022,21 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                           const name = getPersonName(assign?.personId, true);
                           const iliescu = persons.find(p => p.id === 'p_iliescu');
                           return (
-                            <div key={d.dateStr} className="p-2 bg-amber-50/60 border-2 border-amber-300 rounded-xs space-y-0.5">
+                            <div key={d.dateStr} className={`p-2 print:p-1 rounded-xs space-y-0.5 ${
+                              printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-amber-50/60 border-2 border-amber-300'
+                            }`}>
                               <div className="flex items-center justify-between">
-                                <span className="text-[10.5px] font-black uppercase tracking-wider text-amber-950">
+                                <span className={`text-[10.5px] print:text-[8px] font-black uppercase tracking-wider ${
+                                  printInkMode === 'laser_bw' ? 'text-black' : 'text-amber-950'
+                                }`}>
                                   Sâmbătă:
                                 </span>
-                                <span className="text-[9.5px] font-bold text-amber-900 font-mono">{d.dateFormatted}</span>
+                                <span className="text-[9.5px] print:text-[7.5px] font-bold text-stone-800 font-mono">{d.dateFormatted}</span>
                               </div>
-                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
+                              <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug text-sm sm:text-base print:text-[11.5px] print:leading-tight`}>
                                 {name !== '—' ? name : iliescu ? getPersonName(iliescu.id, true) : 'Pr. Iliescu / Diacon de rând'}
                               </div>
-                              <div className="text-[9px] text-stone-600 italic">
+                              <div className="text-[9px] print:text-[7px] text-stone-600 italic">
                                 2 sâmbete Pr. Iliescu, 2 sâmbete diacon prin rotație
                               </div>
                             </div>
@@ -959,18 +1048,22 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                           const assign = predicaModule ? getAssignment(d.dateStr, predicaModule.id, predicaModule.roles[0]?.id, 0) : null;
                           const name = getPersonName(assign?.personId, true);
                           return (
-                            <div key={d.dateStr} className="p-2 bg-amber-50 border-2 border-amber-400 rounded-xs space-y-0.5">
+                            <div key={d.dateStr} className={`p-2 print:p-1 rounded-xs space-y-0.5 ${
+                              printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-amber-50 border-2 border-amber-400'
+                            }`}>
                               <div className="flex items-center justify-between">
-                                <span className="text-[10.5px] font-black uppercase tracking-wider text-red-900 flex items-center space-x-1">
-                                  <span className="text-red-600 text-xs">✝</span>
+                                <span className={`text-[10.5px] print:text-[8px] font-black uppercase tracking-wider flex items-center space-x-1 ${
+                                  printInkMode === 'laser_bw' ? 'text-black' : 'text-red-900'
+                                }`}>
+                                  <span className="text-red-600 text-xs print:text-[10px]">✝</span>
                                   <span>Praznic ({d.dayShort} {format(d.day, 'd')}):</span>
                                 </span>
-                                <span className="text-[9.5px] font-bold text-red-800 font-mono">{d.litInfo.feastTitle}</span>
+                                <span className="text-[9.5px] print:text-[7.5px] font-bold text-stone-800 font-mono">{d.litInfo.feastTitle}</span>
                               </div>
-                              <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
+                              <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug text-sm sm:text-base print:text-[11.5px] print:leading-tight`}>
                                 {name !== '—' ? name : 'Pr. Mina / Pr. Sebastian / Preot de rând'}
                               </div>
-                              <div className="text-[9px] text-stone-600 italic">
+                              <div className="text-[9px] print:text-[7px] text-stone-600 italic">
                                 Predică de praznic la amvon prin rotație
                               </div>
                             </div>
@@ -978,35 +1071,42 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                         })}
 
                         {/* Mențiune pentru celelalte zile din săptămână */}
-                        <div className="bg-stone-50 border border-stone-200 p-2 rounded-xs text-[9.5px] text-stone-700 space-y-0.5">
+                        <div className={`p-2 print:p-1 rounded-xs text-[9.5px] print:text-[7.5px] space-y-0.5 ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-50 border border-stone-800 print:border-black text-stone-950' : 'bg-stone-50 border border-stone-200 text-stone-700'
+                        }`}>
                           <span className="font-bold text-stone-900 block uppercase tracking-wide">
                             Zilele de rând (Luni – Vineri):
                           </span>
                           <p className="leading-tight text-stone-600">
-                            În zilele de rând fără sărbătoare mare <strong>nu se ține predică la amvon</strong>. Se citește Cazania sau se rostește cateheză la cererea credincioșilor.
+                            Fără sărbătoare mare <strong>nu se ține predică la amvon</strong>. Se citește Cazania / cateheză.
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Cuvântul de învățătură se rostește după Sf. Evanghelie sau la chinonic
+                    <div className="px-2 py-1 print:py-0.5 print:px-1 bg-stone-100/70 border-t border-stone-300 print:border-black text-[9px] print:text-[7.5px] text-stone-600 font-sans italic text-center">
+                      Cuvântul de învățătură se rostește după Sf. Evanghelie
                     </div>
                   </div>
 
                   {/* DREPTUNGHIUL 3: ZILELE DE STAT ÎN BISERICĂ ȘI CINE STĂ ÎMPĂRȚIT PE ZILELE DIN SĂPTĂMÂNĂ */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs print:border-[1.5px] print:shadow-none">
                     <div>
-                      <div className="bg-[#059669] text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900">
+                      <div 
+                        className="text-white print-inv-text px-2.5 py-1 print:py-0.5 print:px-1.5 text-xs print:text-[10px] font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
+                        style={{ backgroundColor: printInkMode === 'laser_bw' ? '#000000' : '#059669' }}
+                      >
                         <div className="flex items-center space-x-1.5">
                           <Eye className="w-3.5 h-3.5 text-emerald-200" />
                           <span className={fontThemeClasses[fontTheme].header}>ÎN BISERICĂ PE ZILE</span>
                         </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">pomelnice</span>
+                        <span className="text-[9px] print:text-[7.5px] font-sans font-normal opacity-90 lowercase bg-white/20 text-white px-1.5 py-0.2 rounded">pomelnice</span>
                       </div>
 
-                      <div className="p-2 space-y-1.5">
-                        <div className="text-[10px] font-bold text-emerald-950 uppercase tracking-wider bg-emerald-50 p-1 border border-emerald-200 text-center rounded-xs flex items-center justify-center space-x-1.5">
+                      <div className="p-2 print:p-1 space-y-1 print:space-y-0.5">
+                        <div className={`text-[10px] print:text-[8px] font-black uppercase tracking-wider p-1 print:p-0.5 border text-center rounded-xs flex items-center justify-center space-x-1.5 ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-100 border-stone-800 text-stone-950' : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                        }`}>
                           <Calendar className="w-3 h-3 text-emerald-700" />
                           <span>Primire Pomelnice & Pelerini (7 Zile)</span>
                         </div>
@@ -1019,29 +1119,31 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                           return (
                             <div
                               key={item.dateStr}
-                              className={`flex items-center justify-between px-2 py-1.5 rounded-xs border text-xs ${
-                                item.isSunday
+                              className={`flex items-center justify-between px-1.5 py-1 print:py-0.5 rounded-xs border text-xs print:text-[9.5px] ${
+                                printInkMode === 'laser_bw'
+                                  ? 'bg-white border-stone-800 print:border-black'
+                                  : item.isSunday
                                   ? 'bg-red-50/80 border-red-300'
                                   : item.isSaturday
                                   ? 'bg-amber-50/60 border-amber-300'
                                   : 'bg-stone-50 border-stone-200'
                               }`}
                             >
-                              <div className="flex items-center space-x-2">
-                                <span className={`w-11 text-[10.5px] font-black uppercase tracking-wider ${isWeekend ? 'text-amber-950' : 'text-stone-800'}`}>
+                              <div className="flex items-center space-x-1.5">
+                                <span className={`w-10 print:w-8 text-[10.5px] print:text-[8px] font-black uppercase tracking-wider ${isWeekend ? 'text-amber-950 font-black' : 'text-stone-800'}`}>
                                   {item.dayShort}
                                 </span>
-                                <span className="text-[9.5px] text-stone-500 font-mono">
+                                <span className="text-[9.5px] print:text-[7.5px] text-stone-500 font-mono">
                                   {format(item.day, 'd MMM')}
                                 </span>
                               </div>
 
                               <div className="text-right">
-                                <span className={`${fontSizes.name} ${weightClass} ${personName === '—' ? 'text-stone-400 italic' : 'text-stone-950'} text-xs sm:text-sm`}>
+                                <span className={`${fontSizes.name} ${weightClass} ${personName === '—' ? 'text-stone-400 italic' : printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} text-xs sm:text-sm print:text-[11px] print:leading-tight`}>
                                   {personName}
                                 </span>
                                 {assign?.notes && (
-                                  <span className="text-[8.5px] text-stone-500 italic ml-1 block sm:inline">
+                                  <span className="text-[8px] print:text-[7px] text-stone-500 italic ml-1 block sm:inline">
                                     ({assign.notes})
                                   </span>
                                 )}
@@ -1052,80 +1154,90 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
-                      Primirea pomelnicelor, pelerini, supraveghere & bună-cuviință
+                    <div className="px-2 py-1 print:py-0.5 print:px-1 bg-stone-100/70 border-t border-stone-300 print:border-black text-[9px] print:text-[7.5px] text-stone-600 font-sans italic text-center">
+                      Primirea pomelnicelor, pelerini & bună-cuviință
                     </div>
                   </div>
 
                   {/* DREPTUNGHIUL 4: ȘOFERUL DE RÂND */}
-                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs">
+                  <div className="border-2 border-stone-900 bg-white flex flex-col justify-between shadow-xs print:border-[1.5px] print:shadow-none">
                     <div>
                       <div 
-                        className="text-white px-2.5 py-1 text-xs font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
-                        style={{ backgroundColor: '#1d4ed8' }}
+                        className="text-white print-inv-text px-2.5 py-1 print:py-0.5 print:px-1.5 text-xs print:text-[10px] font-black uppercase tracking-wider flex items-center justify-between border-b-2 border-stone-900"
+                        style={{ backgroundColor: printInkMode === 'laser_bw' ? '#000000' : '#1d4ed8' }}
                       >
                         <div className="flex items-center space-x-1.5">
                           <Car className="w-3.5 h-3.5 text-blue-200" />
                           <span className={fontThemeClasses[fontTheme].header}>ȘOFERUL DE RÂND</span>
                         </div>
-                        <span className="text-[9px] font-sans font-normal opacity-90 lowercase bg-black/25 px-1.5 py-0.2 rounded">săptămână</span>
+                        <span className="text-[9px] print:text-[7.5px] font-sans font-normal opacity-90 lowercase bg-white/20 text-white px-1.5 py-0.2 rounded">săptămână</span>
                       </div>
 
-                      <div className="p-2 space-y-2">
-                        <div className="text-[10px] font-bold text-blue-950 uppercase tracking-wider bg-blue-50 p-1 border border-blue-200 text-center rounded-xs">
+                      <div className="p-2 print:p-1 space-y-1.5 print:space-y-0.5">
+                        <div className={`text-[10px] print:text-[8px] font-black uppercase tracking-wider p-1 print:p-0.5 border text-center rounded-xs ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-100 border-stone-800 text-stone-950' : 'bg-blue-50 border-blue-200 text-blue-950'
+                        }`}>
                           Transport Operativ & Auto (Toată Săpt.)
                         </div>
 
                         {/* Șofer de serviciu */}
-                        <div className="bg-stone-50 border-2 border-blue-300 p-2 rounded-xs space-y-0.5">
+                        <div className={`p-1.5 print:p-1 rounded-xs space-y-0.5 ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-50 border-2 border-stone-900 print:border-black' : 'bg-stone-50 border-2 border-blue-300'
+                        }`}>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-stone-700 tracking-wider">
+                            <span className="text-[9.5px] print:text-[8px] uppercase font-bold text-stone-800 tracking-wider">
                               Șofer de Serviciu:
                             </span>
-                            <span className="text-[9px] text-blue-700 font-bold font-sans">Toată Săptămâna</span>
+                            <span className="text-[8.5px] print:text-[7.5px] text-blue-700 font-bold font-sans">Toată Săpt.</span>
                           </div>
-                          <div className={`${fontSizes.name} ${weightClass} text-stone-950 mt-1 leading-snug text-sm sm:text-base`}>
+                          <div className={`${fontSizes.name} ${weightClass} ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-950'} mt-0.5 leading-snug text-sm sm:text-base print:text-[11.5px] print:leading-tight`}>
                             {getPersonName(soferAssignment?.personId, true)}
                           </div>
                           {soferAssignment?.notes && (
-                            <div className="text-[9px] text-stone-600 italic mt-0.5">{soferAssignment.notes}</div>
+                            <div className="text-[8.5px] print:text-[7px] text-stone-600 italic mt-0.5">{soferAssignment.notes}</div>
                           )}
                         </div>
 
                         {/* De gardă / Urgențe */}
-                        <div className="bg-blue-50/40 border border-blue-200 p-2 rounded-xs space-y-0.5">
+                        <div className={`p-1.5 print:p-1 rounded-xs space-y-0.5 ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-50 border border-stone-800 print:border-black' : 'bg-blue-50/40 border border-blue-200'
+                        }`}>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-blue-950 tracking-wider">
+                            <span className="text-[9.5px] print:text-[8px] uppercase font-bold text-blue-950 tracking-wider">
                               De Gardă & Urgențe:
                             </span>
-                            <span className="text-[9px] text-blue-800 font-sans font-bold">24h / 7</span>
+                            <span className="text-[8.5px] print:text-[7.5px] text-blue-800 font-sans font-bold">24h / 7</span>
                           </div>
-                          <div className="text-xs sm:text-sm font-bold text-stone-900 mt-0.5">
+                          <div className={`text-xs sm:text-sm print:text-[10.5px] font-bold mt-0.5 ${printInkMode === 'laser_bw' ? 'text-black' : 'text-stone-900'}`}>
                             Pr. Modest / Pr. Petru
                           </div>
-                          <div className="text-[9px] text-stone-600 italic">Disponibili pentru urgențe și drumuri lungi</div>
+                          <div className="text-[8px] print:text-[7px] text-stone-600 italic">Disponibili pentru urgențe și drumuri lungi</div>
                         </div>
 
                         {/* Domenii de deplasare */}
-                        <div className="text-[9.5px] text-stone-700 bg-stone-50 p-2 rounded border border-stone-200 space-y-1">
+                        <div className={`p-1.5 print:p-1 rounded border space-y-0.5 text-[9px] print:text-[7.5px] ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-50 border-stone-800 print:border-black text-stone-950' : 'bg-stone-50 border border-stone-200 text-stone-700'
+                        }`}>
                           <span className="font-bold text-stone-900 block uppercase tracking-wide">
                             Domenii de deplasare:
                           </span>
-                          <ul className="space-y-0.5 list-disc list-inside text-stone-600 text-[9px]">
-                            <li>Aprovizionare mănăstirească & alimente</li>
-                            <li>Transport aeroport, gară & spitale</li>
+                          <ul className="space-y-0.5 list-disc list-inside text-stone-600 text-[8.5px] print:text-[7px]">
+                            <li>Aprovizionare mănăstirească</li>
+                            <li>Transport aeroport, gară, spitale</li>
                             <li>Pelerinaje și deplasări bisericești</li>
                           </ul>
                         </div>
 
                         {/* Notă canonică */}
-                        <div className="p-1.5 bg-amber-50/60 border border-amber-200 rounded-xs text-[8.5px] text-amber-950 italic text-center">
+                        <div className={`p-1 print:p-0.5 rounded-xs text-[8px] print:text-[7px] italic text-center font-semibold ${
+                          printInkMode === 'laser_bw' ? 'bg-stone-100 border border-stone-800 print:border-black text-stone-950' : 'bg-amber-50/60 border border-amber-200 text-amber-950'
+                        }`}>
                           Plecarea din mănăstire se face exclusiv cu binecuvântarea Pr. Stareț.
                         </div>
                       </div>
                     </div>
 
-                    <div className="px-2 py-1 bg-stone-100/70 border-t border-stone-300 text-[9px] text-stone-600 font-sans italic text-center">
+                    <div className="px-2 py-1 print:py-0.5 print:px-1 bg-stone-100/70 border-t border-stone-300 print:border-black text-[9px] print:text-[7.5px] text-stone-600 font-sans italic text-center">
                       Responsabil parc auto & deplasări monahale
                     </div>
                   </div>
@@ -1554,14 +1666,14 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
           </div>
 
           {/* BOTTOM SECTION: ANNOUNCEMENTS, BYZANTINE DIVIDER & SIGNATURES */}
-          <div className="mt-3">
+          <div className="mt-2 print:mt-1">
             {/* ANNOUNCEMENTS / TIPIC FOOTER */}
             {showAnnouncements && customAnnouncement && (
-              <div className="p-2 border border-stone-900 bg-stone-50 font-sans text-xs rounded-xs">
-                <span className={`${fontThemeClasses[fontTheme].header} font-bold text-stone-950 block mb-0.5 tracking-wider text-[10px]`}>
+              <div className="p-2 print:p-1 border border-stone-900 bg-stone-50 font-sans text-xs rounded-xs print:mt-0.5">
+                <span className={`${fontThemeClasses[fontTheme].header} font-bold text-stone-950 block mb-0.5 tracking-wider text-[10px] print:text-[8px]`}>
                   ❖ RÂNDUIELI & ÎNDATORIRI SPECIALE PENTRU ACEASTĂ SĂPTĂMÂNĂ:
                 </span>
-                <p className="text-stone-900 leading-relaxed italic text-[11px]">
+                <p className="text-stone-900 leading-tight italic text-[11px] print:text-[8.5px]">
                   {customAnnouncement}
                 </p>
               </div>
@@ -1569,44 +1681,44 @@ export const PrintableView: React.FC<PrintableViewProps> = ({
 
             {/* ORNAMENTAL BYZANTINE DIVIDER BEFORE SIGNATURES */}
             {showSignatures && (
-              <div className="my-2">
+              <div className="my-1.5 print:my-0.5">
                 <ByzantineDivider color={activeOrnamentColor} />
               </div>
             )}
 
             {/* SIGNATURES BLOCK */}
             {showSignatures && (
-              <div className="pt-2 flex items-center justify-between font-sans text-xs text-stone-950 px-12 sm:px-16">
-                <div className="text-center min-w-[140px]">
-                  <p className={`${fontThemeClasses[fontTheme].header} font-bold tracking-wider text-stone-600 text-[10px]`}>
+              <div className="pt-1.5 print:pt-0.5 flex items-center justify-between font-sans text-xs text-stone-950 px-8 sm:px-16 print:px-8">
+                <div className="text-center min-w-[130px] print:min-w-[100px]">
+                  <p className={`${fontThemeClasses[fontTheme].header} font-bold tracking-wider text-stone-600 text-[10px] print:text-[8px]`}>
                     Din încredințarea
                   </p>
-                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm text-stone-900`}>
+                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm print:text-[10px] text-stone-900`}>
                     Pr. Stareț,
                   </p>
-                  <div className="h-6 flex items-center justify-center">
-                    <span className="text-[9px] text-stone-400 italic">(Semnătura)</span>
+                  <div className="h-5 print:h-2 flex items-center justify-center">
+                    <span className="text-[9px] print:text-[7.5px] text-stone-400 italic">(Semnătura)</span>
                   </div>
-                  <p className={`font-bold text-xs sm:text-sm text-stone-900 ${weightClass}`}>{settings.abbotName}</p>
+                  <p className={`font-bold text-xs sm:text-sm print:text-[10.5px] ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-900'} ${weightClass}`}>{settings.abbotName}</p>
                 </div>
 
-                <div className="text-center opacity-50 px-4">
-                  <div className="w-12 h-12 rounded-full border-2 border-dashed border-stone-400 flex items-center justify-center mx-auto text-[8px] uppercase tracking-widest text-stone-500 font-cinzel">
+                <div className="text-center opacity-60 px-4">
+                  <div className="w-11 h-11 print:w-7 print:h-7 rounded-full border-2 border-dashed border-stone-500 print:border-black flex items-center justify-center mx-auto text-[8px] print:text-[6px] uppercase tracking-widest text-stone-700 print:text-black font-cinzel">
                     Pecetea
                   </div>
                 </div>
 
-                <div className="text-center min-w-[140px]">
-                  <p className={`${fontThemeClasses[fontTheme].header} font-bold tracking-wider text-stone-600 text-[10px]`}>
+                <div className="text-center min-w-[130px] print:min-w-[100px]">
+                  <p className={`${fontThemeClasses[fontTheme].header} font-bold tracking-wider text-stone-600 text-[10px] print:text-[8px]`}>
                     Întocmit,
                   </p>
-                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm text-stone-900`}>
+                  <p className={`${fontThemeClasses[fontTheme].header} font-black text-xs sm:text-sm print:text-[10px] text-stone-900`}>
                     Pr. Eclesiarh,
                   </p>
-                  <div className="h-6 flex items-center justify-center">
-                    <span className="text-[9px] text-stone-400 italic">(Semnătura)</span>
+                  <div className="h-5 print:h-2 flex items-center justify-center">
+                    <span className="text-[9px] print:text-[7.5px] text-stone-400 italic">(Semnătura)</span>
                   </div>
-                  <p className={`font-bold text-xs sm:text-sm text-stone-900 ${weightClass}`}>{settings.ecclesiarchName}</p>
+                  <p className={`font-bold text-xs sm:text-sm print:text-[10.5px] ${printInkMode === 'laser_bw' ? 'text-black font-black' : 'text-stone-900'} ${weightClass}`}>{settings.ecclesiarchName}</p>
                 </div>
               </div>
             )}

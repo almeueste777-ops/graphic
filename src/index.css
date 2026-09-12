@@ -156,17 +156,28 @@
 }
 
 /* Printable Sheet & A4 Landscape Optimization */
+@page {
+  size: A4 landscape;
+  margin: 4mm 5mm 4mm 5mm;
+}
+
 @media print {
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-sizing: border-box !important;
+  }
+
   html, body, #root, main {
     background-color: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 198mm !important;
+    overflow: hidden !important;
   }
 
   .no-print {
@@ -177,19 +188,35 @@
     display: block !important;
   }
 
-  @page {
-    size: A4 landscape;
-    margin: 5mm 6mm 5mm 6mm;
-  }
-
   .print-sheet-landscape {
     box-sizing: border-box !important;
     width: 100% !important;
     max-width: 100% !important;
+    height: 196mm !important;
+    max-height: 196mm !important;
+    overflow: hidden !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
     background-color: #ffffff !important;
-    color: #0c0a09 !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .print-frame-contain {
+    height: 194mm !important;
+    max-height: 194mm !important;
+    padding: 1.5mm 2.5mm !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
   }
 
   table {
@@ -200,6 +227,41 @@
   tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+  }
+
+  /* Laser B&W High-Contrast Print Rules */
+  .laser-bw-print {
+    color: #000000 !important;
+  }
+
+  .laser-bw-print .border-stone-200,
+  .laser-bw-print .border-stone-300,
+  .laser-bw-print .border-stone-400 {
+    border-color: #000000 !important;
+  }
+
+  .laser-bw-print .border-stone-800,
+  .laser-bw-print .border-stone-900 {
+    border-color: #000000 !important;
+  }
+
+  .laser-bw-print .text-stone-500,
+  .laser-bw-print .text-stone-600,
+  .laser-bw-print .text-stone-700 {
+    color: #000000 !important;
+  }
+
+  .laser-bw-print .text-stone-400 {
+    color: #333333 !important;
+  }
+
+  .laser-bw-print .bg-stone-50,
+  .laser-bw-print .bg-stone-100 {
+    background-color: #f4f4f5 !important;
+  }
+
+  .laser-bw-print .print-inv-text {
+    color: #ffffff !important;
   }
 }
 
